@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campus Connect - Sign Up</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #f5deb3 0%, #deb887 50%, #cd853f 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 40% 90%, rgba(205, 133, 63, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 24px;
+            padding: 40px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.1);
+            position: relative;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .app-name {
+            font-size: 28px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .tagline {
+            font-size: 14px;
+            color: #666;
+            opacity: 0.8;
+        }
+
+        .title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .role-selection {
+            margin-bottom: 30px;
+        }
+
+        .role-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .role-option {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 20px 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .role-option::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .role-option:hover::before {
+            left: 100%;
+        }
+
+        .role-option:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255, 193, 7, 0.5);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .role-option.selected {
+            background: rgba(255, 193, 7, 0.2);
+            border-color: #ffc107;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 193, 7, 0.2);
+        }
+
+        .role-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .role-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .role-desc {
+            font-size: 11px;
+            color: #666;
+            opacity: 0.8;
+        }
+
+        .admin-role {
+            grid-column: 1 / -1;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            position: relative;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 16px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            font-size: 16px;
+            color: #333;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .form-input::placeholder {
+            color: #888;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #ffc107;
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 0 4px rgba(255, 193, 7, 0.1);
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #666;
+            font-size: 18px;
+            padding: 4px;
+            border-radius: 4px;
+            transition: color 0.3s ease;
+        }
+
+        .password-toggle:hover {
+            color: #ffc107;
+        }
+
+        .signup-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+            border: none;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+            margin-bottom: 20px;
+        }
+
+        .signup-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 193, 7, 0.4);
+        }
+
+        .signup-btn:active {
+            transform: translateY(0);
+        }
+
+        .signup-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.1), transparent);
+            margin: 24px 0;
+        }
+
+        .login-link {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .login-link a {
+            color: #ffc107;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        .login-link a:hover {
+            color: #ff9800;
+            text-decoration: underline;
+        }
+
+        .conditional-fields {
+            display: none;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .conditional-fields.show {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 30px 24px;
+                margin: 10px;
+            }
+            
+            .role-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .admin-role {
+                grid-column: 1;
+            }
+        }
+
+        .floating-shapes {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .shape {
+            position: absolute;
+            opacity: 0.1;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .shape:nth-child(1) {
+            top: 20%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .shape:nth-child(2) {
+            top: 60%;
+            right: 10%;
+            animation-delay: 2s;
+        }
+
+        .shape:nth-child(3) {
+            bottom: 20%;
+            left: 20%;
+            animation-delay: 4s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-shapes">
+        <div class="shape">🎓</div>
+        <div class="shape">🏫</div>
+        <div class="shape">👥</div>
+    </div>
+
+    <div class="container">
+        <div class="logo-section">
+            <h1 class="app-name">Campus Connect</h1>
+            <p class="tagline">Building bridges across campus</p>
+        </div>
+
+        <h2 class="title">Create Account</h2>
+
+        <form id="signupForm">
+            <div class="role-selection">
+                <div class="role-grid">
+                    <div class="role-option" data-role="student">
+                        <span class="role-icon">👨‍🎓</span>
+                        <div class="role-title">Student</div>
+                        <div class="role-desc">Access events & join clubs</div>
+                    </div>
+                    <div class="role-option" data-role="club">
+                        <span class="role-icon">🏛️</span>
+                        <div class="role-title">Club/Society</div>
+                        <div class="role-desc">Organize & manage events</div>
+                    </div>
+                    <div class="role-option admin-role" data-role="admin">
+                        <span class="role-icon">👨‍💼</span>
+                        <div class="role-title">Administrator</div>
+                        <div class="role-desc">Full platform management access</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <input type="text" class="form-input" placeholder="Full Name" required>
+            </div>
+
+            <div class="form-group">
+                <input type="email" class="form-input" id="emailInput" placeholder="Email Address" required>
+                <div class="email-helper" id="emailHelper" style="font-size: 12px; color: #666; margin-top: 4px; display: none;">
+                    Students & Clubs must use @connect.edu email
+                </div>
+            </div>
+
+            <div class="conditional-fields" id="studentFields">
+                <div class="form-group">
+                    <input type="text" class="form-input" placeholder="Student ID">
+                </div>
+                <div class="form-group">
+                    <input type="text" class="form-input" placeholder="Department">
+                </div>
+            </div>
+
+            <div class="conditional-fields" id="clubFields">
+                <div class="form-group">
+                    <input type="text" class="form-input" placeholder="Club/Society Name">
+                </div>
+                <div class="form-group">
+                    <input type="text" class="form-input" placeholder="Registration Number">
+                </div>
+                <div class="form-group">
+                    <input type="text" class="form-input" placeholder="Faculty Advisor">
+                </div>
+            </div>
+
+            <div class="conditional-fields" id="adminFields">
+                <div class="form-group">
+                    <input type="text" class="form-input" placeholder="Employee ID">
+                </div>
+                <div class="form-group">
+                    <input type="text" class="form-input" placeholder="Department">
+                </div>
+                <div class="form-group">
+                    <input type="text" class="form-input" placeholder="Admin Access Code">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="input-group">
+                    <input type="password" class="form-input" placeholder="Password" id="password" required>
+                    <button type="button" class="password-toggle" onclick="togglePassword('password')">👁️</button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="input-group">
+                    <input type="password" class="form-input" placeholder="Confirm Password" id="confirmPassword" required>
+                    <button type="button" class="password-toggle" onclick="togglePassword('confirmPassword')">👁️</button>
+                </div>
+            </div>
+
+            <button type="submit" class="signup-btn" id="signupBtn" disabled>
+                Create Account
+            </button>
+        </form>
+
+        <div class="divider"></div>
+
+        <div class="login-link">
+            Already have an account? <a href="/login">Sign In</a>
+        </div>
+    </div>
+
+    <script>
+        let selectedRole = null;
+
+        // Role selection functionality
+        document.querySelectorAll('.role-option').forEach(option => {
+            option.addEventListener('click', function() {
+                // Remove previous selection
+                document.querySelectorAll('.role-option').forEach(opt => opt.classList.remove('selected'));
+                
+                // Add selection to clicked option
+                this.classList.add('selected');
+                selectedRole = this.dataset.role;
+                
+                // Update email placeholder and helper text
+                updateEmailField();
+                
+                // Hide all conditional fields
+                document.querySelectorAll('.conditional-fields').forEach(field => {
+                    field.classList.remove('show');
+                });
+                
+                // Show relevant fields
+                if (selectedRole) {
+                    const fieldsToShow = document.getElementById(selectedRole + 'Fields');
+                    if (fieldsToShow) {
+                        setTimeout(() => {
+                            fieldsToShow.classList.add('show');
+                        }, 100);
+                    }
+                }
+                
+                checkFormValidity();
+            });
+        });
+
+        // Update email field based on selected role
+        function updateEmailField() {
+            const emailInput = document.getElementById('emailInput');
+            const emailHelper = document.getElementById('emailHelper');
+            
+            if (selectedRole === 'student') {
+                emailInput.placeholder = 'Student Email (e.g., john.doe@connect.edu)';
+                emailHelper.textContent = 'Use your @connect.edu student email address';
+                emailHelper.style.display = 'block';
+            } else if (selectedRole === 'club') {
+                emailInput.placeholder = 'Club Email (e.g., chess.club@connect.edu)';
+                emailHelper.textContent = 'Use your @connect.edu club/society email address';
+                emailHelper.style.display = 'block';
+            } else if (selectedRole === 'admin') {
+                emailInput.placeholder = 'Admin Email Address';
+                emailHelper.style.display = 'none';
+            } else {
+                emailInput.placeholder = 'Email Address';
+                emailHelper.style.display = 'none';
+            }
+        }
+
+        // Email validation function
+        function validateEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                return { valid: false, message: 'Please enter a valid email address' };
+            }
+            
+            if (selectedRole === 'student' || selectedRole === 'club') {
+                if (!email.endsWith('@connect.edu')) {
+                    const roleText = selectedRole === 'student' ? 'Students' : 'Clubs';
+                    return { 
+                        valid: false, 
+                        message: `${roleText} must use their @connect.edu email address` 
+                    };
+                }
+            }
+            
+            return { valid: true };
+        }
+
+        // Password toggle functionality
+        function togglePassword(fieldId) {
+            const field = document.getElementById(fieldId);
+            const button = field.nextElementSibling;
+            
+            if (field.type === 'password') {
+                field.type = 'text';
+                button.textContent = '🙈';
+            } else {
+                field.type = 'password';
+                button.textContent = '👁️';
+            }
+        }
+
+        // Form validation
+        function checkFormValidity() {
+            const signupBtn = document.getElementById('signupBtn');
+            const requiredFields = document.querySelectorAll('.form-input[required]');
+            const emailInput = document.getElementById('emailInput');
+            let isValid = selectedRole !== null;
+            let errorMessage = '';
+            
+            // Check all required fields
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    isValid = false;
+                }
+            });
+            
+            // Validate email
+            if (emailInput.value.trim()) {
+                const emailValidation = validateEmail(emailInput.value.trim());
+                if (!emailValidation.valid) {
+                    isValid = false;
+                    errorMessage = emailValidation.message;
+                }
+            }
+            
+            // Check password match
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            if (password && confirmPassword && password !== confirmPassword) {
+                isValid = false;
+                if (!errorMessage) errorMessage = 'Passwords do not match';
+            }
+            
+            // Update button state
+            signupBtn.disabled = !isValid;
+            
+            // Show/hide error message
+            let errorDiv = document.getElementById('errorMessage');
+            if (errorMessage && !isValid) {
+                if (!errorDiv) {
+                    errorDiv = document.createElement('div');
+                    errorDiv.id = 'errorMessage';
+                    errorDiv.style.cssText = `
+                        background: rgba(255, 0, 0, 0.1);
+                        border: 1px solid rgba(255, 0, 0, 0.3);
+                        border-radius: 8px;
+                        padding: 12px;
+                        margin-bottom: 16px;
+                        color: #d32f2f;
+                        font-size: 14px;
+                        text-align: center;
+                    `;
+                    signupBtn.parentNode.insertBefore(errorDiv, signupBtn);
+                }
+                errorDiv.textContent = errorMessage;
+                errorDiv.style.display = 'block';
+            } else if (errorDiv) {
+                errorDiv.style.display = 'none';
+            }
+        }
+
+        // Add event listeners to form inputs
+        document.querySelectorAll('.form-input').forEach(input => {
+            input.addEventListener('input', checkFormValidity);
+        });
+
+        // Form submission
+        document.getElementById('signupForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const emailInput = document.getElementById('emailInput');
+            
+            // Final email validation
+            const emailValidation = validateEmail(emailInput.value.trim());
+            if (!emailValidation.valid) {
+                alert(emailValidation.message);
+                return;
+            }
+            
+            const signupBtn = document.getElementById('signupBtn');
+            signupBtn.textContent = 'Creating Account...';
+            signupBtn.disabled = true;
+            
+            // Prepare data for API call
+            const userData = {
+                fullName: document.querySelector('input[placeholder="Full Name"]').value,
+                email: emailInput.value,
+                password: document.getElementById('password').value,
+                confirmPassword: document.getElementById('confirmPassword').value,
+                role: selectedRole
+            };
+            
+            // Add role-specific data
+            if (selectedRole === 'student') {
+                userData.studentId = document.querySelector('input[placeholder="Student ID"]').value;
+                userData.department = document.querySelector('input[placeholder="Department"]').value;
+            } else if (selectedRole === 'club') {
+                userData.clubName = document.querySelector('input[placeholder="Club/Society Name"]').value;
+                userData.registrationNumber = document.querySelector('input[placeholder="Registration Number"]').value;
+                userData.facultyAdvisor = document.querySelector('input[placeholder="Faculty Advisor"]').value;
+            } else if (selectedRole === 'admin') {
+                userData.employeeId = document.querySelector('input[placeholder="Employee ID"]').value;
+                userData.department = document.querySelector('#adminFields input[placeholder="Department"]').value;
+                userData.adminAccessCode = document.querySelector('input[placeholder="Admin Access Code"]').value;
+            }
+            
+            // Simulate API call (replace with actual API endpoint)
+            fetch('/api/signup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(userData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`Welcome to Campus Connect! Your ${selectedRole} account has been created successfully. Please check your email to verify your account.`);
+                    // Redirect to login or verification page
+                } else {
+                    alert(`Registration failed: ${data.message}`);
+                }
+            })
+            .catch(error => {
+                console.error('Registration error:', error);
+                alert('Registration failed. Please try again.');
+            })
+            .finally(() => {
+                signupBtn.textContent = 'Create Account';
+                checkFormValidity();
+            });
+        });
+
+        // Add some interactive effects
+        document.querySelectorAll('.form-input').forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentElement.style.transform = 'scale(1.02)';
+            });
+            
+            input.addEventListener('blur', function() {
+                this.parentElement.style.transform = 'scale(1)';
+            });
+        });
+    </script>
+</body>
+</html>
