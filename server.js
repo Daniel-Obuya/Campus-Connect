@@ -14,7 +14,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Serve static files
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(__dirname)); 
 
 // Database connection pool (reuse connections efficiently)
 const pool = mysql.createPool({
@@ -37,18 +37,33 @@ const pool = mysql.createPool({
   }
 })();
 
-// Serve Welcome, Signup, and Login pages
+// --- HTML Serving Routes ---
+
+// Root redirects to welcome
+app.get('/', (req, res) => {
+  res.redirect('/welcome');
+});
+
 app.get('/welcome', (req, res) => {
   res.sendFile(path.join(__dirname, 'welcome.html'));
 });
-app.get('/signup', (req, res) => {
-  res.sendFile(path.join(__dirname, 'Signup.html'));
+
+// New specific signup and login pages
+app.get('/signup-student', (req, res) => {
+  res.sendFile(path.join(__dirname, 'signup-student.html'));
 });
-app.get('/login', (req, res) => {
-  res.sendFile(path.join(__dirname, 'login.html'));
+app.get('/login-student', (req, res) => {
+  res.sendFile(path.join(__dirname, 'login-student.html'));
 });
-app.get('/', (req, res) => {
-  res.redirect('/welcome');
+app.get('/signup-admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'signup-admin.html'));
+});
+app.get('/login-admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'login-admin.html'));
+});
+
+app.get('/department-dashboard', (req, res) => {  // New route
+    res.sendFile(path.join(__dirname, 'department_dashboard.html'));
 });
 
 // --- API Routes ---
@@ -315,6 +330,9 @@ app.post('/api/login', async (req, res) => {
 // Start server
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
-  console.log(`Signup page: http://localhost:${PORT}/signup`);
-  console.log(`Login page: http://localhost:${PORT}/login`);
+  console.log(`Welcome page: http://localhost:${PORT}/welcome`);
+  console.log(`Student Signup: http://localhost:${PORT}/signup-student`);
+  console.log(`Student Login: http://localhost:${PORT}/login-student`);
+  console.log(`Admin Signup: http://localhost:${PORT}/signup-admin`);
+  console.log(`Admin Login: http://localhost:${PORT}/login-admin`);
 });

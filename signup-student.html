@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campus Connect - Student Sign Up</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #f5deb3 0%, #deb887 50%, #cd853f 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 40% 90%, rgba(205, 133, 63, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 24px;
+            padding: 40px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.1);
+            position: relative;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .app-name {
+            font-size: 28px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .tagline {
+            font-size: 14px;
+            color: #666;
+            opacity: 0.8;
+        }
+
+        .title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            position: relative;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 16px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            font-size: 16px;
+            color: #333;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .form-input::placeholder {
+            color: #888;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #ffc107;
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 0 4px rgba(255, 193, 7, 0.1);
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #666;
+            font-size: 18px;
+            padding: 4px;
+            border-radius: 4px;
+            transition: color 0.3s ease;
+        }
+
+        .password-toggle:hover {
+            color: #ffc107;
+        }
+
+        .signup-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+            border: none;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+            margin-bottom: 20px;
+        }
+
+        .signup-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 193, 7, 0.4);
+        }
+
+        .signup-btn:active {
+            transform: translateY(0);
+        }
+
+        .signup-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.1), transparent);
+            margin: 24px 0;
+        }
+
+        .login-link {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .login-link a {
+            color: #ffc107;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        .login-link a:hover {
+            color: #ff9800;
+            text-decoration: underline;
+        }
+
+        .terms-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .terms-group input[type="checkbox"] {
+            margin-right: 10px;
+            accent-color: #ffc107;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 30px 24px;
+                margin: 10px;
+            }
+        }
+
+        .floating-shapes {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .shape {
+            position: absolute;
+            opacity: 0.1;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .shape:nth-child(1) { top: 20%; left: 10%; animation-delay: 0s; }
+        .shape:nth-child(2) { top: 60%; right: 10%; animation-delay: 2s; }
+        .shape:nth-child(3) { bottom: 20%; left: 20%; animation-delay: 4s; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-shapes">
+        <div class="shape">🎓</div>
+        <div class="shape">📚</div>
+        <div class="shape">🎉</div>
+    </div>
+
+    <div class="container">
+        <div class="logo-section">
+            <h1 class="app-name">Campus Connect</h1>
+            <p class="tagline">Student Registration</p>
+        </div>
+
+        <h2 class="title">Create Student Account</h2>
+
+        <form id="signupForm">
+            <div class="form-group">
+                <input type="text" id="firstName" class="form-input" placeholder="First Name" required>
+            </div>
+            <div class="form-group">
+                <input type="text" id="lastName" class="form-input" placeholder="Last Name" required>
+            </div>
+
+            <div class="form-group">
+                <input type="email" class="form-input" id="emailInput" placeholder="Student Email (e.g., john.doe@gmail.com)" required>
+                <div class="email-helper" id="emailHelper" style="font-size: 12px; color: #666; margin-top: 4px;">
+                    Use your @gmail.com student email address.
+                </div>
+            </div>
+
+            <div id="studentFields">
+                <div class="form-group">
+                    <input type="text" class="form-input" name="studentId" placeholder="Student ID" required>
+                </div>
+                <div class="form-group">
+                    <input type="text" class="form-input" name="studentDepartment" placeholder="Department" required>
+                </div>
+                <div class="form-group">
+                    <input type="number" class="form-input" name="graduationYear" placeholder="Graduation Year (YYYY)" min="2000" max="2050" required>
+                </div>
+                <div class="form-group">
+                    <input type="text" class="form-input" name="major" placeholder="Major" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="input-group">
+                    <input type="password" class="form-input" placeholder="Password" id="password" required minlength="8">
+                    <button type="button" class="password-toggle" onclick="togglePassword('password')">👁️</button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="input-group">
+                    <input type="password" class="form-input" placeholder="Confirm Password" id="confirmPassword" required minlength="8">
+                    <button type="button" class="password-toggle" onclick="togglePassword('confirmPassword')">👁️</button>
+                </div>
+            </div>
+
+            <div class="form-group terms-group">
+                <input type="checkbox" id="terms" name="terms" required>
+                <label for="terms">I agree to the <a href="/terms" target="_blank" style="color: #ffc107;">Terms and Conditions</a></label>
+            </div>
+
+            <button type="submit" class="signup-btn" id="signupBtn" disabled>
+                Create Account
+            </button>
+        </form>
+
+        <div class="divider"></div>
+
+        <div class="login-link">
+            Already have an account? <a href="/login-student">Sign In</a>
+        </div>
+    </div>
+
+    <script>
+        // Password toggle functionality
+        function togglePassword(fieldId) {
+            const field = document.getElementById(fieldId);
+            const button = field.nextElementSibling;
+            if (field.type === 'password') {
+                field.type = 'text';
+                button.textContent = '🙈';
+            } else {
+                field.type = 'password';
+                button.textContent = '👁️';
+            }
+        }
+
+        // Email validation function
+        function validateEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                return { valid: false, message: 'Please enter a valid email address' };
+            }
+            return { valid: true };
+        }
+
+        // Form validation
+        function checkFormValidity() {
+            const signupBtn = document.getElementById('signupBtn');
+            const requiredFields = document.querySelectorAll('#signupForm .form-input[required]');
+            const termsCheckbox = document.getElementById('terms');
+            const emailInput = document.getElementById('emailInput');
+            let isValid = true;
+            let errorMessage = '';
+
+            requiredFields.forEach(field => {
+                if (field.type === 'checkbox') {
+                    if (!field.checked) isValid = false;
+                } else if (field.tagName.toLowerCase() === 'select') {
+                    if (!field.value) isValid = false;
+                } else if (!field.value.trim()) {
+                    isValid = false;
+                }
+            });
+
+            if (!termsCheckbox.checked) isValid = false;
+
+            if (emailInput.value.trim()) {
+                const emailValidation = validateEmail(emailInput.value.trim());
+                if (!emailValidation.valid) {
+                    isValid = false;
+                    errorMessage = emailValidation.message;
+                }
+            }
+
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            if (password && confirmPassword && password !== confirmPassword) {
+                isValid = false;
+                if (!errorMessage) errorMessage = 'Passwords do not match.';
+            }
+            if (password && password.length < 8) {
+                isValid = false;
+                if (!errorMessage) errorMessage = 'Password must be at least 8 characters long.';
+            }
+
+            signupBtn.disabled = !isValid;
+
+            let errorDiv = document.getElementById('errorMessage');
+            if (errorMessage && !isValid) {
+                if (!errorDiv) {
+                    errorDiv = document.createElement('div');
+                    errorDiv.id = 'errorMessage';
+                    errorDiv.style.cssText = `
+                        background: rgba(255, 0, 0, 0.1); border: 1px solid rgba(255, 0, 0, 0.3);
+                        border-radius: 8px; padding: 12px; margin-bottom: 16px;
+                        color: #d32f2f; font-size: 14px; text-align: center;`;
+                    signupBtn.parentNode.insertBefore(errorDiv, signupBtn);
+                }
+                errorDiv.textContent = errorMessage;
+                errorDiv.style.display = 'block';
+            } else if (errorDiv) {
+                errorDiv.style.display = 'none';
+            }
+        }
+
+        document.querySelectorAll('#signupForm .form-input, #terms').forEach(input => {
+            input.addEventListener('input', checkFormValidity);
+            input.addEventListener('change', checkFormValidity);
+        });
+
+        // Form submission
+        document.getElementById('signupForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const emailInput = document.getElementById('emailInput');
+            const emailValidation = validateEmail(emailInput.value.trim());
+            if (!emailValidation.valid) {
+                alert(emailValidation.message);
+                return;
+            }
+
+            const signupBtn = document.getElementById('signupBtn');
+            signupBtn.textContent = 'Creating Account...';
+            signupBtn.disabled = true;
+
+            const userData = {
+                firstName: document.getElementById('firstName').value.trim(),
+                lastName: document.getElementById('lastName').value.trim(),
+                email: emailInput.value.trim(),
+                password: document.getElementById('password').value,
+                role: 'student',
+                studentDetails: {
+                    studentId: document.querySelector('#studentFields input[name="studentId"]').value.trim(),
+                    major: document.querySelector('#studentFields input[name="major"]').value.trim(), // Corrected from studentDepartment
+                    graduationYear: parseInt(document.querySelector('#studentFields input[name="graduationYear"]').value),
+                    // The backend expects 'major', not 'department' in studentDetails.
+                    // If you need 'department' as well, ensure your backend /api/signup handles it for students.
+                    // For now, I'm mapping the "Department" field to "major" as per original Signup.html's studentFields.
+                    // If "Department" and "Major" are distinct, you'll need to adjust the form and backend.
+                }
+            };
+             // The backend expects 'major' and 'graduationYear'. The 'department' field from the form
+            // was mapped to 'major' in the original script. If 'department' is a separate field for students,
+            // the backend user schema and signup logic needs to be updated.
+            // For now, assuming 'Department' input field maps to 'major' for studentDetails.
+            // And 'studentDepartment' field from form is actually 'major'
+            userData.studentDetails.major = document.querySelector('#studentFields input[name="studentDepartment"]').value.trim();
+
+
+            console.log('Submitting student data:', userData);
+
+            fetch('/api/signup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(userData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(errData => {
+                        throw new Error(errData.message || `Server error: ${response.status}`);
+                    }).catch(() => { throw new Error(`Server error: ${response.status} ${response.statusText}`); });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    alert(`Welcome! Your student account has been created. Please log in.`);
+                    setTimeout(() => { window.location.href = '/login-student'; }, 1500);
+                } else {
+                    throw new Error(data.message || 'Registration failed');
+                }
+            })
+            .catch(error => {
+                console.error('Registration error:', error);
+                alert(`Registration failed: ${error.message}`);
+            })
+            .finally(() => {
+                signupBtn.textContent = 'Create Account';
+                checkFormValidity();
+            });
+        });
+        checkFormValidity(); // Initial check
+    </script>
+</body>
+</html>
