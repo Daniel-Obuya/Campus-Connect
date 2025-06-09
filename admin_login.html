@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campus Connect - Admin Sign In</title>
+    <style>
+        /* --- General Styles (Copied from login.html) --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #f5deb3 0%, #deb887 50%, #cd853f 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 40% 90%, rgba(205, 133, 63, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 24px;
+            padding: 40px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.1);
+            position: relative;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .app-name {
+            font-size: 28px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .tagline {
+            font-size: 14px;
+            color: #666;
+            opacity: 0.8;
+        }
+
+        .page-title { /* Renamed for clarity */
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        /* Role tabs are removed for admin login */
+        /* .role-tabs { ... } */
+        /* .role-tab { ... } */
+        /* .role-tab.active { ... } */
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            position: relative;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 16px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            font-size: 16px;
+            color: #333;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .form-input::placeholder {
+            color: #888;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #ffc107;
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 0 4px rgba(255, 193, 7, 0.1);
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #666;
+            font-size: 18px;
+            padding: 4px;
+            border-radius: 4px;
+            transition: color 0.3s ease;
+        }
+
+        .password-toggle:hover {
+            color: #ffc107;
+        }
+
+        .forgot-password {
+            text-align: right;
+            margin-bottom: 24px;
+        }
+
+        .forgot-password a {
+            color: #ffc107;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .forgot-password a:hover {
+            color: #ff9800;
+            text-decoration: underline;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+            border: none;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+            margin-bottom: 20px;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 193, 7, 0.4);
+        }
+
+        .login-btn:active {
+            transform: translateY(0);
+        }
+
+        .login-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.1), transparent);
+            margin: 24px 0;
+        }
+
+        .main-login-link { /* Renamed from signup-link */
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .main-login-link a { /* Renamed from signup-link a */
+            color: #ffc107;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        .main-login-link a:hover { /* Renamed from signup-link a:hover */
+            color: #ff9800;
+            text-decoration: underline;
+        }
+
+        /* Admin login link is removed as this is the admin page */
+        /* .admin-login-link { ... } */
+
+        .alert {
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .alert.error {
+            background: rgba(255, 82, 82, 0.1);
+            border: 1px solid rgba(255, 82, 82, 0.3);
+            color: #d32f2f;
+        }
+
+        .alert.success {
+            background: rgba(76, 175, 80, 0.1);
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            color: #2e7d32;
+        }
+
+        .floating-shapes {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .shape {
+            position: absolute;
+            opacity: 0.1;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .shape:nth-child(1) {
+            top: 20%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .shape:nth-child(2) {
+            top: 60%;
+            right: 10%;
+            animation-delay: 2s;
+        }
+
+        .shape:nth-child(3) {
+            bottom: 20%;
+            left: 20%;
+            animation-delay: 4s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 30px 24px;
+                margin: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-shapes">
+        <div class="shape">🔑</div> <!-- Admin specific icon -->
+        <div class="shape">⚙️</div> <!-- Admin specific icon -->
+        <div class="shape">📊</div> <!-- Admin specific icon -->
+    </div>
+
+    <div class="container">
+        <div class="logo-section">
+            <h1 class="app-name">Campus Connect</h1>
+            <p class="tagline">Building bridges across campus</p>
+        </div>
+
+        <h2 class="page-title">Administrator Sign In</h2>
+
+        <!-- Role tabs removed -->
+        <!-- <div class="role-tabs">...</div> -->
+
+        <div class="alert" id="alertMessage"></div>
+
+        <form id="adminLoginForm"> <!-- Changed form ID -->
+            <div class="form-group">
+                <input type="email" class="form-input" id="emailInput" placeholder="Admin Email Address" required>
+            </div>
+
+            <div class="form-group">
+                <div class="input-group">
+                    <input type="password" class="form-input" placeholder="Password" id="password" required>
+                    <button type="button" class="password-toggle" onclick="togglePassword('password')">👁️</button>
+                </div>
+            </div>
+
+            <!-- Forgot password link kept, but might need admin-specific logic -->
+            <div class="forgot-password">
+                <a href="#" onclick="showForgotPassword()">Forgot Password?</a>
+            </div>
+
+            <button type="submit" class="login-btn" id="adminLoginBtn"> <!-- Changed button ID -->
+                Sign In
+            </button>
+        </form>
+
+        <div class="divider"></div>
+
+        <div class="main-login-link"> <!-- Changed class name -->
+            Not an administrator? <a href="/login">Sign In Here</a> <!-- Link back to main login -->
+        </div>
+        <!-- Admin login link removed -->
+        <!-- <div class="admin-login-link">...</div> -->
+    </div>
+
+    <script>
+        // No selectedRole needed for admin login
+        // let selectedRole = 'admin'; // Removed
+
+        // Role tab functionality removed
+        // document.querySelectorAll('.role-tab').forEach(tab => { ... });
+
+        // updateEmailField function removed/simplified (placeholder is static)
+        // function updateEmailField() { ... }
+
+        // Password toggle functionality (kept as is)
+        function togglePassword(fieldId) {
+            const field = document.getElementById(fieldId);
+            const button = field.nextElementSibling;
+
+            if (field.type === 'password') {
+                field.type = 'text';
+                button.textContent = '🙈';
+            } else {
+                field.type = 'password';
+                button.textContent = '👁️';
+            }
+        }
+
+        // Show alert message (kept as is)
+        function showAlert(message, type = 'error') {
+            const alertDiv = document.getElementById('alertMessage');
+            alertDiv.textContent = message;
+            alertDiv.className = `alert ${type}`;
+            alertDiv.style.display = 'block';
+
+            if (type === 'success') {
+                setTimeout(() => {
+                    alertDiv.style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        // Form submission (Modified for admin)
+        document.getElementById('adminLoginForm').addEventListener('submit', async function(e) { // Changed form ID
+            e.preventDefault();
+
+            const email = document.getElementById('emailInput').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const loginBtn = document.getElementById('adminLoginBtn'); // Changed button ID
+
+            if (!email || !password) {
+                showAlert('Please fill in all fields.');
+                return;
+            }
+
+            loginBtn.textContent = 'Signing In...';
+            loginBtn.disabled = true;
+
+            const loginData = {
+                email: email,
+                password: password,
+                role: 'admin' // Send a generic 'admin' role for the backend to check against department_admin/system_admin
+            };
+
+            console.log('Attempting admin login with:', { email });
+
+            try {
+                const response = await fetch('/api/login', { // Still use the same login endpoint
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(loginData)
+                });
+
+                const data = await response.json();
+                console.log('Admin login response:', data);
+
+                if (data.success) {
+                    showAlert(data.message, 'success');
+
+                    // Store user data (including the actual role from backend)
+                    localStorage.setItem('authToken', data.token);
+                    localStorage.setItem('currentUser', JSON.stringify(data.user));
+
+                    // Redirect to dashboard
+                    setTimeout(() => {
+                        redirectToDashboard(data.user);
+                    }, 1500);
+                } else {
+                    // Server should return specific messages like 'Invalid role for this account'
+                    showAlert(data.message || 'Admin login failed. Please check your credentials.');
+                }
+            } catch (error) {
+                console.error('Admin login error:', error);
+                showAlert('An error occurred during admin login. Please try again.');
+            } finally {
+                loginBtn.textContent = 'Sign In';
+                loginBtn.disabled = false;
+            }
+        });
+
+        // Redirect to dashboard based on user role (Modified for admin roles)
+        function redirectToDashboard(user) {
+            const userRole = user.role; // This will be 'department_admin' or 'system_admin' from the backend response
+
+            const dashboardUrls = {
+                department_admin: '/admin-dashboard', // Or a specific department admin page
+                system_admin: '/admin-dashboard'     // Or a specific system admin page
+            };
+
+            if (dashboardUrls[userRole]) {
+                alert(`Welcome Administrator ${user.firstName}! Redirecting to admin dashboard...`);
+                // For now, just redirect to a placeholder page or show success
+                console.log(`Would redirect to: ${dashboardUrls[userRole]}`);
+                // Uncomment when you have actual dashboard pages:
+                // window.location.href = dashboardUrls[userRole];
+            } else {
+                 // This case should ideally not happen if backend sends correct admin role
+                showAlert(`Dashboard not configured for admin role: ${userRole}`);
+                console.error('Admin logged in, but no dashboard URL for role:', user);
+            }
+        }
+
+        // Forgot password functionality (kept as is, but might need admin-specific backend)
+        function showForgotPassword() {
+            const email = prompt('Enter your admin email address to reset password:');
+            if (email) {
+                alert('Password reset instructions have been sent to your email address.');
+                // TODO: Implement actual password reset functionality for admins
+            }
+        }
+
+        // Demo functionality - show test credentials (Removed or updated for admin)
+        // function showTestCredentials() { ... }
+        // Demo button removed
+        // const demoBtn = document.createElement('button'); ...
+
+        // Initialize email field (Not needed as placeholder is static)
+        // updateEmailField(); // Removed
+
+        // Add interactive effects (kept as is)
+        document.querySelectorAll('.form-input').forEach(input => {
+            input.addEventListener('focus', function() {
+                if (this.parentElement.classList.contains('input-group') || this.parentElement.classList.contains('form-group')) {
+                    this.parentElement.style.transform = 'scale(1.01)';
+                }
+            });
+
+            input.addEventListener('blur', function() {
+                if (this.parentElement.classList.contains('input-group') || this.parentElement.classList.contains('form-group')) {
+                    this.parentElement.style.transform = 'scale(1)';
+                }
+            });
+        });
+
+        // Hide alert on input focus (kept as is)
+        document.querySelectorAll('.form-input').forEach(input => {
+            input.addEventListener('focus', function() {
+                const alertDiv = document.getElementById('alertMessage');
+                if (alertDiv.style.display === 'block') {
+                    alertDiv.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

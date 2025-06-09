@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Campus Connect</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #f5deb3, #deb887, #cd853f);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 40% 90%, rgba(205, 133, 63, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 24px;
+            padding: 50px 40px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.2), 0 0 15px rgba(255, 255, 255, 0.2);
+            position: relative;
+            text-align: center;
+            animation: slideUp 0.8s ease-out forwards;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            opacity: 0;
+            animation: fadeIn 1s ease-out forwards;
+        }
+
+        .fade-in-delay {
+            animation-delay: 0.5s;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+
+        .logo-section {
+            margin-bottom: 20px;
+            
+        }
+.logo{
+border-radius: 50%;
+border-style: double;
+    border-width: 4px;
+    box-shadow: 4px 4px 30px cornsilk;
+}
+        .app-name {
+            font-size: 32px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .tagline {
+            font-size: 16px;
+            color: #555;
+            opacity: 0.9;
+            margin-bottom: 30px;
+        }
+
+        .welcome-message {
+            font-size: 22px;
+            font-weight: 600;
+            color: #444;
+            margin-bottom: 15px;
+        }
+
+        .welcome-description {
+            font-size: 17px;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 40px;
+        }
+
+        .buttons a {
+            text-decoration: none;
+            color: #333;
+            background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+            padding: 16px 35px;
+            margin: 10px 10px;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            display: inline-block;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+        }
+
+        .buttons a:hover {
+            transform: translateY(-3px) scale(1.03);
+            box-shadow: 0 8px 25px rgba(255, 193, 7, 0.4);
+        }
+
+        .buttons a:active {
+            transform: translateY(0) scale(1);
+        }
+
+        .floating-shapes {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .shape {
+            position: absolute;
+            opacity: 0.5;
+            font-size: 80px;
+            animation: float 8s ease-in-out infinite;
+        }
+
+        .shape:nth-child(1) { top: 15%; left: 10%; animation-delay: 0s; }
+        .shape:nth-child(2) { top: 70%; right: 15%; animation-delay: 2.5s; }
+        .shape:nth-child(3) { bottom: 10%; left: 25%; animation-delay: 5s; }
+        .shape:nth-child(4) { top: 30%; right: 30%; font-size: 40px; animation-delay: 1s; }
+        .shape:nth-child(5) { bottom: 35%; left: 5%; font-size: 60px; animation-delay: 3.5s; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg) scale(1); }
+            50% { transform: translateY(-25px) rotate(15deg) scale(1.1); }
+        }
+
+        footer {
+            position: absolute;
+            bottom: 20px;
+            font-size: 14px;
+            color: #fff;
+            opacity: 0.7;
+            width: 100%;
+            text-align: center;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 40px 25px;
+                margin: 10px;
+            }
+            .app-name { font-size: 28px; }
+            .tagline { font-size: 14px; }
+            .welcome-message { font-size: 20px; }
+            .welcome-description { font-size: 15px; }
+            .buttons a { padding: 14px 25px; font-size: 15px; margin: 8px 5px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-shapes">
+        <div class="shape">🎓</div>
+        <div class="shape">🤝</div>
+        <div class="shape">🏛️</div>
+        <div class="shape">🎉</div>
+        <div class="shape">💡</div>
+    </div>
+
+    <div class="container">
+        <div class="logo-section fade-in">
+            
+             <img src="logo 1.png" alt="Campus Connect Logo" class="logo" style="height: 100px; margin-bottom: 45px;"> 
+            <h1 class="app-name">Campus Connect</h1>
+        </div>
+
+        <p class="tagline fade-in" style="animation-delay: 0.3s;">
+            <em>Bringing campus life to your fingertips.</em>
+        </p>
+
+        <p class="welcome-message fade-in fade-in-delay">Welcome Aboard!</p>
+        <p class="welcome-description fade-in fade-in-delay" style="animation-delay: 0.8s;">
+            Discover events, join clubs, and build lasting connections.<br>
+            Campus Connect is your vibrant hub for everything happening on campus.
+        </p>
+
+        <div class="buttons fade-in fade-in-delay" style="animation-delay: 1.2s;">
+            <a href="/login">🔐 Login</a>
+            <a href="/signup">📝 Sign Up</a>
+        </div>
+    </div>
+
+    <footer>
+        🌟 Explore. Connect. Belong. | © Campus Connect 2025
+    </footer>
+</body>
+</html>

@@ -1,104 +1,320 @@
+require('dotenv').config();
+const secret = process.env.JWT_SECRET;
+const jwt = require('jsonwebtoken');
 const express = require('express');
 const path = require('path');
+const mysql = require('mysql2/promise'); 
+const bcrypt = require('bcrypt');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
-// Middleware to parse JSON bodies (for API requests)
+// Middleware
 app.use(express.json());
-// Middleware to parse URL-encoded bodies (if you were using traditional form posts)
-// app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true }));
 
-// Middleware to serve static files (CSS, JS, images)
-// If you create a 'public' folder for these, uncomment the line below:
-// app.use(express.static(path.join(__dirname, 'public')));
+// Serve static files
+app.use(express.static(path.join(__dirname, 'public')));
 
-// Route to serve the Signup page
+// Database connection pool (reuse connections efficiently)
+const pool = mysql.createPool({
+  host: process.env.DB_HOST || 'localhost',
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASS || '',
+  database: process.env.DB_NAME || 'campus_connect',
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
+});
+
+(async () => {
+  try {
+    const connection = await pool.getConnection();
+    console.log('✅ Connected to the database successfully');
+    connection.release();
+  } catch (err) {
+    console.error('❌ Failed to connect to the database:', err);
+  }
+})();
+
+// Serve Welcome, Signup, and Login pages
+app.get('/welcome', (req, res) => {
+  res.sendFile(path.join(__dirname, 'welcome.html'));
+});
 app.get('/signup', (req, res) => {
-    res.sendFile(path.join(__dirname, 'Signup.html'));
+  res.sendFile(path.join(__dirname, 'Signup.html'));
 });
-
-// Route to serve the Login page
 app.get('/login', (req, res) => {
-    res.sendFile(path.join(__dirname, 'login.html'));
+  res.sendFile(path.join(__dirname, 'login.html'));
 });
-
-// Optional: A root route, e.g., redirect to signup or login
 app.get('/', (req, res) => {
-    res.redirect('/signup'); // Or '/login' or serve an index.html
+  res.redirect('/welcome');
 });
 
-// --- API Routes for Form Submissions ---
+// --- API Routes ---
 
-// API endpoint for Signup
-app.post('/api/signup', (req, res) => {
-    console.log('Signup attempt received on server:');
-    console.log('Body:', req.body);
-    const { fullName, email, password, confirmPassword, role, ...roleSpecificData } = req.body;
+// Signup
+app.post('/api/signup', async (req, res) => {
+  try {
+    const { firstName, lastName, email, password, role, studentDetails, clubDetails, departmentDetails } = req.body;
 
-    // Basic validation (you'll need more robust validation)
-    if (!fullName || !email || !password || !role) {
-        return res.status(400).json({ success: false, message: 'Missing required fields.' });
+    console.log('Signup request received:', { firstName, lastName, email, role });
+
+    // Basic validation
+    if (!firstName || !lastName || !email || !password || !role) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Missing required fields (firstName, lastName, email, password, role).' 
+      });
     }
-    if (password !== confirmPassword) {
-        return res.status(400).json({ success: false, message: 'Passwords do not match.' });
+
+    if (password.length < 8) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Password must be at least 8 characters long.' 
+      });
     }
 
-    // TODO:
-    // 1. More comprehensive validation (email format, password strength).
-    // 2. Check if user (email) already exists in your database.
-    // 3. Hash the password securely (e.g., using bcrypt).
-    // 4. Save the new user to your database.
-    // 5. Potentially send a verification email.
+    // Check if email already exists
+    const [existingUsers] = await pool.query('SELECT user_id FROM users WHERE email = ?', [email]);
+    if (existingUsers.length > 0) {
+      return res.status(409).json({ 
+        success: false, 
+        message: 'Email already registered.' 
+      });
+    }
 
-    console.log(`Registering user: ${fullName}, Email: ${email}, Role: ${role}`);
-    console.log('Role specific data:', roleSpecificData);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    // For now, send a mock success response
-    res.json({
+    let userId;
+    const connection = await pool.getConnection();
+    await connection.beginTransaction();
+
+    try {
+      let userInsertData = {
+        email,
+        password_hash: hashedPassword,
+        first_name: firstName,
+        last_name: lastName,
+        role,
+        email_verified: true, // Set to true for now, implement email verification later
+        is_active: true
+      };
+
+      if (role === 'student') {
+        if (!studentDetails || !studentDetails.studentId || !studentDetails.major || !studentDetails.graduationYear) {
+          await connection.rollback();
+          connection.release();
+          return res.status(400).json({ 
+            success: false, 
+            message: 'Missing student-specific data (studentId, major, graduationYear).' 
+          });
+        }
+        userInsertData.student_id = studentDetails.studentId;
+        userInsertData.major = studentDetails.major;
+        userInsertData.graduation_year = studentDetails.graduationYear;
+      }
+
+      const [result] = await connection.query('INSERT INTO users SET ?', userInsertData);
+      userId = result.insertId;
+
+      if (role === 'club_admin') {
+        if (!clubDetails || !clubDetails.name || !clubDetails.category || !clubDetails.advisorName) {
+          await connection.rollback();
+          connection.release();
+          return res.status(400).json({ 
+            success: false, 
+            message: 'Missing club-specific data (name, category, advisorName).' 
+          });
+        }
+        const [existingClubs] = await connection.query('SELECT club_id FROM clubs_societies WHERE name = ?', [clubDetails.name]);
+        if (existingClubs.length > 0) {
+          await connection.rollback();
+          connection.release();
+          return res.status(409).json({ success: false, message: 'Club name already exists.' });
+        }
+        await connection.query(
+          'INSERT INTO clubs_societies (name, description, category, president_user_id, advisor_name, contact_email, is_active) VALUES (?, ?, ?, ?, ?, ?, ?)',
+          [clubDetails.name, clubDetails.description || null, clubDetails.category, userId, clubDetails.advisorName, email, true]
+        );
+      } else if (role === 'department_admin') {
+        if (!departmentDetails || !departmentDetails.name || !departmentDetails.code) {
+          await connection.rollback();
+          connection.release();
+          return res.status(400).json({ 
+            success: false, 
+            message: 'Missing department-specific data (Department Name and Department Code are required).' 
+          });
+        }
+
+        // Check if department code already exists
+        const [existingDepts] = await connection.query('SELECT department_id FROM departments WHERE code = ?', [departmentDetails.code]);
+        if (existingDepts.length > 0) {
+          await connection.rollback();
+          connection.release();
+          return res.status(409).json({ success: false, message: 'Department code already exists.' });
+        }
+
+        await connection.query(
+          'INSERT INTO departments (name, code, description, head_of_department, contact_email, contact_phone, website_url, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+          [
+            departmentDetails.name,
+            departmentDetails.code,
+            departmentDetails.description || null,
+            departmentDetails.head_of_department || null,
+            email, // User's email as department contact email
+            departmentDetails.contact_phone || null,
+            departmentDetails.website_url || null,
+            true 
+          ]
+        );
+      }
+
+      await connection.commit();
+      connection.release();
+
+      const token = jwt.sign({ 
+        id: userId, 
+        email, 
+        role, 
+        firstName, 
+        lastName 
+      }, secret, { expiresIn: '2h' });
+
+      res.status(201).json({
         success: true,
-        message: `Server: ${role} account for ${fullName} creation initiated. Implement full DB logic.`
+        message: `User ${email} registered successfully as ${role}.`,
+        token,
+        user: { 
+          id: userId, 
+          firstName, 
+          lastName, 
+          email, 
+          role 
+        }
+      });
+
+    } catch (error) {
+      await connection.rollback();
+      connection.release();
+      console.error('Signup transaction error:', error);
+      return res.status(500).json({ 
+        success: false, 
+        message: 'Internal server error during signup.' 
+      });
+    }
+
+  } catch (error) {
+    console.error('Signup error:', error);
+    if (error.code === 'ER_DUP_ENTRY') {
+      return res.status(409).json({ 
+        success: false, 
+        message: 'Email already registered.' 
+      });
+    }
+    res.status(500).json({ 
+      success: false, 
+      message: 'Internal server error' 
     });
+  }
 });
 
-// API endpoint for Login
-app.post('/api/login', (req, res) => {
-    console.log('Login attempt received on server:');
-    console.log('Body:', req.body);
-    const { email, password, role } = req.body;
+// Login
+app.post('/api/login', async (req, res) => {
+  try {
+    const { email, password, role: roleFromRequest } = req.body;
 
-    if (!email || !password || !role) {
-        return res.status(400).json({ success: false, message: 'Email, password, and role are required.' });
+    console.log('Login request received:', { email, role: roleFromRequest });
+
+    if (!email || !password || !roleFromRequest) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Email, password, and role selection are required.' 
+      });
     }
 
-    // TODO:
-    // 1. Find user by email and role in your database.
-    // 2. Compare the provided password with the stored hashed password.
-    // 3. If match, create a session or JWT token.
+    const [users] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
 
-    console.log(`Authenticating user: Email: ${email}, Role: ${role}`);
-
-    // Mock successful login response
-    // In a real app, you'd fetch user details from DB
-    if (email && password) { // Replace with actual DB check
-        res.json({
-            success: true,
-            message: 'Server: Login successful (mock response). Implement full DB logic.',
-            user: { // Send some mock user data back
-                fullName: 'Mock User ' + role,
-                email: email,
-                role: role
-            }
-        });
-    } else {
-        res.status(401).json({ success: false, message: 'Server: Invalid credentials (mock response).' });
+    if (users.length === 0) {
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Invalid email or password.' 
+      });
     }
+
+    const user = users[0];
+
+    // Role validation
+    let expectedDbRole;
+    if (roleFromRequest === 'club') {
+      expectedDbRole = 'club_admin';
+    } else if (roleFromRequest === 'department') {
+      expectedDbRole = 'department_admin';
+    } else { // Default to student
+      expectedDbRole = 'student';
+    }
+    if (user.role !== expectedDbRole) {
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Invalid role for this account.' 
+      });
+    }
+
+    if (!user.is_active) {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Account is inactive. Contact support.' 
+      });
+    }
+
+    if (!user.email_verified) {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Account not verified. Please check your email.' 
+      });
+    }
+
+    const match = await bcrypt.compare(password, user.password_hash);
+    if (!match) {
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Invalid email or password.' 
+      });
+    }
+
+    const token = jwt.sign({ 
+      id: user.user_id, 
+      email: user.email, 
+      role: user.role, 
+      firstName: user.first_name, 
+      lastName: user.last_name 
+    }, secret, { expiresIn: '2h' });
+
+    res.json({
+      success: true,
+      message: 'Login successful.',
+      token,
+      user: {
+        id: user.user_id,
+        firstName: user.first_name,
+        lastName: user.last_name,
+        email: user.email,
+        role: user.role,
+      }
+    });
+
+  } catch (err) {
+    console.error('Login Error:', err);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error during login.' 
+    });
+  }
 });
 
-
-// Start the server
+// Start server
 app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
-    console.log(`Access Signup page: http://localhost:${PORT}/signup`);
-    console.log(`Access Login page: http://localhost:${PORT}/login`);
+  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Signup page: http://localhost:${PORT}/signup`);
+  console.log(`Login page: http://localhost:${PORT}/login`);
 });

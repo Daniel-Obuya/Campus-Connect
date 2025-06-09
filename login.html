@@ -82,7 +82,7 @@
             opacity: 0.8;
         }
 
-        .title {
+        .page-title { /* Renamed for clarity */
             font-size: 24px;
             font-weight: 600;
             color: #333;
@@ -238,6 +238,12 @@
             text-decoration: underline;
         }
 
+        .admin-login-link {
+            text-align: center;
+            margin-top: 10px; /* Add some space above */
+            font-size: 14px;
+        }
+
         .alert {
             padding: 12px 16px;
             margin-bottom: 20px;
@@ -323,12 +329,12 @@
             <p class="tagline">Building bridges across campus</p>
         </div>
 
-        <h2 class="title">Welcome Back</h2>
+        <h2 class="page-title">Student & Club Sign In</h2>
 
         <div class="role-tabs">
             <div class="role-tab active" data-role="student">Student</div>
             <div class="role-tab" data-role="club">Club</div>
-            <div class="role-tab" data-role="admin">Admin</div>
+            <div class="role-tab" data-role="department">Department</div>
         </div>
 
         <div class="alert" id="alertMessage"></div>
@@ -359,190 +365,207 @@
         <div class="signup-link">
             Don't have an account? <a href="/signup">Create Account</a>
         </div>
+        <div class="admin-login-link">
+            Are you an administrator? <a href="/admin/login" style="color: #ffc107; text-decoration: none; font-weight: 600;">Admin Sign In</a>
+        </div>
     </div>
 
     <script>
         let selectedRole = 'student';
 
-        // Role tab functionality
-        document.querySelectorAll('.role-tab').forEach(tab => {
-            tab.addEventListener('click', function() {
-                document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
-                this.classList.add('active');
-                selectedRole = this.dataset.role;
-                updateEmailField();
-            });
-        });
-
-        // Update email field based on selected role
-        function updateEmailField() {
-            const emailInput = document.getElementById('emailInput');
-            
-            if (selectedRole === 'student') {
-                emailInput.placeholder = 'Student Email (e.g., john.doe@connect.edu)';
-            } else if (selectedRole === 'club') {
-                emailInput.placeholder = 'Club Email (e.g., chess.club@connect.edu)';
-            } else if (selectedRole === 'admin') {
-                emailInput.placeholder = 'Admin Email Address';
-            }
-        }
-
-        // Password toggle functionality
-        function togglePassword(fieldId) {
-            const field = document.getElementById(fieldId);
-            const button = field.nextElementSibling;
-            
-            if (field.type === 'password') {
-                field.type = 'text';
-                button.textContent = '🙈';
-            } else {
-                field.type = 'password';
-                button.textContent = '👁️';
-            }
-        }
-
-        // Show alert message
-        function showAlert(message, type = 'error') {
-            const alertDiv = document.getElementById('alertMessage');
-            alertDiv.textContent = message;
-            alertDiv.className = `alert ${type}`;
-            alertDiv.style.display = 'block';
-            
-            if (type === 'success') {
-                setTimeout(() => {
-                    alertDiv.style.display = 'none';
-                }, 3000);
-            }
-        }
-
-        // Form submission
-        document.getElementById('loginForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const email = document.getElementById('emailInput').value.trim();
-            const password = document.getElementById('password').value.trim();
-            const loginBtn = document.getElementById('loginBtn');
-            
-            if (!email || !password) {
-                showAlert('Please fill in all fields.');
-                return;
-            }
-
-            // Email validation for students and clubs
-            if ((selectedRole === 'student' || selectedRole === 'club') && !email.endsWith('@connect.edu')) {
-                const roleText = selectedRole === 'student' ? 'Students' : 'Clubs';
-                showAlert(`${roleText} must use their @connect.edu email address.`);
-                return;
-            }
-
-            loginBtn.textContent = 'Signing In...';
-            loginBtn.disabled = true;
-
-            const loginData = {
-                email: email,
-                password: password,
-                role: selectedRole
-            };
-
-            fetch('/api/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(loginData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showAlert(data.message, 'success');
-                    
-                    // Simulate redirect to dashboard
-                    setTimeout(() => {
-                        redirectToDashboard(data.user);
-                    }, 1500);
-                } else {
-                    showAlert(data.message || 'Login failed. Please check your credentials.');
-                }
-            })
-            .catch(error => {
-                console.error('Login error:', error);
-                showAlert('An error occurred during login. Please try again.');
-            })
-            .finally(() => {
-                loginBtn.textContent = 'Sign In';
-                loginBtn.disabled = false;
-            });
-        });
-
-        // Redirect to dashboard based on user role
-        function redirectToDashboard(user) {
-            const dashboardUrls = {
-                student: '/student-dashboard',
-                club: '/club-dashboard', 
-                admin: '/admin-dashboard'
-            };
-            
-            alert(`Welcome ${user.fullName}! Redirecting to ${user.role} dashboard...`);
-            
-            // Store user session (in production, use secure session management)
-            sessionStorage.setItem('currentUser', JSON.stringify(user));
-            
-            // In production, redirect to actual dashboard
-            // window.location.href = dashboardUrls[user.role];
-            
-            console.log('User logged in:', user);
-            console.log(`Redirect to: ${dashboardUrls[user.role]}`);
-        }
-
-        function showForgotPassword() {
-            const email = prompt('Enter your email address to reset password:');
-            if (email) {
-                alert('Password reset instructions have been sent to your email address.');
-            }
-        }
-
-        // Demo functionality - show test credentials
-        function showTestCredentials() {
-            const credentials = {
-                student: 'Email: john.doe@connect.edu | Password: student123',
-                club: 'Email: chess.club@connect.edu | Password: chess123',
-                admin: 'Email: admin@connect.edu | Password: admin123'
-            };
-            
-            alert(`Test credentials for ${selectedRole}:\n${credentials[selectedRole]}`);
-        }
-
-        // Add demo button (for testing purposes)
-        const demoBtn = document.createElement('button');
-        demoBtn.textContent = 'Show Test Credentials';
-        demoBtn.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 8px 12px;
-            background: rgba(255, 193, 7, 0.8);
-            border: none;
-            border-radius: 8px;
-            font-size: 12px;
-            cursor: pointer;
-            z-index: 1000;
-        `;
-        demoBtn.onclick = showTestCredentials;
-        document.body.appendChild(demoBtn);
-
-        // Initialize email field
+// Role tab functionality
+document.querySelectorAll('.role-tab').forEach(tab => {
+    tab.addEventListener('click', function() {
+        document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+        selectedRole = this.dataset.role;
         updateEmailField();
+    });
+});
 
-        // Add interactive effects
-        document.querySelectorAll('.form-input').forEach(input => {
-            input.addEventListener('focus', function() {
-                this.parentElement.style.transform = 'scale(1.02)';
-            });
-            
-            input.addEventListener('blur', function() {
-                this.parentElement.style.transform = 'scale(1)';
-            });
+// Update email field based on selected role
+function updateEmailField() {
+    const emailInput = document.getElementById('emailInput');
+    
+    if (selectedRole === 'student') {
+        emailInput.placeholder = 'Student Email (e.g., john.doe@gmail.com)';
+    } else if (selectedRole === 'club') {
+        emailInput.placeholder = 'Club Email (e.g., chess.club@gmail.com)';
+    } else if (selectedRole === 'department') {
+        emailInput.placeholder = 'Department Admin Email (e.g., hod.cs@example.com)';
+    }
+}
+
+// Password toggle functionality
+function togglePassword(fieldId) {
+    const field = document.getElementById(fieldId);
+    const button = field.nextElementSibling;
+    
+    if (field.type === 'password') {
+        field.type = 'text';
+        button.textContent = '🙈';
+    } else {
+        field.type = 'password';
+        button.textContent = '👁️';
+    }
+}
+
+// Show alert message
+function showAlert(message, type = 'error') {
+    const alertDiv = document.getElementById('alertMessage');
+    alertDiv.textContent = message;
+    alertDiv.className = `alert ${type}`;
+    alertDiv.style.display = 'block';
+    
+    if (type === 'success') {
+        setTimeout(() => {
+            alertDiv.style.display = 'none';
+        }, 3000);
+    }
+}
+
+// Form submission
+document.getElementById('loginForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const email = document.getElementById('emailInput').value.trim();
+    const password = document.getElementById('password').value.trim();
+    const loginBtn = document.getElementById('loginBtn');
+    
+    if (!email || !password) {
+        showAlert('Please fill in all fields.');
+        return;
+    }
+
+    loginBtn.textContent = 'Signing In...';
+    loginBtn.disabled = true;
+
+    const loginData = {
+        email: email,
+        password: password,
+        role: selectedRole // 'student' or 'club'
+    };
+
+    console.log('Attempting login with:', { email, role: selectedRole });
+
+    try {
+        const response = await fetch('/api/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(loginData)
         });
+
+        const data = await response.json();
+        console.log('Login response:', data);
+
+        if (data.success) {
+            showAlert(data.message, 'success');
+            
+            // Store user data
+            localStorage.setItem('authToken', data.token);
+            localStorage.setItem('currentUser', JSON.stringify(data.user));
+            
+            // Redirect to dashboard
+            setTimeout(() => {
+                redirectToDashboard(data.user);
+            }, 1500);
+        } else {
+            showAlert(data.message || 'Login failed. Please check your credentials.');
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        showAlert('An error occurred during login. Please try again.');
+    } finally {
+        loginBtn.textContent = 'Sign In';
+        loginBtn.disabled = false;
+    }
+});
+
+// Redirect to dashboard based on user role
+function redirectToDashboard(user) {
+    const userRole = user.role;
+
+    const dashboardUrls = {
+        student: '/student-dashboard',
+        club_admin: '/club-dashboard',
+        department_admin: '/department-dashboard' // Added for department admin
+    };
+    
+    if (dashboardUrls[userRole]) {
+        alert(`Welcome ${user.firstName}! Redirecting to your dashboard...`);
+        // For now, just redirect to a placeholder page or show success
+        console.log(`Would redirect to: ${dashboardUrls[userRole]}`);
+        // Uncomment when you have actual dashboard pages:
+        // window.location.href = dashboardUrls[userRole];
+    } else {
+        showAlert(`Dashboard not configured for role: ${userRole}`);
+        console.error('User logged in, but no dashboard URL for role:', user);
+    }
+}
+
+// Forgot password functionality
+function showForgotPassword() {
+    const email = prompt('Enter your email address to reset password:');
+    if (email) {
+        alert('Password reset instructions would be sent to your email address.');
+        // TODO: Implement actual password reset functionality
+    }
+}
+
+// Demo functionality - show test credentials
+function showTestCredentials() {
+    const credentials = {
+        student: 'Student Email: student@example.com | Password: student123',
+        club: 'Club Email: club@example.com | Password: club123',
+        department: 'Department Email: dept.admin@example.com | Password: deptadmin123' // Added for department
+    };
+    
+    alert(`Test credentials for ${selectedRole}:\n${credentials[selectedRole]}`);
+}
+
+// Add demo button (for testing purposes)
+const demoBtn = document.createElement('button');
+demoBtn.textContent = 'Show Test Credentials';
+demoBtn.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 8px 12px;
+    background: rgba(255, 193, 7, 0.8);
+    border: none;
+    border-radius: 8px;
+    font-size: 12px;
+    cursor: pointer;
+    z-index: 1000;
+`;
+demoBtn.onclick = showTestCredentials;
+document.body.appendChild(demoBtn);
+
+// Initialize email field
+updateEmailField();
+
+// Add interactive effects
+document.querySelectorAll('.form-input').forEach(input => {
+    input.addEventListener('focus', function() {
+        this.parentElement.style.transform = 'scale(1.02)';
+    });
+    
+    input.addEventListener('blur', function() {
+        this.parentElement.style.transform = 'scale(1)';
+    });
+});
+
+// Hide alert on input focus
+document.querySelectorAll('.form-input').forEach(input => {
+    input.addEventListener('focus', function() {
+        const alertDiv = document.getElementById('alertMessage');
+        if (alertDiv.style.display === 'block') {
+            alertDiv.style.display = 'none';
+        }
+    });
+});
     </script>
 </body>
 </html>
