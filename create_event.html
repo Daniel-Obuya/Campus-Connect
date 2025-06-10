@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create New Event - Campus Connect</title>
+    <link rel="stylesheet" href="department_admin.css">
+</head>
+<body>
+    <header class="dashboard-header">
+        <div class="logo-section fade-in"> <!-- The fade-in class is present but not defined in the provided CSS -->
+            <img src="images/logo 1.png" alt="Campus Connect Logo" class="logo"> <!-- Removed inline style -->
+            <h1 class="app-name">Campus Connect</h1>
+        </div>
+        <h1>Create New Event</h1> <!-- Corrected title placement -->
+        <a href="/department-dashboard" class="action-button header-button">Back to Dashboard</a>
+    </header>
+
+    <main>
+        <section id="create-event-form-section" class="dashboard-section">
+            <!-- The h2 is removed as the page title is in the header -->
+            <form id="createEventForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="eventTitle">Event Title</label>
+                        <input type="text" id="eventTitle" name="title" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="eventType">Event Type</label>
+                        <select id="eventType" name="event_type">
+                            <option value="workshop">Workshop</option>
+                            <option value="seminar">Seminar</option>
+                            <option value="social">Social</option>
+                            <option value="sports">Sports</option>
+                            <option value="academic">Academic</option>
+                            <option value="career">Career</option>
+                            <option value="cultural">Cultural</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="eventDescription">Description</label>
+                    <textarea id="eventDescription" name="description" rows="4"></textarea>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="startDatetime">Start Date & Time</label>
+                        <input type="datetime-local" id="startDatetime" name="start_datetime" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="endDatetime">End Date & Time</label>
+                        <input type="datetime-local" id="endDatetime" name="end_datetime" required>
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="location">Location (if physical)</label>
+                        <input type="text" id="location" name="location">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="virtualLink">Virtual Link (if online)</label>
+                        <input type="url" id="virtualLink" name="virtual_link" placeholder="https://">
+                    </div>
+                </div>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="maxAttendees">Max Attendees (optional)</label>
+                        <input type="number" id="maxAttendees" name="max_attendees" min="0">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="tags">Tags (comma-separated)</label>
+                        <input type="text" id="tags" name="tags" placeholder="e.g., tech, career, social">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="imageUrl">Image URL (optional)</label>
+                    <input type="url" id="imageUrl" name="image_url" placeholder="https://">
+                </div>
+
+                <div class="checkbox-group form-group"> <!-- Added form-group for consistent spacing -->
+                    <input type="checkbox" id="registrationRequired" name="registration_required">
+                    <label for="registrationRequired">Registration Required?</label>
+                </div>
+                <!-- Add registration_deadline, is_recurring, recurrence_pattern, is_published fields as needed, potentially with JS for conditional display -->
+                <button type="submit">Create Event</button>
+            </form>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Campus Connect - Department Admin</p>
+    </footer>
+</body>
+</html>

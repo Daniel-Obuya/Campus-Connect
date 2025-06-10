@@ -63,7 +63,7 @@ app.get('/login-admin', (req, res) => {
 });
 
 app.get('/department-dashboard', (req, res) => {  // New route
-    res.sendFile(path.join(__dirname, 'department_dashboard.html'));
+    res.sendFile(path.join(__dirname, 'department_admin.html')); // Corrected filename
 });
 
 // --- API Routes ---
@@ -188,26 +188,34 @@ app.post('/api/signup', async (req, res) => {
       await connection.commit();
       connection.release();
 
-      const token = jwt.sign({ 
-        id: userId, 
-        email, 
-        role, 
-        firstName, 
-        lastName 
-      }, secret, { expiresIn: '2h' });
+      if (role === 'department_admin') {
+        // For department admin, redirect to their dashboard.
+        // Note: The token is not sent in the response body with a redirect.
+        // If the dashboard page needs the token immediately, consider setting an HTTP-only cookie
+        // or have the frontend handle the redirect after receiving the token in a JSON response.
+        res.redirect('/department-dashboard');
+      } else {
+        const token = jwt.sign({
+          id: userId,
+          email,
+          role,
+          firstName,
+          lastName
+        }, secret, { expiresIn: '2h' });
 
-      res.status(201).json({
-        success: true,
-        message: `User ${email} registered successfully as ${role}.`,
-        token,
-        user: { 
-          id: userId, 
-          firstName, 
-          lastName, 
-          email, 
-          role 
-        }
+        res.status(201).json({
+          success: true,
+          message: `User ${email} registered successfully as ${role}.`,
+          token,
+          user: {
+            id: userId,
+            firstName,
+            lastName,
+            email,
+            role
+          } // Removed extra closing brace here
       });
+    }
 
     } catch (error) {
       await connection.rollback();
@@ -297,26 +305,34 @@ app.post('/api/login', async (req, res) => {
       });
     }
 
-    const token = jwt.sign({ 
-      id: user.user_id, 
-      email: user.email, 
-      role: user.role, 
-      firstName: user.first_name, 
-      lastName: user.last_name 
-    }, secret, { expiresIn: '2h' });
+    if (user.role === 'department_admin') {
+        // For department admin, redirect to their dashboard.
+        // Note: The token is not sent in the response body with a redirect.
+        // If the dashboard page needs the token immediately, consider setting an HTTP-only cookie
+        // or have the frontend handle the redirect after receiving the token in a JSON response.
+        res.redirect('/department-dashboard');
+    } else {
+        const token = jwt.sign({
+            id: user.user_id,
+            email: user.email,
+            role: user.role,
+            firstName: user.first_name,
+            lastName: user.last_name
+        }, secret, { expiresIn: '2h' });
 
-    res.json({
-      success: true,
-      message: 'Login successful.',
-      token,
-      user: {
-        id: user.user_id,
-        firstName: user.first_name,
-        lastName: user.last_name,
-        email: user.email,
-        role: user.role,
-      }
-    });
+        res.json({
+            success: true,
+            message: 'Login successful.',
+            token,
+            user: {
+                id: user.user_id,
+                firstName: user.first_name,
+                lastName: user.last_name,
+                email: user.email,
+                role: user.role,
+            }
+        });
+    }
 
   } catch (err) {
     console.error('Login Error:', err);
@@ -325,6 +341,87 @@ app.post('/api/login', async (req, res) => {
       message: 'Server error during login.' 
     });
   }
+});
+
+// API Endpoint to Create a New Event
+app.post('/api/events', async (req, res) => {
+    // In a real application, you'd get the user ID and role from an authenticated session/token
+    // For now, we'll assume the frontend correctly sets organizer_type and a placeholder organizer_id
+    // It's CRITICAL to validate that the user making the request is authorized to create events for the given organizer_id.
+    // For example, if organizer_type is 'department', ensure the logged-in user is an admin of that department.
+
+    const {
+        title,
+        description,
+        organizer_type, // Should be 'department' from the frontend for this form
+        organizer_id,   // This should ideally be derived from the authenticated user's session
+        event_type,
+        start_datetime,
+        end_datetime,
+        location,
+        virtual_link,
+        max_attendees,
+        registration_required, // boolean
+        tags, // JSON string from frontend
+        image_url,
+        // Optional fields not yet in the form, but in schema:
+        // registration_deadline,
+        // is_recurring,
+        // recurrence_pattern,
+        // is_published (defaults to TRUE in DB)
+    } = req.body;
+
+    // Basic Validation
+    if (!title || !organizer_type || !organizer_id || !event_type || !start_datetime || !end_datetime) {
+        return res.status(400).json({ success: false, message: 'Missing required fields: title, organizer_type, organizer_id, event_type, start_datetime, end_datetime.' });
+    }
+
+    // Further validation (e.g., date formats, enum values) can be added here
+    // For example, check if start_datetime is before end_datetime
+    if (new Date(start_datetime) >= new Date(end_datetime)) {
+        return res.status(400).json({ success: false, message: 'Start date and time must be before end date and time.' });
+    }
+
+    const parsedMaxAttendees = max_attendees ? parseInt(max_attendees, 10) : null;
+    if (max_attendees && (isNaN(parsedMaxAttendees) || parsedMaxAttendees < 0)) {
+        return res.status(400).json({ success: false, message: 'Max attendees must be a non-negative number.' });
+    }
+
+    const sql = `
+        INSERT INTO events (
+            title, description, organizer_type, organizer_id, event_type,
+            start_datetime, end_datetime, location, virtual_link, max_attendees,
+            registration_required, tags, image_url
+            ${req.body.hasOwnProperty('is_published') ? ', is_published' : ''}
+            ${req.body.hasOwnProperty('registration_deadline') ? ', registration_deadline' : ''}
+            ${req.body.hasOwnProperty('is_recurring') ? ', is_recurring' : ''}
+            ${req.body.hasOwnProperty('recurrence_pattern') ? ', recurrence_pattern' : ''}
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+            ${req.body.hasOwnProperty('is_published') ? ', ?' : ''}
+            ${req.body.hasOwnProperty('registration_deadline') ? ', ?' : ''}
+            ${req.body.hasOwnProperty('is_recurring') ? ', ?' : ''}
+            ${req.body.hasOwnProperty('recurrence_pattern') ? ', ?' : ''}
+        )
+    `;
+
+    const values = [
+        title, description || null, organizer_type, organizer_id, event_type || null,
+        start_datetime, end_datetime, location || null, virtual_link || null, parsedMaxAttendees,
+        registration_required, tags || JSON.stringify([]), image_url || null
+    ];
+
+    if (req.body.hasOwnProperty('is_published')) values.push(req.body.is_published);
+    if (req.body.hasOwnProperty('registration_deadline')) values.push(req.body.registration_deadline || null);
+    if (req.body.hasOwnProperty('is_recurring')) values.push(req.body.is_recurring);
+    if (req.body.hasOwnProperty('recurrence_pattern')) values.push(req.body.recurrence_pattern || null);
+
+    try {
+        const [result] = await pool.query(sql, values);
+        res.status(201).json({ success: true, message: 'Event created successfully!', eventId: result.insertId });
+    } catch (error) {
+        console.error('Error creating event:', error);
+        res.status(500).json({ success: false, message: 'Failed to create event. Please try again.' });
+    }
 });
 
 // Start server

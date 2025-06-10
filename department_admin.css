@@ -1,0 +1,511 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* General logo styling */
+  .logo-section {
+            margin-bottom: 20px;
+            
+        }
+.logo{
+border-radius: 50%;
+border-style: double;
+    border-width: 4px;
+    box-shadow: 4px 4px 30px cornsilk;
+}
+
+:root {
+    /* Theme Colors (from login/welcome pages) */
+    --theme-color-primary: #ffc107; /* Bright yellow/orange */
+    --theme-color-primary-darker: #ff9800; /* Darker orange for hover/gradients */
+    --theme-color-background-start: #f5deb3; /* Wheat */
+    --theme-color-background-mid: #deb887;   /* Burlywood */
+    --theme-color-background-end: #cd853f;   /* Peru */
+
+    /* Glassmorphism Component Backgrounds */
+    --color-bg-glass-primary: rgba(255, 255, 255, 0.15); /* Main component background */
+    --color-bg-glass-secondary: rgba(255, 255, 255, 0.1);  /* Slightly more transparent for inputs, list items */
+    --color-bg-glass-focus: rgba(255, 255, 255, 0.2);   /* For focused inputs */
+
+    /* Borders */
+    --color-border-glass: rgba(255, 255, 255, 0.25); /* Slightly more opaque for better visibility */
+    --color-border-input: rgba(255, 255, 255, 0.3);
+    --color-border-focus: var(--theme-color-primary);
+    --color-border-divider: rgba(0,0,0,0.08); /* For subtle dividers like h2 border-bottom */
+    --border-width: 1px;
+    --border-width-input: 1.5px; /* Adjusted for a slightly softer look than 2px */
+
+    /* Text Colors */
+    --color-text-base: #3a3a3a;        /* Dark grey/black for primary text, slightly softer than #333 */
+    --color-text-secondary: #555;   /* Medium grey for secondary text */
+    --color-text-muted: #777;       /* Lighter grey for muted text */
+    --color-text-on-accent: #333;   /* Text color on accent buttons */
+    --color-text-placeholder: #888;
+
+    /* Typography */
+    --font-family-sans-serif: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    --font-weight-normal: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700; /* Common in login/welcome */
+    --line-height-base: 1.6;
+    --font-size-base: 1rem; /* Approx 16px */
+    --font-size-small: 0.9em;
+    --font-size-xsmall: 0.8em;
+
+    /* Spacing */
+    --spacing-xs: 5px;
+    --spacing-sm: 10px;
+    --spacing-md: 15px;
+    --spacing-lg: 20px;
+    --spacing-xl: 30px;
+    --spacing-xxl: 40px;
+
+    /* Borders Radii (from login/welcome pages) */
+    --border-radius-sm: 8px;   /* Smaller elements, list items */
+    --border-radius-md: 12px;  /* Inputs, buttons */
+    --border-radius-lg: 16px;  /* Section cards */
+
+    /* Shadows */
+    --box-shadow-soft: 0 8px 20px rgba(0,0,0,0.08);
+    --box-shadow-medium: 0 10px 25px rgba(0,0,0,0.1);
+    --box-shadow-button: 0 4px 12px rgba(255,193,7,0.25);
+    --box-shadow-button-hover: 0 6px 18px rgba(255,193,7,0.35);
+    --box-shadow-focus-ring: 0 0 0 3px rgba(255,193,7,0.2);
+
+    /* Layout */
+    --container-max-width: 1200px;
+
+    /* Blur */
+    --backdrop-blur-strong: 12px; /* For main sections */
+    --backdrop-blur-medium: 8px; /* For inputs or nested elements */
+}
+
+body {
+    font-family: var(--font-family-sans-serif);
+    line-height: var(--line-height-base);
+    color: var(--color-text-base);
+    background: linear-gradient(135deg, var(--theme-color-background-start) 0%, var(--theme-color-background-mid) 50%, var(--theme-color-background-end) 100%);
+    background-attachment: fixed; /* Prevents gradient from scrolling with content */
+    padding: var(--spacing-lg);
+    min-height: 100vh;
+}
+
+/* General Header Styling for both pages */
+header.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--color-bg-glass-primary);
+    backdrop-filter: blur(var(--backdrop-blur-strong));
+    -webkit-backdrop-filter: blur(var(--backdrop-blur-strong));
+    padding: var(--spacing-md) var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+    border-radius: var(--border-radius-lg);
+    border: var(--border-width) solid var(--color-border-glass);
+    box-shadow: var(--box-shadow-soft);
+    color: var(--color-text-base);
+}
+
+/* Styling for the logo and app name group in department_admin.html */
+/* Also used in create_event.html for its logo section */
+.logo-section {
+    display: flex;
+    flex-direction: column; /* Stack logo and app name vertically */
+    align-items: center;   /* Center items horizontally within this section */
+    margin-right: var(--spacing-md);
+}
+
+/* Styling for the app name text "Campus Connect" */
+.app-name {
+    font-size: 1.1em; /* Slightly smaller to fit nicely below logo */
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-base);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    margin-top: var(--spacing-xs); /* Space between logo and text */
+    margin-bottom: 0;
+}
+
+/* Targets the "Department Dashboard" H1 in department_admin.html */
+header.dashboard-header > h1:not(.app-name) {
+    font-size: 1.6em; /* Prominent page title */
+    font-weight: var(--font-weight-semibold);
+    text-align: center; /* Center the title */
+    flex-grow: 1;       /* Allow it to take available space */
+    margin-left: var(--spacing-md); /* Space from logo section */
+    margin-right: var(--spacing-md); /* Space before logout button */
+}
+
+/* Logout Button Styling - inherits from .action-button */
+.logout-button {
+    /* Specific overrides if .action-button isn't enough */
+    padding: var(--spacing-xs) var(--spacing-md); /* Can be smaller */
+    font-size: var(--font-size-small);
+    background: var(--theme-color-primary-darker); /* Distinct color for logout */
+}
+
+.logout-button:hover {
+    background: var(--theme-color-primary); /* Lighter on hover */
+}
+
+.dashboard-nav {
+    background: var(--color-bg-glass-primary);
+    backdrop-filter: blur(var(--backdrop-blur-strong));
+    -webkit-backdrop-filter: blur(var(--backdrop-blur-strong));
+    padding: var(--spacing-sm) var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+    border-radius: var(--border-radius-lg);
+    border: var(--border-width) solid var(--color-border-glass);
+    box-shadow: var(--box-shadow-soft);
+}
+
+.dashboard-nav ul {
+    list-style: none;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    padding: 0;
+}
+
+.dashboard-nav ul li {
+    margin: 0 var(--spacing-sm);
+}
+
+.dashboard-nav ul li a {
+    color: var(--color-text-base);
+    text-decoration: none;
+    font-weight: var(--font-weight-semibold);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    display: inline-block;
+}
+
+.dashboard-nav ul li a:hover {
+    color: var(--theme-color-primary-darker);
+    text-decoration: underline;
+}
+
+.dashboard-section {
+    background: var(--color-bg-glass-primary);
+    backdrop-filter: blur(var(--backdrop-blur-strong));
+    -webkit-backdrop-filter: blur(var(--backdrop-blur-strong));
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+    border-radius: var(--border-radius-lg);
+    border: var(--border-width) solid var(--color-border-glass);
+    box-shadow: var(--box-shadow-medium);
+}
+
+.dashboard-section h2 {
+    color: var(--color-text-base);
+    margin-bottom: var(--spacing-md);
+    border-bottom: var(--border-width) solid var(--color-border-divider);
+    padding-bottom: var(--spacing-sm);
+    font-weight: var(--font-weight-bold);
+}
+
+.dashboard-section h3 {
+    color: var(--color-text-secondary);
+    margin-top: var(--spacing-lg);
+    margin-bottom: var(--spacing-sm);
+    font-weight: var(--font-weight-semibold);
+}
+
+form div { /* General form group spacing, might be overridden by .form-grid */
+    margin-bottom: var(--spacing-md);
+}
+
+form label {
+    display: block;
+    margin-bottom: var(--spacing-xs);
+    font-weight: var(--font-weight-medium);
+}
+
+form input[type="text"],
+form input[type="time"],
+form input[type="datetime-local"],
+form input[type="url"],
+form input[type="number"],
+form textarea {
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--color-bg-glass-secondary);
+    backdrop-filter: blur(var(--backdrop-blur-medium));
+    -webkit-backdrop-filter: blur(var(--backdrop-blur-medium));
+    border: var(--border-width-input) solid var(--color-border-input);
+    border-radius: var(--border-radius-md);
+    color: var(--color-text-base);
+    font-size: var(--font-size-base);
+    transition: all 0.3s ease;
+}
+
+form input[type="text"]::placeholder,
+form input[type="date"]::placeholder, /* Keep if you use date type */
+form input[type="datetime-local"]::placeholder,
+form input[type="time"]::placeholder,
+form input[type="url"]::placeholder,
+form input[type="number"]::placeholder,
+form textarea::placeholder {
+    color: var(--color-text-placeholder);
+}
+
+
+form input[type="text"]:focus,
+form input[type="date"]:focus, /* Keep if you use date type */
+form input[type="time"]:focus,
+form input[type="datetime-local"]:focus,
+form input[type="url"]:focus,
+form input[type="number"]:focus,
+form textarea:focus {
+    outline: none;
+    border-color: var(--color-border-focus);
+    background: var(--color-bg-glass-focus);
+    box-shadow: var(--box-shadow-focus-ring);
+}
+
+/* Styling for select dropdowns */
+form select {
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--color-bg-glass-secondary);
+    backdrop-filter: blur(var(--backdrop-blur-medium));
+    -webkit-backdrop-filter: blur(var(--backdrop-blur-medium));
+    border: var(--border-width-input) solid var(--color-border-input);
+    border-radius: var(--border-radius-md);
+    color: var(--color-text-base);
+    font-size: var(--font-size-base);
+    transition: all 0.3s ease;
+    appearance: none; /* Remove default arrow */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%233a3a3a' width='18px' height='18px'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e"); /* Custom arrow */
+    background-repeat: no-repeat;
+    background-position: right var(--spacing-md) center;
+    background-size: 1.5em;
+}
+
+form select:focus {
+    outline: none;
+    border-color: var(--color-border-focus);
+    background-color: var(--color-bg-glass-focus);
+    box-shadow: var(--box-shadow-focus-ring);
+}
+
+/* Styling for checkboxes */
+form .checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+form input[type="checkbox"] {
+    width: auto; /* Override 100% width for checkboxes */
+    accent-color: var(--theme-color-primary); /* Style the checkmark color */
+}
+
+form textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+form button { /* This styles the submit button in create_event.html */
+    display: inline-block;
+    background: linear-gradient(135deg, var(--theme-color-primary) 0%, var(--theme-color-primary-darker) 100%);
+    color: var(--color-text-on-accent);
+    padding: var(--spacing-sm) var(--spacing-xl);
+    border: none;
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    box-shadow: var(--box-shadow-button);
+    transition: all 0.3s ease;
+}
+
+form button:hover {
+    background: linear-gradient(135deg, var(--theme-color-primary-darker) 0%, var(--theme-color-primary) 100%);
+    box-shadow: var(--box-shadow-button-hover);
+    transform: translateY(-2px);
+}
+
+/* Generic list container - not used by dashboard boxes */
+.list-container li {
+    background: var(--color-bg-glass-secondary);
+    backdrop-filter: blur(var(--backdrop-blur-medium));
+    -webkit-backdrop-filter: blur(var(--backdrop-blur-medium));
+    border: var(--border-width) solid var(--color-border-glass);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+}
+
+.list-container li h4 {
+    margin-top: 0;
+    margin-bottom: var(--spacing-xs);
+    color: var(--theme-color-primary-darker);
+    font-weight: var(--font-weight-semibold);
+}
+
+.list-container li p {
+    margin-bottom: var(--spacing-xs);
+    font-size: var(--font-size-small);
+    color: var(--color-text-secondary);
+}
+
+.list-container li small {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-xsmall);
+}
+
+
+.metrics-display, .collaboration-tools {
+    padding: var(--spacing-md);
+    background: var(--color-bg-glass-primary);
+    backdrop-filter: blur(var(--backdrop-blur-strong));
+    -webkit-backdrop-filter: blur(var(--backdrop-blur-strong));
+    border-radius: var(--border-radius-lg);
+    border: var(--border-width) solid var(--color-border-glass);
+    box-shadow: var(--box-shadow-medium);
+}
+
+.metrics-display p, .collaboration-tools p {
+    margin-bottom: var(--spacing-sm);
+    color: var(--color-text-secondary);
+}
+
+.collaboration-tools ul {
+    list-style: disc;
+    padding-left: var(--spacing-lg); /* Use padding for list indentation */
+}
+
+.collaboration-tools ul li a {
+    color: var(--theme-color-primary);
+    text-decoration: none;
+}
+
+footer {
+    text-align: center;
+    margin-top: var(--spacing-xl);
+    padding: var(--spacing-lg);
+    background: var(--color-bg-glass-primary);
+    backdrop-filter: blur(var(--backdrop-blur-strong));
+    -webkit-backdrop-filter: blur(var(--backdrop-blur-strong));
+    color: var(--color-text-base);
+    border-radius: var(--border-radius-lg);
+    border: var(--border-width) solid var(--color-border-glass);
+    box-shadow: var(--box-shadow-soft);
+}
+
+/* Form specific layout for two columns (used in create_event.html) */
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--spacing-lg);
+}
+
+.form-grid .form-group {
+    margin-bottom: 0; /* Remove default margin as gap is handled by grid */
+}
+
+/* Styles for general action buttons (can be applied to <a> and <button> tags) */
+.action-button {
+    display: inline-block;
+    width: auto; /* Default width, overridden by .dashboard-box .action-button */
+    background: linear-gradient(135deg, var(--theme-color-primary) 0%, var(--theme-color-primary-darker) 100%);
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border: none;
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    font-weight: var(--font-weight-semibold);
+    box-shadow: var(--box-shadow-button);
+    transition: all 0.3s ease;
+    font-size: var(--font-size-base);
+    color: var(--color-text-on-accent);
+    text-decoration: none; /* Explicitly remove underline for links */
+    text-align: center;
+}
+
+.action-button:hover {
+    background: linear-gradient(135deg, var(--theme-color-primary-darker) 0%, var(--theme-color-primary) 100%);
+    box-shadow: var(--box-shadow-button-hover);
+    transform: translateY(-2px);
+    color: var(--color-text-on-accent);
+    text-decoration: none;
+}
+
+/* Specific adjustments for buttons in the header if they use .action-button */
+.header-button {
+    padding: var(--spacing-xs) var(--spacing-md);
+    font-size: var(--font-size-small);
+}
+
+/* Dashboard Grid Layout */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Responsive 2 columns */
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.dashboard-box {
+    background: var(--color-bg-glass-primary);
+    backdrop-filter: blur(var(--backdrop-blur-strong));
+    -webkit-backdrop-filter: blur(var(--backdrop-blur-strong));
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius-lg);
+    border: var(--border-width) solid var(--color-border-glass);
+    box-shadow: var(--box-shadow-medium);
+    display: flex;
+    flex-direction: column; /* Stack content vertically */
+}
+
+.dashboard-box h2 {
+    font-size: 1.2em; /* Adjust size for boxes */
+    border-bottom: var(--border-width) solid var(--color-border-divider);
+    padding-bottom: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+}
+
+.dashboard-box ul {
+    list-style: none;
+    padding-left: 0;
+    margin-bottom: var(--spacing-md);
+    flex-grow: 1; /* Pushes button to the bottom */
+}
+
+.dashboard-box ul li {
+    padding: var(--spacing-xs) 0;
+    border-bottom: 1px dashed rgba(255,255,255,0.15);
+    font-size: var(--font-size-small);
+    color: var(--color-text-secondary);
+}
+.dashboard-box ul li:last-child {
+    border-bottom: none;
+}
+
+/* Targets both <button class="action-button"> and <a class="action-button"> inside .dashboard-box */
+.dashboard-box .action-button {
+    margin-top: auto; /* Pushes button to the bottom of the flex container */
+    align-self: flex-start; /* Aligns button to the left if container is wider */
+    width: 100%; /* Make buttons full width within the box */
+}
+
+/* Stats Card Styling */
+.stats-section {
+    /* .dashboard-section already provides glassmorphism */
+}
+.stats-card {
+    text-align: center;
+}
+.stats-card h2 {
+    font-size: 1.1em;
+    color: var(--color-text-secondary);
+    margin-bottom: var(--spacing-xs);
+    border-bottom: none;
+    padding-bottom: 0;
+}
+.stats-card .stat-number {
+    font-size: 2.5em;
+    font-weight: var(--font-weight-bold);
+    color: var(--theme-color-primary-darker);
+}

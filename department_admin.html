@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Department Admin Dashboard - Campus Connect</title>
+    <link rel="stylesheet" href="department_admin.css">
+</head>
+<body>
+    <header class="dashboard-header">
+       =    <img src="images/logo 1.png" alt="Campus Connect Logo" class="logo" style="height: 100px; margin-bottom: 45px;"> 
+            <h1 class="app-name">Campus Connect</h1>
+        <h1>Department Dashboard</h1>
+        <a href="welcome.html" class="logout-button action-button">Logout</a> <!-- Changed to <a> tag and linked to welcome.html -->
+    </header>
+
+    <nav class="dashboard-nav">
+        <ul>
+            <li><a href="#announcements-section">Announcements</a></li>
+            <li><a href="#research-section">Research Opportunities</a></li>
+            <li><a href="#course-updates-section">Course Updates</a></li>
+            <li><a href="#engagement-metrics-section">Student Engagement</a></li>
+            <li><a href="create_event.html">Event Management</a></li>
+            <li><a href="#faculty-collaboration-section">Faculty Collaboration</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <!-- Dashboard Grid -->
+        <section class="dashboard-grid">
+            <!-- Academic Announcements -->
+            <div class="dashboard-box">
+                <h2>Academic Announcements</h2>
+                <ul>
+                    <li>📢 Semester starts on Sept 1</li>
+                    <li>📢 Exam registration ends Aug 20</li>
+                </ul>
+                <button class="action-button">Create New Announcement</button> <!-- Added action-button class -->
+            </div>
+
+            <!-- Research Opportunities -->
+            <div class="dashboard-box">
+                <h2>Research Opportunities</h2>
+                <ul>
+                    <li>🧪 AI for Agriculture Project</li>
+                    <li>🧪 Join Renewable Energy Study</li>
+                </ul>
+                <button class="action-button">Post New Opportunity</button> <!-- Added action-button class -->
+            </div>
+
+            <!-- Course Updates -->
+            <div class="dashboard-box">
+                <h2>Course Updates</h2>
+                <ul>
+                    <li>📘 CS101 moved to Room 12</li>
+                    <li>📘 New assignment for CS202</li>
+                </ul>
+                <button class="action-button">Post Course Update</button> <!-- Added action-button class -->
+            </div>
+
+            <!-- Events -->
+            <div class="dashboard-box">
+                <h2>Events</h2>
+                <ul>
+                    <li>🎉 Career Fair - Sept 10</li>
+                    <li>🎉 Tech Talk - Aug 25</li>
+                </ul>
+                <a href="create_event.html" class="action-button">Create New Event</a>
+            </div>
+        </section>
+<section class="dashboard-section stats-section">
+    <div class="stats-card">
+        <h2>👥 Students Following</h2>
+        <p class="stat-number">124</p> <!-- Replace 124 with a dynamic value later -->
+    </div>
+</section>
+
+        <!-- Additional Sections Remain Unchanged -->
+        <!-- Student Engagement Metrics -->
+        <section id="engagement-metrics-section" class="dashboard-section">
+            <h2>Student Engagement Metrics</h2>
+            <div class="metrics-display">
+                <p><em>[Placeholder for student engagement charts and data]</em></p>
+            </div>
+        </section>
+
+        <!-- Faculty Collaboration -->
+        <section id="faculty-collaboration-section" class="dashboard-section">
+            <h2>Faculty Collaboration Tools</h2>
+            <ul>
+                <li><a href="#">Shared Research Documents</a></li>
+                <li><a href="#">Internal Communication Channel</a></li>
+                <li><a href="#">Project Management Board</a></li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Campus Connect - Department Admin</p>
+    </footer>
+</body>
+
+</html>
