@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create New Announcement - Campus Connect</title>
+    <link rel="stylesheet" href="department_admin.css">
+</head>
+<body>
+    <header class="dashboard-header">
+        <div class="logo-section">
+            <img src="images/logo 1.png" alt="Campus Connect Logo" class="logo" style="height: 100px;">
+            <h1 class="app-name">Campus Connect</h1>
+        </div>
+        <h1>Create New Announcement</h1>
+        <a href="/department-dashboard" class="action-button header-button">Back to Dashboard</a>
+    </header>
+
+    <main>
+        <!-- Message display area -->
+        <div id="formMessage" class="alert" style="display: none;"></div>
+
+        <section id="create-announcement-form-section" class="dashboard-section">
+            <form id="announcementForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="announcementTitle">Announcement Title</label>
+                        <input type="text" id="announcementTitle" name="title" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="priority">Priority</label>
+                        <select id="priority" name="priority">
+                            <option value="normal">Normal</option>
+                            <option value="low">Low</option>
+                            <option value="high">High</option>
+                            <option value="urgent">Urgent</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="announcementContent">Content</label>
+                    <textarea id="announcementContent" name="content" rows="6" required></textarea>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="targetAudience">Target Audience (comma-separated roles, e.g., student, faculty)</label>
+                        <input type="text" id="targetAudience" name="target_audience" placeholder="e.g., student, faculty_cs">
+                    </div>
+                    <div class="form-group">
+                        <label for="tags">Tags (comma-separated)</label>
+                        <input type="text" id="tags" name="tags" placeholder="e.g., important, deadline, academic">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="attachmentUrls">Attachment URLs (comma-separated, optional)</label>
+                    <textarea id="attachmentUrls" name="attachment_urls" rows="2" placeholder="https://example.com/doc1.pdf, https://example.com/doc2.pdf"></textarea>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="scheduledPublishAt">Schedule Publish At (optional)</label>
+                        <input type="datetime-local" id="scheduledPublishAt" name="scheduled_publish_at">
+                    </div>
+                    <div class="form-group">
+                        <label for="expiresAt">Expires At (optional)</label>
+                        <input type="datetime-local" id="expiresAt" name="expires_at">
+                    </div>
+                </div>
+
+                <div class="form-group checkbox-group-container">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="isPinned" name="is_pinned">
+                        <label for="isPinned">Pin Announcement?</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="isPublished" name="is_published" checked>
+                        <label for="isPublished">Publish Immediately?</label>
+                    </div>
+                </div>
+
+                <button type="submit" class="action-button">Create Announcement</button>
+            </form>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Campus Connect - Department Admin</p>
+    </footer>
+
+    <script>
+        const form = document.getElementById('announcementForm');
+        const pageH1Title = document.querySelector('header.dashboard-header > h1:not(.app-name)');
+        const submitButton = form.querySelector('button.action-button[type="submit"]');
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const announcementIdToEdit = urlParams.get('announcementIdToEdit');
+        let isEditMode = !!announcementIdToEdit;
+
+        // Function to show messages (using the .alert class from other pages if available, or simple inline styles)
+        function showMessage(message, type = 'error') {
+            const messageDiv = document.getElementById('formMessage');
+            messageDiv.textContent = message;
+            messageDiv.className = `alert ${type}`;
+            messageDiv.style.display = 'block';
+
+            if (type === 'error') {
+                 messageDiv.style.backgroundColor = 'rgba(255, 82, 82, 0.1)';
+                 messageDiv.style.border = '1px solid rgba(255, 82, 82, 0.3)';
+                 messageDiv.style.color = '#d32f2f';
+            } else if (type === 'success') {
+                 messageDiv.style.backgroundColor = 'rgba(76, 175, 80, 0.1)';
+                 messageDiv.style.border = '1px solid rgba(76, 175, 80, 0.3)';
+                 messageDiv.style.color = '#2e7d32';
+                 setTimeout(() => { messageDiv.style.display = 'none'; }, 5000); // Hide success after 5s
+            } else { // Default/info
+                 messageDiv.style.backgroundColor = 'rgba(255, 193, 7, 0.1)';
+                 messageDiv.style.border = '1px solid rgba(255, 193, 7, 0.3)';
+                 messageDiv.style.color = '#ffc107';
+            }
+        }
+
+        async function loadAnnouncementDataForEditing(announcementId) {
+            const authToken = localStorage.getItem('authToken');
+            if (!authToken) {
+                showMessage('Authentication token not found. Please log in.', 'error');
+                return;
+            }
+            try {
+                const response = await fetch(`/api/announcements/${announcementId}`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const result = await response.json();
+                if (result.success && result.announcement) {
+                    populateForm(result.announcement);
+                } else {
+                    showMessage(result.message || 'Failed to load announcement data for editing.', 'error');
+                    isEditMode = false; // Revert to create mode if loading fails
+                    if (pageH1Title) pageH1Title.textContent = 'Create New Announcement';
+                    submitButton.textContent = 'Create Announcement';
+                }
+            } catch (error) {
+                showMessage('Error loading announcement data: ' + error.message, 'error');
+                isEditMode = false; // Revert
+                if (pageH1Title) pageH1Title.textContent = 'Create New Announcement';
+                submitButton.textContent = 'Create Announcement';
+            }
+        }
+
+        function populateForm(announcement) {
+            form.title.value = announcement.title || '';
+            form.content.value = announcement.content || '';
+            form.priority.value = announcement.priority || 'normal';
+
+            // Handle JSON fields - assuming they are stored as JSON strings in DB
+            try {
+                form.target_audience.value = announcement.target_audience ? JSON.parse(announcement.target_audience).join(', ') : '';
+            } catch (e) { form.target_audience.value = announcement.target_audience || ''; }
+            try {
+                form.tags.value = announcement.tags ? JSON.parse(announcement.tags).join(', ') : '';
+            } catch (e) { form.tags.value = announcement.tags || ''; }
+            try {
+                form.attachment_urls.value = announcement.attachment_urls ? JSON.parse(announcement.attachment_urls).join(', ') : '';
+            } catch (e) { form.attachment_urls.value = announcement.attachment_urls || ''; }
+
+            form.is_pinned.checked = !!announcement.is_pinned;
+            form.is_published.checked = announcement.hasOwnProperty('is_published') ? !!announcement.is_published : true; // Default to true if not present
+
+            if (announcement.scheduled_publish_at) {
+                form.scheduled_publish_at.value = announcement.scheduled_publish_at.slice(0, 16);
+            }
+            if (announcement.expires_at) {
+                form.expires_at.value = announcement.expires_at.slice(0, 16);
+            }
+        }
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(form);
+            const announcementData = {};
+
+            formData.forEach((value, key) => {
+                if (key === 'is_pinned' || key === 'is_published') {
+                    announcementData[key] = form[key].checked;
+                } else if (key === 'target_audience' || key === 'tags' || key === 'attachment_urls') {
+                    // Convert comma-separated strings to JSON arrays
+                    if (value.trim()) {
+                        announcementData[key] = JSON.stringify(value.split(',').map(item => item.trim()).filter(item => item));
+                    } else {
+                        announcementData[key] = JSON.stringify([]); // Empty array if field is empty
+                    }
+                } else if (key === 'scheduled_publish_at' || key === 'expires_at') {
+                    announcementData[key] = value.trim() ? value.trim() : null; // Send null if empty
+                } else {
+                    announcementData[key] = value.trim();
+                }
+            });
+
+            // Basic client-side validation
+            if (!announcementData.title || !announcementData.content) {
+                showMessage('Title and Content are required.', 'error');
+                return;
+            }
+
+            const authToken = localStorage.getItem('authToken');
+            if (!authToken) {
+                showMessage('You are not logged in. Please log in to create/edit an announcement.', 'error');
+                setTimeout(() => { window.location.href = '/login-admin'; }, 2000);
+                return;
+            }
+
+            const apiEndpoint = isEditMode ? `/api/announcements/${announcementIdToEdit}` : '/api/announcements';
+            const httpMethod = isEditMode ? 'PUT' : 'POST';
+            const actionText = isEditMode ? 'Updating...' : 'Creating...';
+            const successActionText = isEditMode ? 'Update Announcement' : 'Create Announcement';
+
+            submitButton.textContent = actionText;
+            submitButton.disabled = true;
+
+            try {
+                const response = await fetch(apiEndpoint, {
+                    method: httpMethod,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify(announcementData),
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    showMessage(result.message || `Announcement ${isEditMode ? 'updated' : 'created'} successfully!`, 'success');
+                    if (!isEditMode) {
+                        form.reset();
+                        // Redirect to dashboard after successful creation
+                        setTimeout(() => { window.location.href = '/department-dashboard'; }, 1500);
+                    }
+                    // Optional: Redirect after update
+                    // if (isEditMode) { setTimeout(() => window.location.href = '/department-dashboard', 1500); }
+                } else {
+                    showMessage(result.message || `Failed to ${isEditMode ? 'update' : 'create'} announcement.`, 'error');
+                }
+
+            } catch (error) {
+                console.error(`Error ${isEditMode ? 'updating' : 'submitting'} announcement:`, error);
+                showMessage(`An error occurred while ${isEditMode ? 'updating' : 'creating'} the announcement. Please try again.`, 'error');
+            } finally {
+                submitButton.textContent = successActionText;
+                submitButton.disabled = false;
+            }
+        });
+
+        // Initialize page for edit mode if announcementIdToEdit is present
+        if (isEditMode) {
+            if (pageH1Title) pageH1Title.textContent = 'Edit Announcement';
+            submitButton.textContent = 'Update Announcement';
+            loadAnnouncementDataForEditing(announcementIdToEdit);
+        } else {
+            if (pageH1Title) pageH1Title.textContent = 'Create New Announcement';
+            submitButton.textContent = 'Create Announcement';
+        }
+    </script>
+</body>
+</html>

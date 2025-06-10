@@ -8,15 +8,19 @@
 </head>
 <body>
     <header class="dashboard-header">
-        <div class="logo-section fade-in"> <!-- The fade-in class is present but not defined in the provided CSS -->
-            <img src="images/logo 1.png" alt="Campus Connect Logo" class="logo"> <!-- Removed inline style -->
+        <div class="logo-section">
+            <img src="images/logo 1.png" alt="Campus Connect Logo" class="logo" style="height: 100px;">
             <h1 class="app-name">Campus Connect</h1>
         </div>
+    </div>
         <h1>Create New Event</h1> <!-- Corrected title placement -->
         <a href="/department-dashboard" class="action-button header-button">Back to Dashboard</a>
     </header>
 
     <main>
+        <!-- Message display area -->
+        <div id="formMessage" class="alert" style="display: none;"></div>
+
         <section id="create-event-form-section" class="dashboard-section">
             <!-- The h2 is removed as the page title is in the header -->
             <form id="createEventForm">
@@ -100,5 +104,179 @@
     <footer>
         <p>&copy; 2024 Campus Connect - Department Admin</p>
     </footer>
+
+    <script>
+        const form = document.getElementById('createEventForm');
+        const pageH1Title = document.querySelector('header.dashboard-header > h1:not(.app-name)'); // Targets "Create New Event" H1
+        const submitButton = form.querySelector('button[type="submit"]');
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const eventIdToEdit = urlParams.get('eventIdToEdit');
+        let isEditMode = !!eventIdToEdit;
+
+        // Function to show messages (using the .alert class from other pages if available, or simple inline styles)
+        function showMessage(message, type = 'error') {
+            const messageDiv = document.getElementById('formMessage');
+            messageDiv.textContent = message;
+            messageDiv.className = `alert ${type}`; // Use alert classes if defined in CSS
+            messageDiv.style.display = 'block';
+
+            // Fallback/simple styles if .alert classes are not in department_admin.css
+            if (type === 'error') {
+                 messageDiv.style.backgroundColor = 'rgba(255, 82, 82, 0.1)';
+                 messageDiv.style.border = '1px solid rgba(255, 82, 82, 0.3)';
+                 messageDiv.style.color = '#d32f2f';
+            } else if (type === 'success') {
+                 messageDiv.style.backgroundColor = 'rgba(76, 175, 80, 0.1)';
+                 messageDiv.style.border = '1px solid rgba(76, 175, 80, 0.3)';
+                 messageDiv.style.color = '#2e7d32';
+                 setTimeout(() => { messageDiv.style.display = 'none'; }, 5000); // Hide success after 5s
+            } else { // Default/info
+                 messageDiv.style.backgroundColor = 'rgba(255, 193, 7, 0.1)';
+                 messageDiv.style.border = '1px solid rgba(255, 193, 7, 0.3)';
+                 messageDiv.style.color = '#ffc107';
+            }
+        }
+
+        async function loadEventDataForEditing(eventId) {
+            const authToken = localStorage.getItem('authToken');
+            if (!authToken) {
+                showMessage('Authentication token not found. Please log in.', 'error');
+                return;
+            }
+            try {
+                const response = await fetch(`/api/events/${eventId}`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const result = await response.json();
+                if (result.success && result.event) {
+                    populateForm(result.event);
+                } else {
+                    showMessage(result.message || 'Failed to load event data for editing.', 'error');
+                    isEditMode = false; // Revert to create mode if loading fails
+                    if (pageH1Title) pageH1Title.textContent = 'Create New Event';
+                    submitButton.textContent = 'Create Event';
+                }
+            } catch (error) {
+                showMessage('Error loading event data: ' + error.message, 'error');
+                isEditMode = false; // Revert
+                if (pageH1Title) pageH1Title.textContent = 'Create New Event';
+                submitButton.textContent = 'Create Event';
+            }
+        }
+
+        function populateForm(event) {
+            form.title.value = event.title || '';
+            form.event_type.value = event.event_type || 'other';
+            form.description.value = event.description || '';
+
+            if (event.start_datetime) {
+                // datetime-local input expects YYYY-MM-DDTHH:mm
+                form.start_datetime.value = event.start_datetime.slice(0, 16);
+            }
+            if (event.end_datetime) {
+                form.end_datetime.value = event.end_datetime.slice(0, 16);
+            }
+
+            form.location.value = event.location || '';
+            form.virtual_link.value = event.virtual_link || '';
+            form.max_attendees.value = event.max_attendees || '';
+            form.image_url.value = event.image_url || '';
+            form.registration_required.checked = !!event.registration_required;
+
+            try {
+                const tagsArray = event.tags ? JSON.parse(event.tags) : [];
+                form.tags.value = tagsArray.join(', ');
+            } catch (e) {
+                form.tags.value = event.tags || ''; // If not valid JSON, display as is or clear
+            }
+        }
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault(); // Prevent default form submission
+            const formData = new FormData(form);
+            const eventData = {};
+
+            // Collect form data
+            formData.forEach((value, key) => {
+                // Handle checkbox value
+                if (key === 'registration_required') {
+                     eventData[key] = form.registration_required.checked;
+                } else {
+                     eventData[key] = value.trim();
+                }
+            });
+
+            // Convert tags string to JSON array
+            if (eventData.tags) {
+                eventData.tags = JSON.stringify(eventData.tags.split(',').map(tag => tag.trim()).filter(tag => tag));
+            } else {
+                eventData.tags = JSON.stringify([]);
+            }
+
+            // Basic client-side validation (backend will also validate)
+            if (new Date(eventData.start_datetime) >= new Date(eventData.end_datetime)) {
+                showMessage('Start date and time must be before end date and time.', 'error');
+                return;
+            }
+
+            // Get JWT token from localStorage
+            const authToken = localStorage.getItem('authToken');
+            if (!authToken) {
+                showMessage('You are not logged in. Please log in to create an event.', 'error');
+                // Redirect to login page after a delay
+                setTimeout(() => { window.location.href = '/login-admin'; }, 2000);
+                return;
+            }
+
+            const apiEndpoint = isEditMode ? `/api/events/${eventIdToEdit}` : '/api/events';
+            const httpMethod = isEditMode ? 'PUT' : 'POST';
+            const actionText = isEditMode ? 'Updating...' : 'Creating...';
+            const successActionText = isEditMode ? 'Update Event' : 'Create Event';
+
+            submitButton.textContent = actionText;
+            submitButton.disabled = true;
+
+            try {
+                const response = await fetch(apiEndpoint, {
+                    method: httpMethod,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}` // Include the token
+                    },
+                    body: JSON.stringify(eventData),
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    showMessage(result.message || `Event ${isEditMode ? 'updated' : 'created'} successfully!`, 'success');
+                    if (!isEditMode) {
+                        form.reset(); // Clear the form on successful creation
+                        // Redirect to dashboard after successful creation
+                        setTimeout(() => { window.location.href = '/department-dashboard'; }, 1500); // Redirect after 1.5 seconds
+                    // if (isEditMode) { setTimeout(() => window.location.href = '/department-dashboard', 2000); }
+                } else {
+                    showMessage(result.message || `Failed to ${isEditMode ? 'update' : 'create'} event.`, 'error');
+                }
+
+            } catch (error) {
+                console.error(`Error ${isEditMode ? 'updating' : 'submitting'} event:`, error);
+                showMessage(`An error occurred while ${isEditMode ? 'updating' : 'creating'} the event. Please try again.`, 'error');
+            } finally {
+                submitButton.textContent = successActionText;
+                submitButton.disabled = false;
+            }
+        });
+
+        // Initialize page for edit mode if eventIdToEdit is present
+        if (isEditMode) {
+            if (pageH1Title) pageH1Title.textContent = 'Edit Event';
+            submitButton.textContent = 'Update Event';
+            loadEventDataForEditing(eventIdToEdit);
+        } else {
+            if (pageH1Title) pageH1Title.textContent = 'Create New Event';
+            submitButton.textContent = 'Create Event';
+        }
+    </script>
 </body>
 </html>

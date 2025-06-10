@@ -482,6 +482,16 @@ footer {
 .dashboard-box ul li:last-child {
     border-bottom: none;
 }
+.dashboard-box ul li {
+    display: flex; /* Align event text and edit button on the same line */
+    justify-content: space-between; /* Push edit button to the right */
+    align-items: center; /* Vertically align items */
+}
+.dashboard-box ul li .item-actions { /* Generic class for action buttons */
+    display: flex; /* Align edit and view buttons horizontally */
+    gap: var(--spacing-xs); /* Smaller space between buttons */
+    margin-left: var(--spacing-md); /* Space between event details and action buttons */
+}
 
 /* Targets both <button class="action-button"> and <a class="action-button"> inside .dashboard-box */
 .dashboard-box .action-button {
@@ -508,4 +518,34 @@ footer {
     font-size: 2.5em;
     font-weight: var(--font-weight-bold);
     color: var(--theme-color-primary-darker);
+}
+
+/* Styling for the Edit Event link */
+.edit-item-link, /* Generic class for Edit links */
+.view-registered-link { /* Specific class for View Registered */
+    font-size: var(--font-size-xsmall);
+    color: var(--theme-color-primary);
+    text-decoration: none;
+    font-weight: var(--font-weight-medium);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    transition: background-color 0.2s ease, color 0.2s ease;
+    border: 1px solid transparent; /* for consistent sizing */
+    white-space: nowrap; /* Prevent wrapping on small screens */
+}
+.view-registered-link:hover {
+    text-decoration: underline;
+    color: var(--theme-color-primary-darker);
+    background-color: rgba(255,193,7,0.1); /* Light accent background on hover */
+}
+
+.view-registered-link { /* Slightly different style if needed, e.g., border */
+    border: 1px solid var(--theme-color-primary);
+    color: var(--color-text-secondary); /* Use secondary text color */
+}
+.view-registered-link:hover {
+     border-color: var(--theme-color-primary-darker);
+     color: var(--theme-color-primary-darker);
+     background-color: rgba(255,193,7,0.15);
+}
 }

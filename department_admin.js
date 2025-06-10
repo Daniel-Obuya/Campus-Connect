@@ -1,97 +1,115 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // --- Announcement Form ---
-    const announcementForm = document.getElementById('announcementForm');
-    const announcementsList = document.getElementById('announcementsList');
-
-    if (announcementForm) {
-        announcementForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const title = this.announcementTitle.value;
-            const content = this.announcementContent.value;
-
-            if (title && content) {
-                addListItem(announcementsList, `<h4>${escapeHTML(title)}</h4><p>${escapeHTML(content)}</p><small>Posted: ${new Date().toLocaleString()}</small>`);
-                this.reset();
-                // TODO: Add AJAX call to send data to the server
-                console.log('Announcement posted:', { title, content });
-            }
-        });
-    }
-
-    // --- Research Opportunity Form ---
-    const researchForm = document.getElementById('researchForm');
-    const researchList = document.getElementById('researchList');
-
-    if (researchForm) {
-        researchForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const title = this.researchTitle.value;
-            const description = this.researchDescription.value;
-            const faculty = this.researchFaculty.value;
-            const contact = this.researchContact.value;
-
-            if (title && description) {
-                addListItem(researchList, `<h4>${escapeHTML(title)}</h4><p><strong>Description:</strong> ${escapeHTML(description)}</p><p><strong>Faculty/PI:</strong> ${escapeHTML(faculty)}</p><p><strong>Contact:</strong> ${escapeHTML(contact)}</p><small>Listed: ${new Date().toLocaleString()}</small>`);
-                this.reset();
-                // TODO: Add AJAX call to send data to the server
-                console.log('Research opportunity listed:', { title, description, faculty, contact });
-            }
-        });
-    }
-
-    // --- Course Update Form ---
-    const courseUpdateForm = document.getElementById('courseUpdateForm');
-    const courseUpdatesList = document.getElementById('courseUpdatesList');
-
-    if (courseUpdateForm) {
-        courseUpdateForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const courseName = this.courseName.value;
-            const message = this.courseUpdateMessage.value;
-
-            if (courseName && message) {
-                addListItem(courseUpdatesList, `<h4>Update for ${escapeHTML(courseName)}</h4><p>${escapeHTML(message)}</p><small>Posted: ${new Date().toLocaleString()}</small>`);
-                this.reset();
-                // TODO: Add AJAX call to send data to the server
-                console.log('Course update posted:', { courseName, message });
-            }
-        });
-    }
-
-    // --- Event Management Form ---
-    const eventForm = document.getElementById('eventForm');
-    const eventsList = document.getElementById('eventsList');
-
-    if (eventForm) {
-        eventForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const title = this.eventTitle.value;
-            const date = this.eventDate.value;
-            const time = this.eventTime.value;
-            const location = this.eventLocation.value;
-            const description = this.eventDescription.value;
-
-            if (title && date && location) {
-                addListItem(eventsList, `<h4>${escapeHTML(title)}</h4><p><strong>Date:</strong> ${escapeHTML(date)} at ${escapeHTML(time)}</p><p><strong>Location:</strong> ${escapeHTML(location)}</p><p><strong>Description:</strong> ${escapeHTML(description)}</p><small>Created: ${new Date().toLocaleString()}</small>`);
-                this.reset();
-                // TODO: Add AJAX call to send data to the server
-                console.log('Event created:', { title, date, time, location, description });
-            }
-        });
-    }
-
-    // Helper function to add items to a list
-    function addListItem(listElement, content) {
-        const listItem = document.createElement('li');
-        listItem.innerHTML = content;
-        listElement.prepend(listItem); // Add to the top of the list
-    }
-
     // Helper function to escape HTML to prevent XSS
     function escapeHTML(str) {
         const div = document.createElement('div');
         div.appendChild(document.createTextNode(str));
         return div.innerHTML;
+    }
+
+    // --- Fetch and Display Department Announcements ---
+    async function fetchAndDisplayDepartmentAnnouncements() {
+        const announcementsListElement = document.getElementById('departmentAnnouncementsList');
+        if (!announcementsListElement) {
+            console.warn('Department announcements list element not found.');
+            return;
+        }
+
+        const authToken = localStorage.getItem('authToken');
+        if (!authToken) {
+            announcementsListElement.innerHTML = '<li>Please log in to view announcements.</li>';
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/announcements/department', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${authToken}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const result = await response.json();
+
+            if (result.success && result.announcements) {
+                announcementsListElement.innerHTML = ''; // Clear existing items
+                if (result.announcements.length === 0) {
+                    announcementsListElement.innerHTML = '<li>No announcements found for your department.</li>';
+                } else {
+                    result.announcements.forEach(announcement => {
+                        const listItem = document.createElement('li');
+                        // Added Edit link for announcements
+                        listItem.innerHTML = `
+                            <span>📢 <strong>${escapeHTML(announcement.title)}</strong> - ${escapeHTML(announcement.content)} <small>(${new Date(announcement.created_at).toLocaleDateString()})</small></span>
+                            <div class="item-actions"> <!-- Use a generic class for actions -->
+                                <a href="create_announcement.html?announcementIdToEdit=${announcement.announcement_id}" class="edit-item-link">Edit</a>
+                            </div>
+                        `;
+                        announcementsListElement.appendChild(listItem);
+                    });
+                }
+            } else {
+                announcementsListElement.innerHTML = `<li>Error fetching announcements: ${escapeHTML(result.message || 'Unknown error')}</li>`;
+            }
+        } catch (error) {
+            console.error('Error fetching department announcements:', error);
+            announcementsListElement.innerHTML = '<li>Could not connect to server to fetch announcements.</li>';
+        }
+    }
+
+    // --- Fetch and Display Department Events ---
+    async function fetchAndDisplayDepartmentEvents() {
+        const eventsListElement = document.getElementById('departmentEventsList');
+        if (!eventsListElement) {
+            console.warn('Department events list element not found.');
+            return;
+        }
+
+        const authToken = localStorage.getItem('authToken');
+        if (!authToken) {
+            eventsListElement.innerHTML = '<li>Please log in to view events.</li>';
+            // Optionally redirect to login
+            // window.location.href = '/login-admin';
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/events/department', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${authToken}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const result = await response.json();
+
+            if (result.success && result.events) {
+                eventsListElement.innerHTML = ''; // Clear any existing items or placeholders
+                if (result.events.length === 0) {
+                    eventsListElement.innerHTML = '<li>No events found for your department.</li>';
+                } else {
+                    result.events.forEach(event => {
+                        const listItem = document.createElement('li');
+                        // Added an Edit link
+                        // Added a View Registered link
+                        listItem.innerHTML = `
+                            <span>🎉 <strong>${escapeHTML(event.title)}</strong> - ${escapeHTML(event.start_datetime_formatted)} ${event.location ? `(${escapeHTML(event.location)})` : ''}</span>
+                            <div class="item-actions"> <!-- Use a generic class for actions -->
+                                <a href="create_event.html?eventIdToEdit=${event.event_id}" class="edit-item-link">Edit</a>
+                                <a href="view_event_registrations.html?eventId=${event.event_id}" class="view-registered-link">View Registered</a>
+                            </div>
+                        `;
+                        eventsListElement.appendChild(listItem);
+                    });
+                }
+            } else {
+                eventsListElement.innerHTML = `<li>Error fetching events: ${escapeHTML(result.message || 'Unknown error')}</li>`;
+            }
+        } catch (error) {
+            console.error('Error fetching department events:', error);
+            eventsListElement.innerHTML = '<li>Could not connect to server to fetch events.</li>';
+        }
     }
 
     // Smooth scrolling for navigation links
@@ -107,4 +125,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+
+    // Initial call to fetch events when the page loads
+    fetchAndDisplayDepartmentAnnouncements(); // Fetch and display announcements
+    fetchAndDisplayDepartmentEvents();
+    // TODO: Add calls for Research Opportunities and Course Updates when backend is ready
 });

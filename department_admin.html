@@ -8,7 +8,7 @@
 </head>
 <body>
     <header class="dashboard-header">
-       =    <img src="images/logo 1.png" alt="Campus Connect Logo" class="logo" style="height: 100px; margin-bottom: 45px;"> 
+         <img src="images/logo 1.png" alt="Campus Connect Logo" class="logo" style="height: 100px; margin-bottom: 45px;"> 
             <h1 class="app-name">Campus Connect</h1>
         <h1>Department Dashboard</h1>
         <a href="welcome.html" class="logout-button action-button">Logout</a> <!-- Changed to <a> tag and linked to welcome.html -->
@@ -30,12 +30,10 @@
         <section class="dashboard-grid">
             <!-- Academic Announcements -->
             <div class="dashboard-box">
-                <h2>Academic Announcements</h2>
-                <ul>
-                    <li>📢 Semester starts on Sept 1</li>
-                    <li>📢 Exam registration ends Aug 20</li>
+                <h2>Announcements</h2>
+                <ul id="departmentAnnouncementsList">
                 </ul>
-                <button class="action-button">Create New Announcement</button> <!-- Added action-button class -->
+                <a href="create_announcement.html" class="action-button">Create New Announcement</a>
             </div>
 
             <!-- Research Opportunities -->
@@ -61,9 +59,8 @@
             <!-- Events -->
             <div class="dashboard-box">
                 <h2>Events</h2>
-                <ul>
-                    <li>🎉 Career Fair - Sept 10</li>
-                    <li>🎉 Tech Talk - Aug 25</li>
+                <ul id="departmentEventsList"> <!-- Added ID here -->
+                    <!-- Event items will be populated by JavaScript -->
                 </ul>
                 <a href="create_event.html" class="action-button">Create New Event</a>
             </div>

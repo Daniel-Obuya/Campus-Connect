@@ -596,6 +596,88 @@ app.put('/api/events/:eventId', authenticateJWT, async (req, res) => {
     }
 });
 
+// --- API Routes for Announcements ---
+
+// API Endpoint to Create a New Announcement
+app.post('/api/announcements', authenticateJWT, async (req, res) => {
+    try {
+        const { title, content } = req.body;
+
+        // Authorization: Ensure user is department_admin
+        if (req.user.role !== 'department_admin' || !req.user.department_id) {
+            return res.status(403).json({ success: false, message: 'You are not authorized to create announcements.' });
+        }
+
+        const departmentId = req.user.department_id;
+
+        // Basic Validation
+        if (!title || !content) {
+            return res.status(400).json({ success: false, message: 'Missing required fields: title, content.' });
+        }
+
+        const sql = `
+            INSERT INTO announcements (department_id, title, content, created_at, updated_at)
+            VALUES (?, ?, ?, NOW(), NOW())
+        `;
+        const values = [departmentId, title, content];
+
+        const [result] = await pool.query(sql, values);
+        console.log(`Announcement "${title}" created successfully by user ${req.user.email} for department ID ${departmentId}. Announcement ID: ${result.insertId}`);
+        res.status(201).json({ success: true, message: 'Announcement created successfully!', announcementId: result.insertId });
+
+    } catch (error) {
+        console.error('Error creating announcement:', error);
+        res.status(500).json({ success: false, message: 'Failed to create announcement. Please try again.' });
+    }
+});
+
+// API Endpoint to GET announcements for the logged-in department admin's department
+app.get('/api/announcements/department', authenticateJWT, async (req, res) => {
+    try {
+        if (req.user.role !== 'department_admin' || !req.user.department_id) {
+            return res.status(403).json({ success: false, message: 'Access denied. User is not a department admin or department ID is missing.' });
+        }
+
+        const departmentId = req.user.department_id;
+
+        const [announcements] = await pool.query(
+            `SELECT announcement_id, title, content, created_at
+             FROM announcements
+             WHERE department_id = ?
+             ORDER BY created_at DESC`, // Show newest announcements first
+            [departmentId]
+        );
+
+        res.json({ success: true, announcements });
+
+    } catch (error) {
+        console.error('Error fetching department announcements:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch department announcements.' });
+    }
+});
+
+// API Endpoint to GET a single announcement by ID
+app.get('/api/announcements/:announcementId', authenticateJWT, async (req, res) => {
+    try {
+        const { announcementId } = req.params;
+        const [announcementRows] = await pool.query('SELECT * FROM announcements WHERE announcement_id = ?', [announcementId]);
+
+        if (announcementRows.length === 0) {
+            return res.status(404).json({ success: false, message: 'Announcement not found.' });
+        }
+        const announcement = announcementRows[0];
+
+        // Authorization check: Ensure the department admin requesting owns this announcement
+        if (req.user.role !== 'department_admin' || announcement.department_id !== req.user.department_id) {
+            return res.status(403).json({ success: false, message: 'You are not authorized to view or edit this announcement.' });
+        }
+        res.json({ success: true, announcement });
+    } catch (error) {
+        console.error('Error fetching single announcement:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch announcement details.' });
+    }
+});
+
 // API Endpoint to GET events for the logged-in department admin's department
 app.get('/api/events/department', authenticateJWT, async (req, res) => {
     try {
