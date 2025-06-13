@@ -230,13 +230,54 @@
             animation: float 6s ease-in-out infinite;
         }
 
-        .shape:nth-child(1) { top: 20%; left: 10%; animation-delay: 0s; }
-        .shape:nth-child(2) { top: 60%; right: 10%; animation-delay: 2s; }
-        .shape:nth-child(3) { bottom: 20%; left: 20%; animation-delay: 4s; }
+        .shape {
+            position: absolute;
+            opacity: 0.1;
+            animation: float 8s ease-in-out infinite; /* Updated animation duration */
+        }
 
-        @keyframes float {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-20px) rotate(180deg); }
+        .shape:nth-child(1) { top: 15%; left: 10%; animation-delay: 0s; font-size: 60px; }
+        .shape:nth-child(2) { top: 70%; right: 15%; animation-delay: 2.5s; font-size: 50px; }
+        .shape:nth-child(3) { bottom: 10%; left: 25%; animation-delay: 5s; font-size: 70px; }
+        .shape:nth-child(4) { top: 30%; right: 30%; font-size: 40px; animation-delay: 1s; }
+
+
+        @keyframes float { /* Updated animation keyframes */
+            0%, 100% { transform: translateY(0px) rotate(0deg) scale(1); }
+            50% { transform: translateY(-25px) rotate(15deg) scale(1.1); }
+        }
+
+        /* Style for the placeholder text in the select box (when it's the initial/invalid state) */
+        select.form-input:required:invalid {
+            color: #888; /* Placeholder color, same as input::placeholder */
+        }
+
+        /* Styling for the dropdown options list */
+        select.form-input option {
+            background-color: #dfa958; /* A light, warm beige fitting the theme */
+            color: #333; /* Dark text for readability */
+            padding: 10px 15px; /* Add some padding to options */
+        }
+
+        /* Optional: Hover/focus styles for options (browser support varies) */
+        select.form-input option:hover {
+            background-color: #f5deb3; /* Theme accent for hover */
+        }
+        select.form-input option:checked { /* Style for the selected option within the dropdown */
+            background-color: #e6cfad; /* Slightly darker to indicate selection */
+            font-weight: 500;
+        }
+
+        /* Specific styling for select elements to enhance glassy appearance and consistency */
+        select.form-input {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            padding-right: 45px; /* Make space for the custom arrow */
+            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23333333%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.4-5.4-13z%22%2F%3E%3C%2Fsvg%3E');
+            background-repeat: no-repeat;
+            background-position: right 18px center; /* Position the arrow */
+            background-size: 12px 12px; /* Size of the arrow */
         }
     </style>
 </head>
@@ -245,6 +286,7 @@
         <div class="shape">🎓</div>
         <div class="shape">📚</div>
         <div class="shape">🎉</div>
+        <div class="shape">💡</div>
     </div>
 
     <div class="container">
@@ -269,19 +311,44 @@
                     Use your @gmail.com student email address.
                 </div>
             </div>
-
             <div id="studentFields">
                 <div class="form-group">
                     <input type="text" class="form-input" name="studentId" placeholder="Student ID" required>
                 </div>
                 <div class="form-group">
-                    <input type="text" class="form-input" name="studentDepartment" placeholder="Department" required>
+                    <select class="form-input" name="studentDepartment" required>
+                        <option value="" disabled selected>Select Department</option>
+                        <option value="School of Computing and Informatics">School of Computing and Informatics</option>
+                        <option value="School of Business">School of Business</option>
+                        <option value="School of Engineering">School of Engineering</option>
+                        <option value="School of Arts and Social Sciences">School of Arts and Social Sciences</option>
+                        <option value="School of Health Sciences">School of Health Sciences</option>
+                        <option value="Other">Other</option>
+                    </select>
                 </div>
                 <div class="form-group">
-                    <input type="number" class="form-input" name="graduationYear" placeholder="Graduation Year (YYYY)" min="2000" max="2050" required>
+                    <select class="form-input" name="major" required>
+                        <option value="" disabled selected>Select Major</option>
+                        <option value="Computer Science">Computer Science</option>
+                        <option value="Software Engineering">Software Engineering</option>
+                        <option value="Information Technology">Information Technology</option>
+                        <option value="Business Administration">Business Administration</option>
+                        <option value="Marketing">Marketing</option>
+                        <option value="Finance">Finance</option>
+                        <option value="Mechanical Engineering">Mechanical Engineering</option>
+                        <option value="Civil Engineering">Civil Engineering</option>
+                        <option value="Electrical Engineering">Electrical Engineering</option>
+                        <option value="Journalism">Journalism</option>
+                        <option value="Psychology">Psychology</option>
+                        <option value="Nursing">Nursing</option>
+                        <option value="Public Health">Public Health</option>
+                        <option value="Other">Other</option>
+                    </select>
                 </div>
                 <div class="form-group">
-                    <input type="text" class="form-input" name="major" placeholder="Major" required>
+                    <select class="form-input" name="graduationYear" required>
+                        {/* Options will be populated by JavaScript */}
+                    </select>
                 </div>
             </div>
 
@@ -327,6 +394,28 @@
             } else {
                 field.type = 'password';
                 button.textContent = '👁️';
+            }
+        }
+
+        // Function to populate graduation years
+        function populateGraduationYears() {
+            const gradYearSelect = document.querySelector('select[name="graduationYear"]');
+            const startYear = 2025; // Set the starting year to 2025
+
+            // Add a placeholder option
+            const placeholderOption = document.createElement('option');
+            placeholderOption.value = "";
+            placeholderOption.textContent = "Select Graduation Year";
+            placeholderOption.disabled = true;
+            placeholderOption.selected = true;
+            gradYearSelect.appendChild(placeholderOption);
+
+            for (let i = 0; i <= 6; i++) { // Current year + next 6 years
+                const year = startYear + i;
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                gradYearSelect.appendChild(option);
             }
         }
 
@@ -426,23 +515,13 @@
                 role: 'student',
                 studentDetails: {
                     studentId: document.querySelector('#studentFields input[name="studentId"]').value.trim(),
-                    major: document.querySelector('#studentFields input[name="major"]').value.trim(), // Corrected from studentDepartment
-                    graduationYear: parseInt(document.querySelector('#studentFields input[name="graduationYear"]').value),
-                    // The backend expects 'major', not 'department' in studentDetails.
-                    // If you need 'department' as well, ensure your backend /api/signup handles it for students.
-                    // For now, I'm mapping the "Department" field to "major" as per original Signup.html's studentFields.
-                    // If "Department" and "Major" are distinct, you'll need to adjust the form and backend.
+                    department: document.querySelector('#studentFields select[name="studentDepartment"]').value,
+                    major: document.querySelector('#studentFields select[name="major"]').value,
+                    graduationYear: parseInt(document.querySelector('#studentFields select[name="graduationYear"]').value)
                 }
             };
-             // The backend expects 'major' and 'graduationYear'. The 'department' field from the form
-            // was mapped to 'major' in the original script. If 'department' is a separate field for students,
-            // the backend user schema and signup logic needs to be updated.
-            // For now, assuming 'Department' input field maps to 'major' for studentDetails.
-            // And 'studentDepartment' field from form is actually 'major'
-            userData.studentDetails.major = document.querySelector('#studentFields input[name="studentDepartment"]').value.trim();
-
-
             console.log('Submitting student data:', userData);
+
 
             fetch('/api/signup', {
                 method: 'POST',
@@ -474,7 +553,12 @@
                 checkFormValidity();
             });
         });
-        checkFormValidity(); // Initial check
+
+        // Populate graduation years on page load and then check form validity
+        document.addEventListener('DOMContentLoaded', () => {
+            populateGraduationYears();
+            checkFormValidity(); // Initial check after populating years
+        });
     </script>
 </body>
 </html>

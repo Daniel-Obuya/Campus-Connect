@@ -549,3 +549,38 @@ footer {
      background-color: rgba(255,193,7,0.15);
 }
 }
+
+/* Secondary Action Button Style (e.g., for Edit) */
+.action-button-secondary {
+    background: linear-gradient(135deg, #b0bec5 0%, #78909c 100%); /* Blue-grey gradient */
+    color: #ffffff; /* White text for better contrast */
+}
+.action-button-secondary:hover {
+    background: linear-gradient(135deg, #90a4ae 0%, #607d8b 100%);
+    color: #ffffff;
+}
+
+/* Danger Action Button Style (e.g., for Delete) */
+.action-button-danger {
+    background: linear-gradient(135deg, #ef5350 0%, #d32f2f 100%); /* Red gradient */
+    color: #ffffff;
+}
+.action-button-danger:hover {
+    background: linear-gradient(135deg, #e53935 0%, #c62828 100%);
+    color: #ffffff;
+}
+
+/* Info Action Button Style (e.g., for View) */
+.action-button-info {
+    background: linear-gradient(135deg, #42a5f5 0%, #1e88e5 100%); /* Blue gradient */
+    color: #ffffff;
+}
+.action-button-info:hover {
+    background: linear-gradient(135deg, #29b6f6 0%, #1976d2 100%);
+    color: #ffffff;
+}
+
+/* Ensure text color on hover for these new buttons remains consistent if not overridden by gradient */
+.action-button-secondary:hover, .action-button-danger:hover, .action-button-info:hover {
+    color: #ffffff; /* Explicitly set white text on hover for these variants */
+}

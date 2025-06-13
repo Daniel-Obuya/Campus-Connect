@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Events Management - Campus Connect</title>
+    <link rel="stylesheet" href="department_admin.css">
+    <style>
+        .event-list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .event-list-item:last-child {
+            border-bottom: none;
+        }
+        .event-details p {
+            margin: 2px 0;
+            font-size: 0.9em;
+            color: #555;
+        }
+        .event-actions button, .event-actions a {
+            margin-left: 8px;
+            padding: 6px 10px;
+            font-size: 0.85em;
+        }
+        .feature-section {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #e0e0e0;
+        }
+        .feature-section h3 {
+            margin-top: 0;
+            color: #333;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+        }
+        .placeholder-text {
+            color: #777;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <header class="dashboard-header">
+        <div class="logo-section">
+            <img src="images/logo 1.png" alt="Campus Connect Logo" class="logo" style="height: 100px;">
+            <h1 class="app-name">Campus Connect</h1>
+        </div>
+        <h1>Events Management</h1>
+        <a href="department_admin.html" class="action-button header-button">Back to Dashboard</a>
+    </header>
+
+    <main>
+        <section class="dashboard-section">
+            <div style="margin-bottom: 20px;">
+                <a href="create_event.html" class="action-button" style="font-size: 1.1em; padding: 12px 20px;">+ Create New Event</a>
+            </div>
+
+            <!-- Event Listing -->
+            <div class="dashboard-box">
+                <h2>Current & Upcoming Events</h2>
+                <ul id="eventsListContainer">
+                    <!-- Events will be loaded here by JavaScript -->
+                    <li class="event-list-item">
+                        <div class="event-info">
+                            <strong>Sample Event: Tech Workshop</strong>
+                            <div class="event-details">
+                                <p>Date: 2024-12-01 | Type: Workshop | Location: Room 101</p>
+                            </div>
+                        </div>
+                        <div class="event-actions">
+                            <a href="create_event.html?eventIdToEdit=sample1" class="action-button action-button-secondary header-button">Edit</a>
+                            <button class="action-button action-button-danger header-button" onclick="deleteEvent('sample1')">Delete</button>
+                            <button class="action-button action-button-info header-button" onclick="viewRsvps('sample1')">View RSVPs</button>
+                        </div>
+                    </li>
+                    <li class="event-list-item">
+                         <div class="event-info">
+                            <strong>Sample Event: Guest Lecture</strong>
+                             <div class="event-details">
+                                <p>Date: 2024-11-25 | Type: Seminar | Virtual</p>
+                            </div>
+                        </div>
+                        <div class="event-actions">
+                            <a href="create_event.html?eventIdToEdit=sample2" class="action-button action-button-secondary header-button">Edit</a>
+                            <button class="action-button action-button-danger header-button" onclick="deleteEvent('sample2')">Delete</button>
+                            <button class="action-button action-button-info header-button" onclick="viewRsvps('sample2')">View RSVPs</button>
+                        </div>
+                    </li>
+                </ul>
+                <p id="noEventsMessage" style="display:none; text-align:center; padding: 20px;">No events found.</p>
+            </div>
+
+            <!-- Event Categorization and Tagging -->
+            <div class="feature-section">
+                <h3>Event Categorization & Tagging</h3>
+                <p class="placeholder-text">[Interface for managing event categories and global tags will be here. This could involve adding, editing, or deleting predefined categories/tags that can be used during event creation.]</p>
+            </div>
+
+            <!-- RSVP Management Overview -->
+            <div class="feature-section">
+                <h3>RSVP Management</h3>
+                <p class="placeholder-text">[Overview of RSVPs across multiple events, or a link to a more detailed RSVP tracking system. Individual event RSVPs can be accessed via the 'View RSVPs' button on each event.]</p>
+            </div>
+
+            <!-- Event Calendar Integration -->
+            <div class="feature-section">
+                <h3>Event Calendar</h3>
+                <p class="placeholder-text">[A visual calendar displaying scheduled events. Could allow filtering by month/week/day and event type. Clicking an event could show details or link to its management page.]</p>
+                <!-- Example: <div id="eventCalendarView"></div> -->
+            </div>
+
+            <!-- Recurring Event Setup Notes -->
+            <div class="feature-section">
+                <h3>Recurring Event Setup</h3>
+                <p class="placeholder-text">[Recurring event functionality is typically handled during event creation (e.g., in <code>create_event.html</code>). This section could provide guidelines or link to advanced scheduling options if available.]</p>
+            </div>
+
+            <!-- Event Promotion Tools -->
+            <div class="feature-section">
+                <h3>Event Promotion Tools</h3>
+                <p class="placeholder-text">[Tools or integrations for promoting events, e.g., generating shareable links, email templates, social media posting (if integrated), or QR code generation for event check-in/info.]</p>
+            </div>
+
+            <!-- Attendance Tracking -->
+            <div class="feature-section">
+                <h3>Attendance Tracking</h3>
+                <p class="placeholder-text">[System for tracking attendance post-event. This might involve manual entry, QR code scanning data, or integration with an RSVP check-in system. Reports on attendance rates could be generated here.]</p>
+            </div>
+
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Campus Connect - Department Admin</p>
+    </footer>
+
+    <script>
+        // Basic JavaScript for future functionality (e.g., loading events)
+        async function loadEvents() {
+            const eventsListContainer = document.getElementById('eventsListContainer');
+            const noEventsMessage = document.getElementById('noEventsMessage');
+            // Placeholder: Fetch events from an API
+            // const response = await fetch('/api/department-events');
+            // const data = await response.json();
+            // if (data.success && data.events.length > 0) {
+            //     eventsListContainer.innerHTML = ''; // Clear sample items
+            //     data.events.forEach(event => {
+            //         const listItem = document.createElement('li');
+            //         listItem.className = 'event-list-item';
+            //         listItem.innerHTML = `... construct event item HTML ...`;
+            //         eventsListContainer.appendChild(listItem);
+            //     });
+            // } else {
+            //     eventsListContainer.innerHTML = ''; // Clear sample items
+            //     noEventsMessage.style.display = 'block';
+            // }
+            console.log("loadEvents function called - implement API call here.");
+        }
+
+        function deleteEvent(eventId) {
+            if (confirm(`Are you sure you want to delete event ${eventId}?`)) {
+                console.log(`Deleting event: ${eventId}`);
+                // Placeholder: API call to delete event
+                // Then reload events or remove item from list
+            }
+        }
+
+        function viewRsvps(eventId) {
+            console.log(`Viewing RSVPs for event: ${eventId}`);
+            // Placeholder: Redirect to an RSVP management page or display a modal
+            alert(`RSVP management for event ${eventId} is a future feature.`);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // loadEvents(); // Call this when you have an API to fetch events
+        });
+    </script>
+</body>
+</html>

@@ -62,6 +62,10 @@ app.get('/login-admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'login-admin.html'));
 });
 
+app.get('/events-management', (req, res) => {
+  res.sendFile(path.join(__dirname, 'events_management.html'));
+});
+
 app.get('/department-dashboard', (req, res) => {  // New route
     res.sendFile(path.join(__dirname, 'department_admin.html')); // Corrected filename
 });
@@ -491,7 +495,13 @@ app.post('/api/events', authenticateJWT, async (req, res) => { // Protected rout
 
     try {
         const [result] = await pool.query(sql, values);
-        console.log(`Event "${title}" created successfully by user ${req.user.email} (ID: ${req.user.id}) for ${organizer_type} ID ${organizer_id}. Event ID: ${result.insertId}`);
+        console.log(`✅ Event Created Successfully!`);
+        console.log(`   - Event ID: ${result.insertId}`);
+        console.log(`   - Title: ${title}`);
+        console.log(`   - Organizer: ${organizer_type} ID ${organizer_id} (User: ${req.user.email}, User ID: ${req.user.id})`);
+        console.log(`   - Start Time: ${start_datetime}`);
+        console.log(`   - Registration Deadline: ${req.body.registration_deadline || 'Not set'}`);
+        // console.log('   - Full Event Data Submitted:', req.body); // Uncomment for very detailed logging
         res.status(201).json({ success: true, message: 'Event created successfully!', eventId: result.insertId });
     } catch (error) {
         console.error('Error creating event:', error);
@@ -548,7 +558,7 @@ app.put('/api/events/:eventId', authenticateJWT, async (req, res) => {
         // For simplicity, this example updates all provided fields.
         // In a real app, you'd carefully construct the SET clause based on what's in eventData
         // and perform more robust validation similar to the POST /api/events route.
-        // The SQL query below is a simplified example and needs to be made robust.
+        // The SQL query below needs to be made robust to include all editable fields, including registration_deadline.
         // It's better to explicitly list columns to update.
         const { title, description, event_type, start_datetime, end_datetime, location, virtual_link, max_attendees, registration_required, tags, image_url } = eventData;
 
@@ -565,19 +575,26 @@ app.put('/api/events/:eventId', authenticateJWT, async (req, res) => {
         }
 
         const sql = `
-            UPDATE events SET
-            title = ?, description = ?, event_type = ?, start_datetime = ?, end_datetime = ?,
-            location = ?, virtual_link = ?, max_attendees = ?, registration_required = ?,
-            tags = ?, image_url = ? 
+            UPDATE events SET 
+            title = ?, description = ?, event_type = ?, 
+            start_datetime = ?, end_datetime = ?, location = ?, 
+            virtual_link = ?, max_attendees = ?, registration_required = ?, 
+            tags = ?, image_url = ?
+            ${eventData.hasOwnProperty('registration_deadline') ? ', registration_deadline = ?' : ''}
             WHERE event_id = ? AND organizer_id = ? AND organizer_type = 'department' 
         `; // Added organizer_id and organizer_type to WHERE for extra safety
 
         const values = [
             title, description || null, event_type || null, start_datetime, end_datetime,
             location || null, virtual_link || null, parsedMaxAttendees,
-            registration_required || false, tags || JSON.stringify([]), image_url || null,
-            eventId, req.user.department_id
+            registration_required || false, tags || JSON.stringify([]), image_url || null
         ];
+        if (eventData.hasOwnProperty('registration_deadline')) {
+            values.push(eventData.registration_deadline || null);
+        }
+        values.push(
+            eventId, req.user.department_id
+        );
 
         const [result] = await pool.query(sql, values);
 
@@ -587,7 +604,10 @@ app.put('/api/events/:eventId', authenticateJWT, async (req, res) => {
             return res.status(404).json({ success: false, message: 'Event not found or not authorized to update.' });
         }
 
-        console.log(`Event ID ${eventId} updated successfully by user ${req.user.email}.`);
+        console.log(`✅ Event Updated Successfully!`);
+        console.log(`   - Event ID: ${eventId}`);
+        console.log(`   - Updated by: User ${req.user.email}`);
+        // console.log('   - Full Event Data Submitted for Update:', eventData); // Uncomment for detailed logging
         res.json({ success: true, message: 'Event updated successfully!' });
 
     } catch (error) {

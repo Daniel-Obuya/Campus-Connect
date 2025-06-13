@@ -78,18 +78,50 @@
         .terms-group input[type="checkbox"] { margin-right: 8px; accent-color: #ffc107; } /* Theme color */
         .floating-shapes { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1; }
         .shape { position: absolute; opacity: 0.08; animation: float 8s ease-in-out infinite; font-size: 60px; }
-        .shape:nth-child(1) { top: 15%; left: 5%; animation-delay: 0s; }
-        .shape:nth-child(2) { top: 70%; right: 10%; animation-delay: 3s; }
-        .shape:nth-child(3) { bottom: 10%; left: 20%; animation-delay: 5s; }
-        @keyframes float { 0%,100% { transform: translateY(0px) rotate(0deg); } 50% { transform: translateY(-25px) rotate(20deg); } }
+        /* Updated shape positions and animation */
+        .shape:nth-child(1) { top: 15%; left: 10%; animation-delay: 0s; font-size: 60px; }
+        .shape:nth-child(2) { top: 70%; right: 15%; animation-delay: 2.5s; font-size: 50px; }
+        .shape:nth-child(3) { bottom: 10%; left: 25%; animation-delay: 5s; font-size: 70px; }
+        .shape:nth-child(4) { top: 30%; right: 30%; font-size: 40px; animation-delay: 1s; }
+
+        @keyframes float { /* Updated animation keyframes */
+            0%, 100% { transform: translateY(0px) rotate(0deg) scale(1); }
+            50% { transform: translateY(-25px) rotate(15deg) scale(1.1); }
+        }
+
+        /* Specific styling for select elements to enhance glassy appearance and consistency */
+        select.form-select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            padding-right: 45px; /* Make space for the custom arrow */
+            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23333333%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.4-5.4-13z%22%2F%3E%3C%2Fsvg%3E');
+            background-repeat: no-repeat;
+            background-position: right 18px center; /* Position the arrow */
+            background-size: 12px 12px; /* Size of the arrow */
+        }
+
+        /* Style for the placeholder text in the select box (when it's the initial/invalid state) */
+        select.form-select:required:invalid {
+            color: #888; /* Placeholder color, same as input::placeholder */
+        }
+
+        /* Styling for the dropdown options list */
+        select.form-select option {
+            background-color: #dfa958; 
+            color: #333; 
+            padding: 10px 15px; 
+        }
+
         @media (max-width: 480px) { .container { padding: 30px 20px; } .role-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
     <div class="floating-shapes">
-        <div class="shape" style="font-size: 70px;">🎓</div> <!-- Using similar shapes from student signup -->
-        <div class="shape" style="font-size: 50px;">📚</div>
-        <div class="shape" style="font-size: 60px;">🎉</div>
+        <div class="shape">⚙️</div>
+        <div class="shape">📊</div>
+        <div class="shape">🔑</div>
+        <div class="shape">🏛️</div>
     </div>
 
     <div class="container">
@@ -132,7 +164,17 @@
             <div class="conditional-fields" id="clubFields">
                 <h3 style="font-size: 18px; margin-bottom: 15px; color: #333; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 5px;">Club Details</h3> <!-- Kept color for heading clarity -->
                 <div class="form-group">
-                    <input type="text" class="form-input" name="clubName" placeholder="Club/Society Name">
+                    <select class="form-select" name="clubName">
+                        <option value="" disabled selected>Select Club/Society Name</option>
+                        <option value="Debate Club">Debate Club</option>
+                        <option value="Coding Club">Coding Club</option>
+                        <option value="Photography Club">Photography Club</option>
+                        <option value="Drama Club">Drama Club</option>
+                        <option value="Music Club">Music Club</option>
+                        <option value="Entrepreneurship Club">Entrepreneurship Club</option>
+                        <option value="Environmental Club">Environmental Club</option>
+                        <option value="Other">Other (Specify if not listed)</option>
+                    </select>
                 </div>
                 <div class="form-group">
                     <textarea class="form-textarea" name="clubDescription" placeholder="Club Description" rows="3"></textarea>
@@ -154,10 +196,30 @@
             <div class="conditional-fields" id="departmentFields">
                  <h3 style="font-size: 18px; margin-bottom: 15px; color: #333; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 5px;">Department Details</h3> <!-- Kept color for heading clarity -->
                 <div class="form-group">
-                    <input type="text" class="form-input" name="departmentName" placeholder="Department Name">
+                    <select class="form-select" name="departmentName">
+                        <option value="" disabled selected>Select Department Name</option>
+                        <option value="School of Computing and Informatics">School of Computing and Informatics</option>
+                        <option value="School of Business">School of Business</option>
+                        <option value="School of Engineering">School of Engineering</option>
+                        <option value="School of Arts and Social Sciences">School of Arts and Social Sciences</option>
+                        <option value="School of Health Sciences">School of Health Sciences</option>
+                        <option value="School of Law">School of Law</option>
+                        <option value="School of Education">School of Education</option>
+                        <option value="Other">Other</option>
+                    </select>
                 </div>
                 <div class="form-group">
-                    <input type="text" class="form-input" name="departmentCode" placeholder="Department Code (e.g., CS, EEE)">
+                    <select class="form-select" name="departmentCode">
+                        <option value="" disabled selected>Select Department Code</option>
+                        <option value="SCI">SCI (Computing & Informatics)</option>
+                        <option value="SOB">SOB (Business)</option>
+                        <option value="SOE">SOE (Engineering)</option>
+                        <option value="SASS">SASS (Arts & Social Sci.)</option>
+                        <option value="SHS">SHS (Health Sci.)</option>
+                        <option value="LAW">LAW (Law)</option>
+                        <option value="EDU">EDU (Education)</option>
+                        <option value="OTH">OTH (Other)</option>
+                    </select>
                 </div>
                 <div class="form-group">
                     <textarea class="form-textarea" name="departmentDescription" placeholder="Department Description (Optional)" rows="3"></textarea>
@@ -248,12 +310,12 @@
                         fieldsToShow.classList.add('show');
                         // Set required attributes for visible fields
                         if (selectedRole === 'club') {
-                            document.querySelector('#clubFields input[name="clubName"]').required = true;
+                            document.querySelector('#clubFields select[name="clubName"]').required = true;
                             document.querySelector('#clubFields select[name="clubCategory"]').required = true;
                             document.querySelector('#clubFields input[name="advisorName"]').required = true;
                         } else if (selectedRole === 'department') {
-                            document.querySelector('#departmentFields input[name="departmentName"]').required = true;
-                            document.querySelector('#departmentFields input[name="departmentCode"]').required = true;
+                            document.querySelector('#departmentFields select[name="departmentName"]').required = true;
+                            document.querySelector('#departmentFields select[name="departmentCode"]').required = true;
                         }
                     }, 50);
                 }
@@ -364,15 +426,15 @@
 
             if (selectedRole === 'club') {
                 userData.clubDetails = {
-                    name: document.querySelector('#clubFields input[name="clubName"]').value.trim(),
+                    name: document.querySelector('#clubFields select[name="clubName"]').value,
                     description: document.querySelector('#clubFields textarea[name="clubDescription"]').value.trim(),
                     category: document.querySelector('#clubFields select[name="clubCategory"]').value,
                     advisorName: document.querySelector('#clubFields input[name="advisorName"]').value.trim()
                 };
             } else if (selectedRole === 'department') {
                 userData.departmentDetails = {
-                    name: document.querySelector('#departmentFields input[name="departmentName"]').value.trim(),
-                    code: document.querySelector('#departmentFields input[name="departmentCode"]').value.trim(),
+                    name: document.querySelector('#departmentFields select[name="departmentName"]').value,
+                    code: document.querySelector('#departmentFields select[name="departmentCode"]').value,
                     description: document.querySelector('#departmentFields textarea[name="departmentDescription"]').value.trim(),
                     head_of_department: document.querySelector('#departmentFields input[name="headOfDepartment"]').value.trim(),
                     contact_phone: document.querySelector('#departmentFields input[name="departmentContactPhone"]').value.trim(),

@@ -12,8 +12,7 @@
             <img src="images/logo 1.png" alt="Campus Connect Logo" class="logo" style="height: 100px;">
             <h1 class="app-name">Campus Connect</h1>
         </div>
-    </div>
-        <h1>Create New Event</h1> <!-- Corrected title placement -->
+        <h1>Create New Event</h1>
         <a href="/department-dashboard" class="action-button header-button">Back to Dashboard</a>
     </header>
 
@@ -86,11 +85,16 @@
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="imageUrl">Image URL (optional)</label>
-                    <input type="url" id="imageUrl" name="image_url" placeholder="https://">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="imageUrl">Image URL (optional)</label>
+                        <input type="url" id="imageUrl" name="image_url" placeholder="https://">
+                    </div>
+                    <div class="form-group">
+                        <label for="registrationDeadline">Registration Deadline (optional)</label>
+                        <input type="datetime-local" id="registrationDeadline" name="registration_deadline">
+                    </div>
                 </div>
-
                 <div class="checkbox-group form-group"> <!-- Added form-group for consistent spacing -->
                     <input type="checkbox" id="registrationRequired" name="registration_required">
                     <label for="registrationRequired">Registration Required?</label>
@@ -116,6 +120,7 @@
 
         // Function to show messages (using the .alert class from other pages if available, or simple inline styles)
         function showMessage(message, type = 'error') {
+            console.log(`showMessage called: type=${type}, message=${message}`); // Debug log
             const messageDiv = document.getElementById('formMessage');
             messageDiv.textContent = message;
             messageDiv.className = `alert ${type}`; // Use alert classes if defined in CSS
@@ -183,6 +188,10 @@
             form.max_attendees.value = event.max_attendees || '';
             form.image_url.value = event.image_url || '';
             form.registration_required.checked = !!event.registration_required;
+            
+            if (event.registration_deadline) {
+                form.registration_deadline.value = event.registration_deadline.slice(0,16);
+            }
 
             try {
                 const tagsArray = event.tags ? JSON.parse(event.tags) : [];
@@ -202,6 +211,8 @@
                 // Handle checkbox value
                 if (key === 'registration_required') {
                      eventData[key] = form.registration_required.checked;
+                } else if (key === 'registration_deadline' && !value) {
+                    eventData[key] = null; // Send null if empty
                 } else {
                      eventData[key] = value.trim();
                 }
