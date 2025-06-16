@@ -214,6 +214,9 @@
                 console.log("Redirecting to student dashboard (placeholder)");
                 // For now, redirect to welcome or a generic success page if dashboard isn't ready
                  window.location.href = '/welcome'; // Or a specific student dashboard
+                alert('Welcome ${user.firstName}! Redirecting to your Profile...');
+                 console.log("Redirecting to student profile page");
+                 window.location.href = '/student-profile';
             } else {
                 showAlert(`Login successful, but dashboard not configured for role: ${user.role}`);
             }
