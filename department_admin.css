@@ -138,16 +138,10 @@ header.dashboard-header > h1:not(.app-name) {
     margin-right: var(--spacing-md); /* Space before logout button */
 }
 
-/* Logout Button Styling - inherits from .action-button */
-.logout-button {
-    /* Specific overrides if .action-button isn't enough */
-    padding: var(--spacing-xs) var(--spacing-md); /* Can be smaller */
-    font-size: var(--font-size-small);
-    background: var(--theme-color-primary-darker); /* Distinct color for logout */
-}
-
-.logout-button:hover {
-    background: var(--theme-color-primary); /* Lighter on hover */
+/* Wrapper for multiple action buttons in the header */
+.header-actions {
+    display: flex;
+    gap: var(--spacing-sm); /* Space between buttons */
 }
 
 .dashboard-nav {
@@ -583,4 +577,52 @@ footer {
 /* Ensure text color on hover for these new buttons remains consistent if not overridden by gradient */
 .action-button-secondary:hover, .action-button-danger:hover, .action-button-info:hover {
     color: #ffffff; /* Explicitly set white text on hover for these variants */
+}
+
+/* Floating Icons Background Effect */
+.floating-icons-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none; /* Allows clicks to pass through */
+    z-index: -1; /* Behind all normally flowed content, part of the far background */
+    overflow: hidden; /* Prevent icons from causing scrollbars */
+}
+
+.floating-icon {
+    position: absolute;
+    background-color: rgba(255, 255, 255, 0.08); /* Very subtle white */
+    border-radius: 50%;
+    opacity: 0; /* Start hidden, fade in with animation */
+    animation: floatAnimation 20s infinite ease-in-out;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.1), 0 0 20px rgba(255, 255, 255, 0.05);
+}
+
+/* Variations for different icons - adjust positions, sizes, and delays as you like */
+.floating-icon.icon1 { width: 60px; height: 60px; top: 10%; left: 15%; animation-duration: 22s; animation-delay: 0s; }
+.floating-icon.icon2 { width: 80px; height: 80px; top: 30%; left: 70%; animation-duration: 25s; animation-delay: -5s; }
+.floating-icon.icon3 { width: 40px; height: 40px; top: 60%; left: 10%; animation-duration: 18s; animation-delay: -10s; }
+.floating-icon.icon4 { width: 70px; height: 70px; top: 80%; left: 80%; animation-duration: 20s; animation-delay: -3s; }
+.floating-icon.icon5 { width: 50px; height: 50px; top: 5%; left: 40%; animation-duration: 28s; animation-delay: -15s; }
+.floating-icon.icon6 { width: 90px; height: 90px; top: 50%; left: 50%; animation-duration: 15s; animation-delay: -8s; }
+
+@keyframes floatAnimation {
+    0% {
+        transform: translateY(30px) translateX(0px) rotate(0deg) scale(0.8);
+        opacity: 0;
+    }
+    20% { /* Fade in and grow */
+        opacity: 0.5;
+        transform: translateY(0px) translateX(10px) rotate(72deg) scale(1);
+    }
+    80% { /* Move and fade slightly */
+        opacity: 0.3;
+        transform: translateY(-30px) translateX(-10px) rotate(288deg) scale(0.9);
+    }
+    100% { /* Fade out and return towards start Y */
+        transform: translateY(30px) translateX(0px) rotate(360deg) scale(0.8);
+        opacity: 0;
+    }
 }

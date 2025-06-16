@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Departments Directory - Campus Connect</title>
+    <link rel="stylesheet" href="department_admin.css"> <!-- Linking your existing stylesheet -->
+    <!-- IDEA: Consider adding an icon library like Font Awesome -->
+    <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> -->
+    <style>
+        /* Specific styles for the Departments Directory page */
+        /* .department-card style can be kept for a detailed department page if you create one */
+        /*
+        .department-card { 
+            background: var(--color-bg-glass-primary); /* Reusing glassmorphism */
+            backdrop-filter: blur(var(--backdrop-blur-strong));
+            -webkit-backdrop-filter: blur(var(--backdrop-blur-strong));
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-lg);
+            border-radius: var(--border-radius-lg);
+            border: var(--border-width) solid var(--color-border-glass);
+            box-shadow: var(--box-shadow-medium);
+        } */
+
+        .department-card h2 { /* Kept if you use .department-card elsewhere, e.g. detail page */
+            color: var(--theme-color-primary-darker); /* Example: Make department names stand out */
+            margin-top: 0;
+        }
+
+        .department-card h3 { /* Kept if you use .department-card elsewhere */
+            margin-top: var(--spacing-md);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .info-list { /* For faculty, courses */
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .info-list li {
+            padding: var(--spacing-xs) 0;
+            border-bottom: 1px solid var(--color-border-divider);
+            font-size: var(--font-size-small);
+        }
+
+        .info-list li:last-child {
+            border-bottom: none;
+        }
+
+        .department-announcement {
+            background: var(--color-bg-glass-secondary); /* Slightly different background for emphasis */
+            padding: var(--spacing-sm);
+            margin-top: var(--spacing-sm);
+            margin-bottom: var(--spacing-md);
+            border-radius: var(--border-radius-sm);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .department-announcement strong {
+            color: var(--theme-color-primary-darker);
+        }
+
+        .department-actions {
+            margin-top: var(--spacing-md);
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--spacing-sm);
+        }
+
+
+        /* Search and Filter Bar Styling */
+        .search-filter-bar {
+            margin-bottom: var(--spacing-lg);
+            padding: var(--spacing-md);
+            background: var(--color-bg-glass-primary);
+            backdrop-filter: blur(var(--backdrop-blur-strong));
+            -webkit-backdrop-filter: blur(var(--backdrop-blur-strong));
+            border-radius: var(--border-radius-lg);
+            border: var(--border-width) solid var(--color-border-glass);
+            box-shadow: var(--box-shadow-soft);
+            display: flex; /* Align items in a row */
+            align-items: center; /* Vertically align items */
+            gap: var(--spacing-sm);
+        }
+
+        .search-filter-bar input[type="text"] {
+            flex-grow: 1; /* Allow input to take available space */
+            /* width: calc(100% - 280px); /* Adjusted for two buttons */
+            /* margin-right: var(--spacing-sm); */ /* Replaced by gap */
+        }
+
+        .search-filter-bar button {
+            width: auto; /* Override form button full width */
+            flex-shrink: 0; /* Prevent buttons from shrinking */
+        }
+
+        /* New styles for department list items */
+        #departmentsList {
+            list-style: none;
+            padding: 0;
+        }
+
+        .department-list-item {
+            display: flex;
+            align-items: center;
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+            background: var(--color-bg-glass-secondary);
+            backdrop-filter: blur(var(--backdrop-blur-medium));
+            -webkit-backdrop-filter: blur(var(--backdrop-blur-medium));
+            border-radius: var(--border-radius-md);
+            border: var(--border-width) solid var(--color-border-glass);
+            box-shadow: var(--box-shadow-soft);
+            gap: var(--spacing-md);
+        }
+
+        .department-icon {
+            font-size: 1.8em; /* Adjust as needed for your icons */
+            color: var(--theme-color-primary-darker);
+            flex-shrink: 0;
+            width: 40px; /* Fixed width for icon container */
+            text-align: center;
+        }
+
+        .department-info {
+            flex-grow: 1;
+        }
+        .department-info h3 {
+            margin: 0 0 var(--spacing-xs) 0;
+            color: var(--color-text-base);
+        }
+        .department-info p {
+            font-size: var(--font-size-small);
+            color: var(--color-text-secondary);
+            margin: 0;
+        }
+
+        .department-item-actions {
+            display: flex;
+            flex-direction: column; /* Stack buttons vertically on smaller screens if needed, or keep row */
+            gap: var(--spacing-xs);
+            flex-shrink: 0;
+        }
+        .department-item-actions .action-button {
+            width: 150px; /* Fixed width for these buttons, adjust as needed */
+            padding: var(--spacing-xs) var(--spacing-sm); /* Smaller padding for list item buttons */
+            font-size: var(--font-size-small);
+        }
+
+        /* Styles for "Followed Departments" section */
+        #followedDepartmentsSection h3 {
+            margin-top: 0; /* dashboard-section h2 already has margin-bottom */
+        }
+        #followedDepartmentsList {
+            list-style: none;
+            padding: 0;
+        }
+        .followed-department-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--spacing-sm);
+            background: var(--color-bg-glass-secondary);
+            border-radius: var(--border-radius-sm);
+            margin-bottom: var(--spacing-sm);
+            border: 1px solid var(--color-border-glass);
+        }
+        .followed-department-item .department-icon {
+            font-size: 1.2em;
+            margin-right: var(--spacing-sm);
+        }
+        .followed-department-item span {
+            flex-grow: 1;
+        }
+        .followed-department-item .action-button {
+             padding: var(--spacing-xs) var(--spacing-sm);
+             font-size: var(--font-size-xsmall);
+        }
+
+    </style>
+</head>
+<body>
+    <header class="dashboard-header">
+        <div class="logo-section">
+            <img src="images/logo 1.png" alt="Campus Connect Logo" class="logo" style="height: 100px;">
+            <h1 class="app-name">Campus Connect</h1>
+        </div>
+        <h1>Departments Directory</h1>
+        <div class="header-actions">
+            <a href="index.html" class="action-button header-button">Back to Home</a> <!-- Assuming index.html is your home page -->
+            <a href="welcome.html" class="action-button header-button action-button-danger">Logout</a>
+        </div>
+    </header>
+
+    <main>
+        <section class="dashboard-section">
+            <h2>Explore Our Academic Departments</h2>
+            <p>Find information about departments, faculty, courses, research, and more.</p>
+
+            <!-- IDEA: Search and Filter Bar -->
+            <div class="search-filter-bar">
+                <input type="text" id="departmentSearch" placeholder="Search departments (e.g., by name, keyword)...">
+                <button class="action-button" onclick="filterDepartments()">Search</button>
+                <a href="#followedDepartmentsSection" class="action-button action-button-secondary">View Followed</a>
+            </div>
+
+            <!-- Department List -->
+            <ul id="departmentsList">
+                <!-- Example Department List Item (Repeat this structure) -->
+                <li class="department-list-item" data-department-id="cse">
+                    <div class="department-icon">💻</div> <!-- Placeholder Icon, e.g., <i class="fas fa-laptop-code"></i> -->
+                    <div class="department-info">
+                        <h3>Computer Science & Engineering</h3>
+                        <p>Cutting-edge research and education in computing, AI, and software development.</p>
+                    </div>
+                    <div class="department-item-actions">
+                        <button class="action-button department-follow-toggle" onclick="toggleFollow('cse', this)">Follow</button>
+                        <a href="department_details.html?id=cse" class="action-button action-button-info">Discover More</a>
+                    </div>
+                </li>
+
+                <li class="department-list-item" data-department-id="business">
+                    <div class="department-icon">📈</div> <!-- Placeholder Icon, e.g., <i class="fas fa-briefcase"></i> -->
+                    <div class="department-info">
+                        <h3>Business Administration</h3>
+                        <p>Programs in management, finance, marketing, and entrepreneurship for future leaders.</p>
+                    </div>
+                    <div class="department-item-actions">
+                        <button class="action-button department-follow-toggle" onclick="toggleFollow('business', this)">Follow</button>
+                        <a href="department_details.html?id=business" class="action-button action-button-info">Discover More</a>
+                    </div>
+                </li>
+
+                <li class="department-list-item" data-department-id="arts">
+                    <div class="department-icon">🎨</div> <!-- Placeholder Icon, e.g., <i class="fas fa-palette"></i> -->
+                    <div class="department-info">
+                        <h3>Fine Arts & Design</h3>
+                        <p>Fostering creativity through visual arts, design, and art history programs.</p>
+                    </div>
+                    <div class="department-item-actions">
+                        <button class="action-button department-follow-toggle" onclick="toggleFollow('arts', this)">Follow</button>
+                        <a href="department_details.html?id=arts" class="action-button action-button-info">Discover More</a>
+                    </div>
+                </li>
+                 <li class="department-list-item" data-department-id="humanities">
+                    <div class="department-icon">📚</div> <!-- Placeholder Icon e.g. <i class="fas fa-book-open"></i> -->
+                    <div class="department-info">
+                        <h3>Humanities & Social Sciences</h3>
+                        <p>Exploring history, literature, philosophy, and social dynamics.</p>
+                    </div>
+                    <div class="department-item-actions">
+                        <button class="action-button department-follow-toggle" onclick="toggleFollow('humanities', this)">Follow</button>
+                        <a href="department_details.html?id=humanities" class="action-button action-button-info">Discover More</a>
+                    </div>
+                </li>
+                <!-- More department list items will be dynamically loaded or added here -->
+            </ul>
+            <p id="noDepartmentsMessage" style="display:none; text-align:center; padding: 20px;">No departments found matching your criteria.</p>
+        </section>
+
+        <section class="dashboard-section" id="followedDepartmentsSection">
+            <h2>Departments You Follow</h2>
+            <ul id="followedDepartmentsList">
+                <!-- Followed departments will be listed here by JavaScript -->
+                <li class="no-followed-message" style="text-align: center; color: var(--color-text-muted);">You are not following any departments yet.</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Campus Connect</p>
+    </footer>
+
+    <div class="floating-icons-container">
+        <div class="floating-icon icon1"></div>
+        <div class="floating-icon icon2"></div>
+        <div class="floating-icon icon3"></div>
+        <div class="floating-icon icon4"></div>
+        <div class="floating-icon icon5"></div>
+        <div class="floating-icon icon6"></div>
+    </div>
+
+
+    <script>
+        // Placeholder for JavaScript functionalities
+        const followedDepartments = new Set(); // In a real app, this would be synced with backend/localStorage
+
+        function filterDepartments() {
+            const searchTerm = document.getElementById('departmentSearch').value.toLowerCase();
+            const departmentItems = document.querySelectorAll('#departmentsList .department-list-item');
+            let found = false;
+            departmentItems.forEach(item => {
+                const departmentName = item.querySelector('.department-info h3').textContent.toLowerCase();
+                const departmentDesc = item.querySelector('.department-info p').textContent.toLowerCase();
+                const departmentInfo = departmentName + " " + departmentDesc;
+                if (departmentName.includes(searchTerm) || departmentInfo.includes(searchTerm)) {
+                    item.style.display = 'flex';
+                    found = true;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            console.log("Filtering departments by:", searchTerm);
+            // In a real app, this might involve an API call if departments are paginated or fetched on demand.
+        }
+
+        function toggleFollow(departmentId, buttonElement) {
+            const departmentItem = document.querySelector(`.department-list-item[data-department-id="${departmentId}"]`);
+            const departmentName = departmentItem.querySelector('.department-info h3').textContent;
+            const departmentIconHTML = departmentItem.querySelector('.department-icon').innerHTML;
+
+            if (followedDepartments.has(departmentId)) {
+                followedDepartments.delete(departmentId);
+                buttonElement.textContent = 'Follow';
+                buttonElement.classList.remove('action-button-secondary'); 
+                // Ensure .action-button is present (it should be, as it's the base)
+                if (!buttonElement.classList.contains('action-button')) {
+                    buttonElement.classList.add('action-button');
+                }
+                console.log(`Unfollowed ${departmentId}`);
+            } else {
+                followedDepartments.add(departmentId);
+                buttonElement.textContent = 'Unfollow';
+                buttonElement.classList.add('action-button-secondary'); // Change style to indicate "unfollow"
+                console.log(`Followed ${departmentId}`);
+            }
+            updateFollowedList();
+            // Example:
+            // fetch(`/api/departments/${departmentId}/subscribe`, { method: 'POST' })
+            //   .then(response => response.json())
+            //   .then(data => {
+            //     if (data.success) {
+            //        // Update UI based on actual subscription status
+            //     } else {
+            //        alert('Action failed.');
+            //     }
+            //   });
+        }
+
+        function updateFollowedList() {
+            const listElement = document.getElementById('followedDepartmentsList');
+            listElement.innerHTML = ''; // Clear current list
+
+            if (followedDepartments.size === 0) {
+                listElement.innerHTML = '<li class="no-followed-message" style="text-align: center; color: var(--color-text-muted);">You are not following any departments yet.</li>';
+                return;
+            }
+
+            followedDepartments.forEach(deptId => {
+                const originalItem = document.querySelector(`.department-list-item[data-department-id="${deptId}"]`);
+                if (!originalItem) return; // Should not happen if data is consistent
+
+                const departmentName = originalItem.querySelector('.department-info h3').textContent;
+                const departmentIconHTML = originalItem.querySelector('.department-icon').innerHTML;
+
+                const listItem = document.createElement('li');
+                listItem.className = 'followed-department-item';
+                listItem.innerHTML = `
+                    <div class="department-icon">${departmentIconHTML}</div>
+                    <span>${departmentName}</span>
+                    <button class="action-button action-button-secondary" onclick="toggleFollow('${deptId}', document.querySelector('.department-list-item[data-department-id=\\'${deptId}\\'] .department-follow-toggle'))">Unfollow</button>
+                `;
+                listElement.appendChild(listItem);
+            });
+        }
+
+        // TODO: Implement dynamic loading of department data from a backend API
+        // async function loadDepartments() {
+        //     const listElement = document.getElementById('departmentsList');
+        //     const noDepartmentsMessage = document.getElementById('noDepartmentsMessage');
+        //     try {
+        //         const response = await fetch('/api/departments'); // Replace with your actual API endpoint
+        //         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        //         const departments = await response.json();
+        //
+        //         container.innerHTML = ''; // Clear existing example cards
+        //         if (departments.length === 0) {
+        //             noDepartmentsMessage.style.display = 'block';
+        //             listElement.style.display = 'none';
+        //             return;
+        //         }
+        //
+        //         noDepartmentsMessage.style.display = 'none';
+        //         listElement.style.display = '';
+        //         listElement.innerHTML = ''; // Clear static examples
+        //
+        //         departments.forEach(dept => {
+        //             const listItem = document.createElement('li');
+        //             listItem.className = 'department-list-item';
+        //             listItem.setAttribute('data-department-id', dept.id);
+        //             listItem.innerHTML = \`
+        //                 <div class="department-icon">\${dept.icon || '❓'}</div>
+        //                 <div class="department-info">
+        //                     <h3>\${dept.name}</h3>
+        //                     <p>\${dept.briefDescription}</p>
+        //                 </div>
+        //                 <div class="department-item-actions">
+        //                     <button class="action-button department-follow-toggle \${followedDepartments.has(dept.id) ? 'action-button-secondary' : ''}" onclick="toggleFollow('\${dept.id}', this)">
+        //                         \${followedDepartments.has(dept.id) ? 'Unfollow' : 'Follow'} // Text content
+        //                     </button>
+        //                     <a href="department_details.html?id=\${dept.id}" class="action-button action-button-info">Discover More</a>
+        //                 </div>
+        //             \`;
+        //             listElement.appendChild(listItem);
+        //         });
+        //     } catch (error) {
+        //         console.error("Could not load departments:", error);
+        //         noDepartmentsMessage.textContent = 'Error loading departments. Please try again later.';
+        //         noDepartmentsMessage.style.display = 'block';
+        //         listElement.style.display = 'none';
+        //     }
+        // }
+        //
+        // document.addEventListener('DOMContentLoaded', () => {
+        //     // loadDepartments(); // Uncomment when API is ready. Also, ensure loaded buttons get 'department-follow-toggle' class.
+        //     updateFollowedList(); // Initial call to render the followed list (empty at first)
+        // });
+    </script>
+</body>
+</html>

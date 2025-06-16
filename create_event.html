@@ -213,6 +213,8 @@
                      eventData[key] = form.registration_required.checked;
                 } else if (key === 'registration_deadline' && !value) {
                     eventData[key] = null; // Send null if empty
+                } else if (key === 'max_attendees' && value) {
+                    eventData[key] = parseInt(value.trim(), 10); // Ensure it's a number
                 } else {
                      eventData[key] = value.trim();
                 }
@@ -220,14 +222,47 @@
 
             // Convert tags string to JSON array
             if (eventData.tags) {
-                eventData.tags = JSON.stringify(eventData.tags.split(',').map(tag => tag.trim()).filter(tag => tag));
+                // FIX 1: Prepare as a JavaScript array; outer JSON.stringify(eventData) will handle it.
+                eventData.tags = eventData.tags.split(',').map(tag => tag.trim()).filter(tag => tag);
             } else {
-                eventData.tags = JSON.stringify([]);
+                eventData.tags = []; // Send an empty array if no tags
             }
+            // --- Add organizer/department information ---
+            const storedUser = localStorage.getItem('currentUser');
+            if (storedUser) {
+                const currentUser = JSON.parse(storedUser);
+                // Prioritize department_id if available and user is department_admin,
+                // otherwise, use user's ID as a general organizer_id.
+                // The backend will ultimately determine what it expects.
+                if (currentUser.role === 'department_admin' && currentUser.department_id) {
+                    // FIX 3: Ensure department_id is a number
+                    eventData.department_id = Number(currentUser.department_id);
+                    eventData.organizer_type = 'department'; // Add organizer_type
+                    console.log('Sending department_id:', currentUser.department_id);
+                } else if (currentUser.id) {
+                    // FIX 3: Ensure organizer_id is a number
+                    eventData.organizer_id = Number(currentUser.id);
+                    eventData.organizer_type = 'user'; // Add organizer_type
+                    console.log('Sending organizer_id (user.id):', currentUser.id);
+                } else {
+                    showMessage('Organizer information (user ID or department ID) is missing from your session. Please re-login.', 'error');
+                    return; // Stop submission
+                }
+            } else {
+                showMessage('User session not found. Please log in again.', 'error');
+                return; // Stop submission
+            }
+            // --- End of adding organizer/department information ---
 
             // Basic client-side validation (backend will also validate)
             if (new Date(eventData.start_datetime) >= new Date(eventData.end_datetime)) {
                 showMessage('Start date and time must be before end date and time.', 'error');
+                return;
+            }
+
+            // FIX 2: Ensure at least location or virtual link is provided
+            if ((!eventData.location || eventData.location.trim() === '') && (!eventData.virtual_link || eventData.virtual_link.trim() === '')) {
+                showMessage('Please provide either a physical location or a virtual link for the event.', 'error');
                 return;
             }
 
@@ -245,6 +280,9 @@
             const actionText = isEditMode ? 'Updating...' : 'Creating...';
             const successActionText = isEditMode ? 'Update Event' : 'Create Event';
 
+            // --- Log the exact payload being sent ---
+            console.log('Submitting Event Data to Backend:', JSON.stringify(eventData, null, 2));
+            // --- End of payload log ---
             submitButton.textContent = actionText;
             submitButton.disabled = true;
 
@@ -260,19 +298,35 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    showMessage(result.message || `Event ${isEditMode ? 'updated' : 'created'} successfully!`, 'success');
+                    const successMsg = result.message || `Event ${isEditMode ? 'updated' : 'created'} successfully!`;
+                    showMessage(successMsg, 'success');
+                    // --- User Requested Alert and Console Log for DB Success ---
+                    alert(`Success: ${successMsg} The event has been processed by the server.`);
+                    console.log(`Event ${isEditMode ? 'updated' : 'created'} and taken to the database. Server response:`, result);
+                    // --- End of User Requested ---
                     if (!isEditMode) {
                         form.reset(); // Clear the form on successful creation
                         // Redirect to dashboard after successful creation
                         setTimeout(() => { window.location.href = '/department-dashboard'; }, 1500); // Redirect after 1.5 seconds
                     // if (isEditMode) { setTimeout(() => window.location.href = '/department-dashboard', 2000); }
+                    }
                 } else {
-                    showMessage(result.message || `Failed to ${isEditMode ? 'update' : 'create'} event.`, 'error');
+                    const errorMsg = result.message || `Failed to ${isEditMode ? 'update' : 'create'} event.`;
+                    showMessage(errorMsg, 'error');
+                    // --- User Requested Alert and Console Log for Server-Side Failure ---
+                    alert(`Server Error: ${errorMsg}`);
+                    console.error(`Server reported failure to ${isEditMode ? 'update' : 'create'} event. Server response:`, result);
+                    // --- End of User Requested ---
                 }
 
             } catch (error) {
                 console.error(`Error ${isEditMode ? 'updating' : 'submitting'} event:`, error);
-                showMessage(`An error occurred while ${isEditMode ? 'updating' : 'creating'} the event. Please try again.`, 'error');
+                const catchErrorMsg = `An error occurred while ${isEditMode ? 'updating' : 'creating'} the event. Please try again.`;
+                showMessage(catchErrorMsg, 'error');
+                // --- User Requested Alert and Console Log for Catch Block ---
+                alert(`Client-Side Error: ${catchErrorMsg} Details: ${error.message}`);
+                console.error(`Client-side error during event ${isEditMode ? 'update' : 'creation'}:`, error);
+                // --- End of User Requested ---
             } finally {
                 submitButton.textContent = successActionText;
                 submitButton.disabled = false;

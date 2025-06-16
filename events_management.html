@@ -22,9 +22,17 @@
             color: #555;
         }
         .event-actions button, .event-actions a {
-            margin-left: 8px;
+            /* margin-left: 8px; /* Removed as buttons are now stacked */
             padding: 6px 10px;
             font-size: 0.85em;
+            width: 130px; /* Give buttons a consistent width in the column */
+            box-sizing: border-box; /* Ensure padding doesn't add to the width */
+        }
+        .event-actions {
+            display: flex;
+            flex-direction: column; /* Stack buttons vertically */
+            gap: 5px; /* Space between stacked buttons */
+            align-items: flex-start; /* Align buttons to the start (left) of the column */
         }
         .feature-section {
             background-color: #f9f9f9;
@@ -53,7 +61,10 @@
             <h1 class="app-name">Campus Connect</h1>
         </div>
         <h1>Events Management</h1>
-        <a href="department_admin.html" class="action-button header-button">Back to Dashboard</a>
+        <div class="header-actions">
+            <a href="department_admin.html" class="action-button header-button">Back to Dashboard</a>
+            <a href="welcome.html" class="action-button header-button action-button-danger">Logout</a>
+        </div>
     </header>
 
     <main>
@@ -141,27 +152,82 @@
         <p>&copy; 2024 Campus Connect - Department Admin</p>
     </footer>
 
+    <div class="floating-icons-container">
+        <div class="floating-icon icon1"></div>
+        <div class="floating-icon icon2"></div>
+        <div class="floating-icon icon3"></div>
+        <div class="floating-icon icon4"></div>
+        <div class="floating-icon icon5"></div>
+        <div class="floating-icon icon6"></div>
+    </div>
+
     <script>
+        // Helper function to escape HTML to prevent XSS
+        function escapeHTML(str) {
+            if (str === null || str === undefined) return '';
+            const div = document.createElement('div');
+            div.appendChild(document.createTextNode(str));
+            return div.innerHTML;
+        }
+
         // Basic JavaScript for future functionality (e.g., loading events)
         async function loadEvents() {
             const eventsListContainer = document.getElementById('eventsListContainer');
             const noEventsMessage = document.getElementById('noEventsMessage');
-            // Placeholder: Fetch events from an API
-            // const response = await fetch('/api/department-events');
-            // const data = await response.json();
-            // if (data.success && data.events.length > 0) {
-            //     eventsListContainer.innerHTML = ''; // Clear sample items
-            //     data.events.forEach(event => {
-            //         const listItem = document.createElement('li');
-            //         listItem.className = 'event-list-item';
-            //         listItem.innerHTML = `... construct event item HTML ...`;
-            //         eventsListContainer.appendChild(listItem);
-            //     });
-            // } else {
-            //     eventsListContainer.innerHTML = ''; // Clear sample items
-            //     noEventsMessage.style.display = 'block';
-            // }
-            console.log("loadEvents function called - implement API call here.");
+            const authToken = localStorage.getItem('authToken');
+
+            if (!authToken) {
+                eventsListContainer.innerHTML = '<li class="event-list-item" style="justify-content: center;">Please log in to view events.</li>';
+                noEventsMessage.style.display = 'none';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/events/department', { // Fetching department-specific events
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const result = await response.json();
+
+                eventsListContainer.innerHTML = ''; // Clear sample/previous items
+
+                if (result.success && result.events) {
+                    if (result.events.length === 0) {
+                        noEventsMessage.style.display = 'block';
+                    } else {
+                        noEventsMessage.style.display = 'none'; // Ensure this is hidden if events are found
+                        result.events.forEach(event => {
+                            const listItem = document.createElement('li');
+                            listItem.className = 'event-list-item';
+                            listItem.innerHTML = `
+                                <div class="event-info">
+                                    <h3>${escapeHTML(event.title)}</h3>
+                                    <div class="event-details">
+                                        <p><strong>Starts:</strong> ${escapeHTML(event.start_datetime_formatted)}</p>
+                                        ${event.registration_deadline_formatted ? `<p><strong>Apply by:</strong> ${escapeHTML(event.registration_deadline_formatted)}</p>` : ''}
+                                        ${event.location ? `<p><strong>Location:</strong> ${escapeHTML(event.location)}</p>` : '<p><strong>Location:</strong> Virtual Event</p>'}
+                                        ${event.description ? `<p style="margin-top: 5px; font-size: 0.85em; color: #666;"><em>${escapeHTML(event.description.substring(0, 150))}${event.description.length > 150 ? '...' : ''}</em></p>` : ''}
+                                    </div>
+                                </div>
+                                <div class="event-actions">
+                                    <a href="create_event.html?eventIdToEdit=${event.event_id}" class="action-button action-button-secondary header-button">Edit</a>
+                                    <button class="action-button action-button-danger header-button" onclick="deleteEvent('${event.event_id}')">Delete</button>
+                                    <button class="action-button action-button-info header-button" onclick="viewRsvps('${event.event_id}')">View RSVPs</button>
+                                </div>
+                            `;
+                            eventsListContainer.appendChild(listItem);
+                        });
+                    }
+                } else {
+                    noEventsMessage.style.display = 'none';
+                    const errorMessage = result && result.message ? result.message : 'Unknown error from server.';
+                    eventsListContainer.innerHTML = `<li class="event-list-item" style="justify-content: center; color: var(--color-text-muted);">Error fetching events: ${escapeHTML(errorMessage)}</li>`;
+                    console.error('API call to /api/events/department was not successful:', result);
+                }
+            } catch (error) {
+                console.error("Error fetching events for management page:", error);
+                noEventsMessage.style.display = 'none';
+                eventsListContainer.innerHTML = '<li class="event-list-item" style="justify-content: center; color: var(--color-text-muted);">Could not connect to server or an error occurred while fetching events. Check console.</li>';
+            }
         }
 
         function deleteEvent(eventId) {
@@ -179,7 +245,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            // loadEvents(); // Call this when you have an API to fetch events
+            loadEvents(); // Fetch and display events when the page loads
         });
     </script>
 </body>

@@ -94,7 +94,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         // Added an Edit link
                         // Added a View Registered link
                         listItem.innerHTML = `
-                            <span>🎉 <strong>${escapeHTML(event.title)}</strong> - ${escapeHTML(event.start_datetime_formatted)} ${event.location ? `(${escapeHTML(event.location)})` : ''}</span>
+                            <span>
+                                🎉 <strong>${escapeHTML(event.title)}</strong>
+                                <br>
+                                <small>Date: ${escapeHTML(event.start_datetime_formatted)} ${event.location ? `| Location: ${escapeHTML(event.location)}` : ''}</small>
+                            </span>
                             <div class="item-actions"> <!-- Use a generic class for actions -->
                                 <a href="create_event.html?eventIdToEdit=${event.event_id}" class="edit-item-link">Edit</a>
                                 <a href="view_event_registrations.html?eventId=${event.event_id}" class="view-registered-link">View Registered</a>

@@ -72,6 +72,12 @@ app.get('/department-dashboard', (req, res) => {  // New route
 
 // --- API Routes ---
 
+// VERY SIMPLE TEST ROUTE - Add this just before /api/events/department
+app.get('/api/test-events-route-unique-name', (req, res) => {
+  console.log('LOG: /api/test-events-route-unique-name was hit!');
+  res.status(200).json({ success: true, message: 'Unique test route is working!' });
+});
+
 // Signup
 app.post('/api/signup', async (req, res) => {
   try {
@@ -284,11 +290,19 @@ const authenticateJWT = (req, res, next) => {
     if (authHeader) {
         const token = authHeader.split(' ')[1]; // Bearer TOKEN
         jwt.verify(token, secret, (err, userPayload) => {
-            if (err) { console.error('JWT verification failed:', err.message); return res.sendStatus(403); } // Forbidden
+            if (err) {
+                console.error('JWT verification failed:', err.message);
+                // Send JSON response for 403 Forbidden
+                return res.status(403).json({ success: false, message: 'Forbidden: Invalid or expired token.' });
+            }
             req.user = userPayload; // Attach user payload (including role, id, email, department_id etc.)
             next();
         });
-    } else { res.sendStatus(401); } // Unauthorized
+    } else {
+        // Send JSON response for 401 Unauthorized
+        console.warn('JWT Authentication: No token provided.');
+        res.status(401).json({ success: false, message: 'Unauthorized: No token provided.' });
+    }
 };
 
 // Login
@@ -415,6 +429,9 @@ app.post('/api/login', async (req, res) => {
 
 // API Endpoint to Create a New Event
 app.post('/api/events', authenticateJWT, async (req, res) => { // Protected route
+    // Log the raw request body as received by the server
+    console.log('Received /api/events POST request body:', req.body);
+
     const {
         title,
         description,
@@ -442,19 +459,61 @@ app.post('/api/events', authenticateJWT, async (req, res) => { // Protected rout
 
     if (req.user.role === 'department_admin') {
         organizer_type = 'department';
-        organizer_id = req.user.department_id; // department_id from JWT payload
+        // Explicitly check department_id from token before assigning
+        if (req.user.department_id && typeof req.user.department_id === 'number' && req.user.department_id > 0) {
+            organizer_id = req.user.department_id;
+        } else {
+            console.error(`SERVER_LOG: Department Admin (User ID: ${req.user.id}, Email: ${req.user.email}) has an invalid or missing department_id in JWT/session. Found: '${req.user.department_id}'. This will likely cause event creation to fail validation for organizer_id.`);
+            organizer_id = req.user.department_id; // Assign it (e.g., null, undefined, 0) - the validation block below will catch it and form the client error message.
+        }
     } else {
         // Handle other roles if they can create events (e.g., club_admin)
+        // For now, only department_admin is configured.
         console.warn(`User ${req.user.email} (role: ${req.user.role}) attempted to create event, but role not configured for event creation.`);
         return res.status(403).json({ success: false, message: 'Your role is not authorized to create events of this type.' });
     }
 
-    // Basic Validation
-    if (!title || !organizer_type || !organizer_id || !event_type || !start_datetime || !end_datetime) { // organizer_id check is important
-        return res.status(400).json({ success: false, message: 'Missing required fields: title, event_type, start_datetime, end_datetime, or organizer information is invalid.' });
+    // --- Enhanced Validation ---
+    const errors = [];
+    if (typeof title !== 'string' || title.trim() === '') {
+        errors.push('Title is required and must be a non-empty string.');
+    }
+    if (typeof event_type !== 'string' || event_type.trim() === '') {
+        errors.push('Event type is required.');
+    }
+    // Basic check for datetime string format (could be more robust with a regex or date library)
+    if (typeof start_datetime !== 'string' || !start_datetime.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/)) {
+        errors.push('Start date and time is required and must be in YYYY-MM-DDTHH:MM format.');
+    }
+    if (typeof end_datetime !== 'string' || !end_datetime.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/)) {
+        errors.push('End date and time is required and must be in YYYY-MM-DDTHH:MM format.');
     }
 
-    // Further validation (e.g., date formats, enum values) can be added here
+    // Specific check for organizer_id based on derived organizer_type
+    if (organizer_type === 'department') {
+        if (typeof organizer_id !== 'number' || isNaN(organizer_id) || organizer_id <= 0) {
+            errors.push('Department Admin is not associated with a valid Department ID. Please check the admin\'s user profile or contact support.');
+        }
+    } else if (organizer_type === 'user') { // Example if you add user-created events
+        if (typeof organizer_id !== 'number' || isNaN(organizer_id) || organizer_id <= 0) {
+            errors.push('User Organizer ID is invalid or missing.');
+        }
+    } // Add similar for 'club' if that becomes a possibility
+
+    if (!['user', 'department', 'club'].includes(organizer_type)) { 
+        errors.push('Organizer type is invalid.');
+    }
+     // Check for location or virtual link
+    if ((typeof location !== 'string' || location.trim() === '') && (typeof virtual_link !== 'string' || virtual_link.trim() === '')) {
+        errors.push('Either a physical location or a virtual link must be provided.');
+    }
+
+    if (errors.length > 0) {
+        console.warn('Event creation validation errors:', errors);
+        return res.status(400).json({ success: false, message: 'Validation failed. Please check the following: ' + errors.join(' ') });
+    }
+    // --- End of Enhanced Validation ---
+
     // For example, check if start_datetime is before end_datetime
     if (new Date(start_datetime) >= new Date(end_datetime)) {
         return res.status(400).json({ success: false, message: 'Start date and time must be before end date and time.' });
@@ -462,7 +521,7 @@ app.post('/api/events', authenticateJWT, async (req, res) => { // Protected rout
 
     const parsedMaxAttendees = max_attendees ? parseInt(max_attendees, 10) : null;
     if (max_attendees && (isNaN(parsedMaxAttendees) || parsedMaxAttendees < 0)) {
-        return res.status(400).json({ success: false, message: 'Max attendees must be a non-negative number.' });
+        return res.status(400).json({ success: false, message: 'Max attendees, if provided, must be a non-negative number.' });
     }
 
     const sql = `
@@ -484,8 +543,14 @@ app.post('/api/events', authenticateJWT, async (req, res) => { // Protected rout
 
     const values = [
         title, description || null, organizer_type, organizer_id, event_type || null,
-        start_datetime, end_datetime, location || null, virtual_link || null, parsedMaxAttendees,
-        registration_required, tags || JSON.stringify([]), image_url || null
+        start_datetime, // MySQL TIMESTAMP can handle 'YYYY-MM-DDTHH:MM'
+        end_datetime,   // MySQL TIMESTAMP can handle 'YYYY-MM-DDTHH:MM'
+        location || null,
+        virtual_link || null,
+        parsedMaxAttendees,
+        registration_required, 
+        (tags && Array.isArray(tags)) ? JSON.stringify(tags) : JSON.stringify([]), // Correctly stringify tags
+        image_url || null
     ];
 
     if (req.body.hasOwnProperty('is_published')) values.push(req.body.is_published);
@@ -505,7 +570,11 @@ app.post('/api/events', authenticateJWT, async (req, res) => { // Protected rout
         res.status(201).json({ success: true, message: 'Event created successfully!', eventId: result.insertId });
     } catch (error) {
         console.error('Error creating event:', error);
-        res.status(500).json({ success: false, message: 'Failed to create event. Please try again.' });
+        // Check for specific MySQL errors if needed
+        if (error.code === 'ER_NO_REFERENCED_ROW_2') {
+             return res.status(400).json({ success: false, message: `Invalid organizer ID (${organizer_id}) or other foreign key constraint violation.` });
+        }
+        res.status(500).json({ success: false, message: 'Database error: Failed to create event. Please try again.' });
     }
 });
 
@@ -622,25 +691,91 @@ app.get('/api/events/department', authenticateJWT, async (req, res) => {
         if (req.user.role !== 'department_admin' || !req.user.department_id) {
             return res.status(403).json({ success: false, message: 'Access denied. User is not a department admin or department ID is missing.' });
         }
-
         const departmentId = req.user.department_id;
-
         const [events] = await pool.query(
-            `SELECT event_id, title, DATE_FORMAT(start_datetime, '%Y-%m-%d %H:%i') as start_datetime_formatted, location 
+            `SELECT event_id, title, description, 
+                    DATE_FORMAT(start_datetime, '%Y-%m-%d %H:%i') as start_datetime_formatted, 
+                    DATE_FORMAT(registration_deadline, '%Y-%m-%d %H:%i') as registration_deadline_formatted, 
+                    location 
              FROM events 
              WHERE organizer_type = 'department' AND organizer_id = ? 
-             ORDER BY start_datetime DESC`, // Show newest events first
+             ORDER BY start_datetime DESC`,
             [departmentId]
         );
-
+        // Log how many events were found for this department ID
+        console.log(`Found ${events.length} events for department ID ${departmentId} (User: ${req.user.email})`);
         res.json({ success: true, events });
-
     } catch (error) {
         console.error('Error fetching department events:', error);
         res.status(500).json({ success: false, message: 'Failed to fetch department events.' });
     }
 });
 
+
+
+
+// API Endpoint to Create a New Announcement
+app.post('/api/announcements', authenticateJWT, async (req, res) => {
+    try {
+        const { title, content, priority, target_audience, tags, attachment_urls, scheduled_publish_at, expires_at, is_pinned, is_published } = req.body;
+        console.log('Received /api/announcements POST request body:', req.body);
+
+        // Authorization: Ensure user is department_admin
+        if (req.user.role !== 'department_admin' || !req.user.department_id) {
+            return res.status(403).json({ success: false, message: 'Access denied. User is not an authorized department admin or department ID is missing.' });
+        }
+
+        const authorType = 'department'; // Since this route is for department admins
+        const authorEntityId = req.user.department_id; // The department_id of the admin
+        const authorId = req.user.id; // The user_id of the admin creating it
+
+        // Validate that authorEntityId (department_id for admin) is valid
+        if (!authorEntityId || typeof authorEntityId !== 'number' || authorEntityId <= 0) {
+            console.error(`SERVER_LOG: Department Admin (User ID: ${req.user.id}, Email: ${req.user.email}) has an invalid or missing department_id in JWT/session. Found: '${req.user.department_id}'. Cannot create announcement.`);
+            return res.status(400).json({ success: false, message: 'Department admin is not associated with a valid department ID.' });
+        }
+        // Validate authorId (user_id for admin)
+        if (!authorId || typeof authorId !== 'number' || authorId <= 0) {
+            console.error(`SERVER_LOG: Department Admin (User ID: ${req.user.id}, Email: ${req.user.email}) has an invalid or missing user ID in JWT/session. Found: '${req.user.id}'. Cannot create announcement.`);
+            return res.status(400).json({ success: false, message: 'Admin user ID is invalid.' });
+        }
+
+        // Basic Validation
+        if (!title || !content) {
+            return res.status(400).json({ success: false, message: 'Title and content are required.' });
+        }
+
+        const sql = `INSERT INTO announcements (
+                        title, content, author_id, author_type, author_entity_id, 
+                        priority, target_audience, tags, attachment_urls, 
+                        is_pinned, scheduled_publish_at, expires_at, is_published
+                     ) 
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+        
+        const values = [
+            title,
+            content,
+            authorId, // Corrected from author_user_id
+            authorType,
+            authorEntityId, // Corrected from department_id
+            priority || 'normal',
+            target_audience || JSON.stringify([]),
+            tags || JSON.stringify([]),
+            attachment_urls || JSON.stringify([]),
+            is_pinned || false,
+            scheduled_publish_at || null,
+            expires_at || null,
+            is_published === undefined ? true : !!is_published // Ensure this value is correctly added
+        ];
+
+        const [result] = await pool.query(sql, values);
+        res.status(201).json({ success: true, message: 'Announcement created successfully!', announcementId: result.insertId });
+
+    } catch (error) {
+        console.error('Error creating announcement:', error);
+        res.status(500).json({ success: false, message: 'Failed to create announcement.' });
+    } // This closes the try-catch block
+}); // This correctly closes the app.post('/api/announcements', ...) route handler
 
 // Start server
 app.listen(PORT, () => {

@@ -104,21 +104,10 @@
             const messageDiv = document.getElementById('formMessage');
             messageDiv.textContent = message;
             messageDiv.className = `alert ${type}`;
-            messageDiv.style.display = 'block';
+                messageDiv.style.display = 'block'; // Always show initially
 
-            if (type === 'error') {
-                 messageDiv.style.backgroundColor = 'rgba(255, 82, 82, 0.1)';
-                 messageDiv.style.border = '1px solid rgba(255, 82, 82, 0.3)';
-                 messageDiv.style.color = '#d32f2f';
-            } else if (type === 'success') {
-                 messageDiv.style.backgroundColor = 'rgba(76, 175, 80, 0.1)';
-                 messageDiv.style.border = '1px solid rgba(76, 175, 80, 0.3)';
-                 messageDiv.style.color = '#2e7d32';
+                if (type === 'success') {
                  setTimeout(() => { messageDiv.style.display = 'none'; }, 5000); // Hide success after 5s
-            } else { // Default/info
-                 messageDiv.style.backgroundColor = 'rgba(255, 193, 7, 0.1)';
-                 messageDiv.style.border = '1px solid rgba(255, 193, 7, 0.3)';
-                 messageDiv.style.color = '#ffc107';
             }
         }
 
@@ -228,7 +217,28 @@
                     },
                     body: JSON.stringify(announcementData),
                 });
-                const result = await response.json();
+
+                let result;
+                // Check content type before trying to parse as JSON
+                const contentType = response.headers.get("content-type");
+                if (contentType && contentType.indexOf("application/json") !== -1) {
+                    result = await response.json();
+                } else {
+                    // If not JSON, get the text and construct an error-like object
+                    const textResponse = await response.text();
+                    console.error("Server sent non-JSON response. Status:", response.status, "Body:", textResponse);
+                    let errorMessage = `Server error: ${response.status} ${response.statusText}.`;
+                    if (textResponse) {
+                        errorMessage += ` Response: ${textResponse.substring(0, 150)}${textResponse.length > 150 ? '...' : ''}`;
+                    }
+                    result = { 
+                        success: false, 
+                        message: errorMessage
+                    };
+                    // If the status is OK but content is not JSON, it's still an issue for the expected flow
+                    // However, the primary issue is usually non-2xx status with non-JSON.
+                }
+
 
                 if (result.success) {
                     showMessage(result.message || `Announcement ${isEditMode ? 'updated' : 'created'} successfully!`, 'success');
@@ -244,8 +254,10 @@
                 }
 
             } catch (error) {
-                console.error(`Error ${isEditMode ? 'updating' : 'submitting'} announcement:`, error);
-                showMessage(`An error occurred while ${isEditMode ? 'updating' : 'creating'} the announcement. Please try again.`, 'error');
+                // This catch block will now primarily handle network errors or truly malformed JSON
+                // if the server somehow sends JSON but it's broken.
+                console.error(`Network or JSON parsing error while ${isEditMode ? 'updating' : 'submitting'} announcement:`, error);
+                showMessage(`An error occurred: ${error.message}. Please check your connection or contact support.`, 'error');
             } finally {
                 submitButton.textContent = successActionText;
                 submitButton.disabled = false;
