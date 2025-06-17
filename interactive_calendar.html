@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Calendar - Campus Connect</title>
+    <link rel="stylesheet" href="department_admin.css"> <!-- Reusing existing stylesheet -->
+    <!-- Consider a dedicated calendar CSS library or more specific styles later -->
+    <style>
+        .calendar-container {
+            display: flex;
+            gap: var(--spacing-lg);
+            /* flex-wrap: wrap; */ /* Allow sidebar to wrap on small screens if needed */
+        }
+
+        .calendar-main {
+            flex-grow: 1;
+        }
+
+        .calendar-sidebar {
+            width: 280px; /* Adjust as needed */
+            flex-shrink: 0;
+            background: var(--color-bg-glass-secondary);
+            padding: var(--spacing-md);
+            border-radius: var(--border-radius-md);
+            border: var(--border-width) solid var(--color-border-glass);
+            box-shadow: var(--box-shadow-soft);
+        }
+
+        .calendar-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-md);
+            padding-bottom: var(--spacing-md);
+            border-bottom: 1px solid var(--color-border-divider);
+        }
+
+        .calendar-controls .view-options button,
+        .calendar-controls .nav-options button {
+            margin-left: var(--spacing-xs);
+        }
+
+        .calendar-grid-header, .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr); /* 7 days a week */
+            gap: 1px; /* For cell borders */
+            background-color: var(--color-border-divider); /* Grid lines */
+            border: 1px solid var(--color-border-divider);
+        }
+
+        .calendar-grid-header div {
+            background-color: var(--color-bg-glass-primary);
+            padding: var(--spacing-sm);
+            text-align: center;
+            font-weight: var(--font-weight-semibold);
+        }
+
+        .calendar-day-cell {
+            background-color: #fff; /* White background for days */
+            min-height: 120px; /* Adjust as needed */
+            padding: var(--spacing-xs);
+            position: relative;
+            font-size: var(--font-size-small);
+            overflow-y: auto; /* For many events in a day */
+        }
+        .calendar-day-cell.other-month {
+            background-color: #f7f7f7; /* Lighter grey for days not in current month */
+            color: var(--color-text-muted);
+        }
+        .calendar-day-cell .day-number {
+            font-weight: var(--font-weight-medium);
+            margin-bottom: var(--spacing-xs);
+        }
+        .calendar-event-item {
+            background-color: var(--theme-color-primary);
+            color: var(--color-text-on-accent);
+            padding: 3px 5px;
+            border-radius: var(--border-radius-sm);
+            font-size: 0.8em;
+            margin-bottom: 3px;
+            cursor: pointer;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .calendar-event-item.personal { background-color: #4CAF50; /* Green */ }
+        .calendar-event-item.department { background-color: #2196F3; /* Blue */ }
+        .calendar-event-item.club { background-color: #FF9800; /* Orange */ }
+        .calendar-event-item.institutional { background-color: #9C27B0; /* Purple */ }
+
+        .filter-group, .actions-group {
+            margin-bottom: var(--spacing-md);
+        }
+        .filter-group h3, .actions-group h3, .reminders-group h3 {
+            font-size: 1.1em;
+            margin-bottom: var(--spacing-sm);
+            color: var(--color-text-base);
+        }
+        .filter-group select, .filter-group input[type="checkbox"] {
+            margin-bottom: var(--spacing-xs);
+        }
+        .filter-group label {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+            font-size: var(--font-size-small);
+        }
+
+        .actions-group .action-button {
+            display: block;
+            width: 100%;
+            margin-bottom: var(--spacing-sm);
+            text-align: center;
+        }
+
+        #eventDetailsModal {
+            display: none; /* Hidden by default */
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background-color: #fff;
+            margin: auto;
+            padding: var(--spacing-lg);
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--box-shadow-medium);
+        }
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .reminders-list li {
+            font-size: var(--font-size-small);
+            padding: var(--spacing-xs) 0;
+            border-bottom: 1px dashed var(--color-border-divider);
+        }
+        .reminders-list li:last-child { border-bottom: none; }
+
+    </style>
+</head>
+<body>
+    <header class="dashboard-header">
+        <div class="logo-section">
+            <img src="images/logo 1.png" alt="Campus Connect Logo" class="logo" style="height: 100px;">
+            <h1 class="app-name">Campus Connect</h1>
+        </div>
+        <h1>Interactive Calendar</h1>
+        <div class="header-actions">
+            <a href="welcome.html" class="action-button header-button">Back to Home</a>
+            <a href="#" id="logoutButton" class="action-button header-button action-button-danger">Logout</a>
+        </div>
+    </header>
+
+    <main>
+        <div class="calendar-container">
+            <div class="calendar-main dashboard-section">
+                <div class="calendar-controls">
+                    <div class="nav-options">
+                        <button id="prevMonthBtn" class="action-button action-button-secondary">&lt; Prev</button>
+                        <button id="nextMonthBtn" class="action-button action-button-secondary">Next &gt;</button>
+                        <button id="todayBtn" class="action-button">Today</button>
+                    </div>
+                    <h2 id="currentMonthYear">Month Year</h2>
+                    <div class="view-options">
+                        <button id="monthViewBtn" class="action-button active">Month</button>
+                        <button id="weekViewBtn" class="action-button">Week</button>
+                        <button id="dayViewBtn" class="action-button">Day</button>
+                    </div>
+                </div>
+
+                <div id="calendarView">
+                    <div class="calendar-grid-header">
+                        <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+                    </div>
+                    <div class="calendar-grid" id="calendarGridBody">
+                        <!-- Day cells will be populated by JavaScript -->
+                    </div>
+                </div>
+                <p id="noEventsMessageCalendar" style="display:none; text-align:center; padding: 20px;">No events to display for this period.</p>
+            </div>
+
+            <aside class="calendar-sidebar">
+                <div class="filter-group">
+                    <h3>Filter Events</h3>
+                    <select id="eventSourceFilter" class="form-input">
+                        <option value="all">All My Events</option>
+                        <option value="personal">Personal</option>
+                        <option value="followed">Followed Depts/Clubs</option>
+                        <option value="institutional">Institutional</option>
+                    </select>
+                    <!-- More detailed filters can be added here, e.g., checkboxes for specific followed entities -->
+                    <label><input type="checkbox" id="showConflicts" name="showConflicts"> Highlight Conflicts</label>
+                </div>
+
+                <div class="actions-group">
+                    <h3>Actions</h3>
+                    <button id="addPersonalEventBtn" class="action-button action-button-info">Add Personal Event</button>
+                    <button id="syncGoogleBtn" class="action-button">Sync with Google</button>
+                    <button id="syncOutlookBtn" class="action-button">Sync with Outlook</button>
+                    <button id="exportCalendarBtn" class="action-button">Export (.ics)</button>
+                </div>
+
+                <div class="reminders-group">
+                    <h3>Upcoming Reminders</h3>
+                    <ul id="remindersList" class="reminders-list">
+                        <li>No upcoming reminders.</li>
+                    </ul>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <!-- Event Details Modal -->
+    <div id="eventDetailsModal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal()">&times;</span>
+            <h3 id="modalEventTitle">Event Title</h3>
+            <p><strong>Starts:</strong> <span id="modalEventStart"></span></p>
+            <p><strong>Ends:</strong> <span id="modalEventEnd"></span></p>
+            <p><strong>Location:</strong> <span id="modalEventLocation"></span></p>
+            <p><strong>Organizer:</strong> <span id="modalEventOrganizer"></span></p>
+            <p><strong>Description:</strong></p>
+            <p id="modalEventDescription"></p>
+            <div class="modal-actions" style="margin-top: 15px;">
+                <!-- Action buttons like RSVP, Save, Add to Personal Calendar -->
+                 <button class="action-button" id="modalRsvpBtn">RSVP</button>
+                 <button class="action-button action-button-secondary" id="modalSaveBtn">Save Event</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 Campus Connect</p>
+    </footer>
+
+    <script>
+        // --- Calendar State ---
+        let currentDate = new Date();
+        let currentView = 'month'; // 'month', 'week', 'day'
+        let allEvents = []; // Will hold fetched events { title, start, end, type, id, ... }
+
+        // --- DOM Elements ---
+        const calendarGridBody = document.getElementById('calendarGridBody');
+        const currentMonthYearElement = document.getElementById('currentMonthYear');
+        const modal = document.getElementById('eventDetailsModal');
+
+        // --- Calendar Rendering (Simplified for now) ---
+        function renderCalendar() {
+            calendarGridBody.innerHTML = ''; // Clear previous view
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth(); // 0-indexed
+
+            currentMonthYearElement.textContent = `${currentDate.toLocaleString('default', { month: 'long' })} ${year}`;
+
+            if (currentView === 'month') {
+                const firstDayOfMonth = new Date(year, month, 1);
+                const lastDayOfMonth = new Date(year, month + 1, 0);
+                const daysInMonth = lastDayOfMonth.getDate();
+                const startDayOfWeek = firstDayOfMonth.getDay(); // 0 for Sunday, 1 for Monday, etc.
+
+                // Create cells for previous month's trailing days
+                for (let i = 0; i < startDayOfWeek; i++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('calendar-day-cell', 'other-month');
+                    calendarGridBody.appendChild(cell);
+                }
+
+                // Create cells for current month's days
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('calendar-day-cell');
+                    cell.innerHTML = `<div class="day-number">${day}</div>`;
+                    // TODO: Add events to this cell
+                    // filterAndDisplayEventsForDay(new Date(year, month, day), cell);
+                    calendarGridBody.appendChild(cell);
+                }
+
+                // Create cells for next month's leading days to fill the grid
+                const totalCells = startDayOfWeek + daysInMonth;
+                const remainingCells = (7 - (totalCells % 7)) % 7;
+                for (let i = 0; i < remainingCells; i++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('calendar-day-cell', 'other-month');
+                    calendarGridBody.appendChild(cell);
+                }
+            } else if (currentView === 'week') {
+                // TODO: Implement week view rendering
+                calendarGridBody.innerHTML = '<div>Week View - To be implemented</div>';
+            } else if (currentView === 'day') {
+                // TODO: Implement day view rendering
+                calendarGridBody.innerHTML = '<div>Day View - To be implemented</div>';
+            }
+            // After rendering, fetch and display events for the current view
+            fetchAndDisplayEvents();
+        }
+
+        // --- Event Fetching and Display (Placeholder) ---
+        async function fetchAndDisplayEvents() {
+            console.log(`Fetching events for ${currentView} view, date: ${currentDate.toDateString()}`);
+            // Placeholder: API call to fetch events based on currentView and currentDate
+            // Example: /api/calendar/events?view=${currentView}&year=${currentDate.getFullYear()}&month=${currentDate.getMonth()+1}
+            // For now, using mock data
+            const mockEvents = [
+                { id: 'e1', title: 'Midterm Exams', start: new Date(currentDate.getFullYear(), currentDate.getMonth(), 10), type: 'institutional' },
+                { id: 'e2', title: 'Coding Club Meetup', start: new Date(currentDate.getFullYear(), currentDate.getMonth(), 15, 18, 0), type: 'club' },
+                { id: 'e3', title: 'My Study Session', start: new Date(currentDate.getFullYear(), currentDate.getMonth(), 15, 10, 0), type: 'personal' },
+            ];
+            allEvents = mockEvents; // Store fetched events
+            populateCalendarWithEvents();
+        }
+
+        function populateCalendarWithEvents() {
+            // This is a very simplified version. A real calendar would position events more accurately.
+            const dayCells = calendarGridBody.querySelectorAll('.calendar-day-cell:not(.other-month)');
+            dayCells.forEach((cell, index) => {
+                const dayNumber = parseInt(cell.querySelector('.day-number').textContent);
+                const cellDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), dayNumber);
+
+                allEvents.forEach(event => {
+                    if (event.start.getFullYear() === cellDate.getFullYear() &&
+                        event.start.getMonth() === cellDate.getMonth() &&
+                        event.start.getDate() === cellDate.getDate()) {
+                        
+                        const eventDiv = document.createElement('div');
+                        eventDiv.classList.add('calendar-event-item', event.type);
+                        eventDiv.textContent = event.title;
+                        eventDiv.onclick = () => showEventDetails(event);
+                        cell.appendChild(eventDiv);
+                    }
+                });
+            });
+        }
+
+        // --- Event Details Modal ---
+        function showEventDetails(event) {
+            document.getElementById('modalEventTitle').textContent = event.title;
+            document.getElementById('modalEventStart').textContent = event.start.toLocaleString();
+            document.getElementById('modalEventEnd').textContent = event.end ? event.end.toLocaleString() : 'N/A';
+            document.getElementById('modalEventLocation').textContent = event.location || 'N/A';
+            document.getElementById('modalEventOrganizer').textContent = event.organizer_name || event.type.toUpperCase();
+            document.getElementById('modalEventDescription').textContent = event.description || 'No details available.';
+            modal.style.display = 'flex';
+        }
+        function closeModal() {
+            modal.style.display = 'none';
+        }
+        window.onclick = function(event) { // Close modal if clicked outside
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+
+        // --- Navigation and View Controls ---
+        document.getElementById('prevMonthBtn').addEventListener('click', () => {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderCalendar();
+        });
+        document.getElementById('nextMonthBtn').addEventListener('click', () => {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderCalendar();
+        });
+        document.getElementById('todayBtn').addEventListener('click', () => {
+            currentDate = new Date();
+            renderCalendar();
+        });
+        // TODO: Add event listeners for monthViewBtn, weekViewBtn, dayViewBtn to change `currentView` and re-render
+
+        // --- Sidebar Actions (Placeholders) ---
+        document.getElementById('addPersonalEventBtn').onclick = () => alert('Add Personal Event form would appear here.');
+        document.getElementById('syncGoogleBtn').onclick = () => alert('Initiate Google Calendar Sync (OAuth flow needed).');
+        document.getElementById('syncOutlookBtn').onclick = () => alert('Initiate Outlook Calendar Sync (OAuth flow needed).');
+        document.getElementById('exportCalendarBtn').onclick = () => alert('Exporting calendar as .ics file (to be implemented).');
+
+        // --- Logout ---
+        document.getElementById('logoutButton').addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('currentUser');
+            window.location.href = '/welcome';
+        });
+
+        // --- Initial Load ---
+        document.addEventListener('DOMContentLoaded', () => {
+            renderCalendar();
+            // TODO: Fetch user preferences for filters, reminders, etc.
+        });
+
+        function escapeHTML(str) { // Basic HTML escaping
+            if (str === null || str === undefined) return '';
+            return String(str).replace(/[&<>"']/g, function (match) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[match];
+            });
+        }
+    </script>
+</body>
+</html>

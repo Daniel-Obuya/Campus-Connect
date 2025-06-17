@@ -346,44 +346,37 @@
             loadMoreApiEventsBtn.textContent = 'Loading External Events...';
             loadMoreApiEventsBtn.disabled = true;
 
-            // Replace with your actual API URL and parameters
-            // This example assumes an Eventbrite-like API structure.
-            const YOUR_API_BASE_URL = 'https://www.eventbriteapi.com/v3'; // Correct Eventbrite API v3 base URL
-            const API_ENDPOINT = '/events/search/'; // ** REPLACE OR ADJUST THIS **
-            const PUBLIC_TOKEN = 'SEBYP6TQ2LIKWV56PBMB'; // Your public token
-
-            // --- Parameters for the API (adjust as needed) ---
-            // You'll likely want to search by location, date, keywords, etc.
-            // Example: Search for events in "Nairobi"
+            // Parameters for your backend API
             const queryParams = new URLSearchParams({
-                'location.address': 'Nairobi', // ** REPLACE WITH DESIRED LOCATION/PARAMS **
+                'location': 'Nairobi', // Example: You can make this dynamic
+                'q': 'technology',     // Example: Search query, make dynamic
                 'page': currentExternalApiPage,
-                'token': PUBLIC_TOKEN, // Some APIs take token as query param
-                'expand': 'organizer,venue' // Example: To get more details
             });
 
-            // const apiUrl = `${YOUR_API_BASE_URL}${API_ENDPOINT}?${queryParams.toString()}`;
-            // If token is in header, don't put it in queryParams.
-             const apiUrl = `${YOUR_API_BASE_URL}${API_ENDPOINT}?${queryParams.toString().replace(`&token=${PUBLIC_TOKEN}`,'')}`;
-
+            const localApiUrl = `/api/external-events?${queryParams.toString()}`;
 
             try {
-                console.log(`Fetching external events from: ${apiUrl}`);
-                const response = await fetch(apiUrl, {
+                console.log(`Fetching external events from backend: ${localApiUrl}`);
+                const response = await fetch(localApiUrl, {
                     method: 'GET',
                     headers: {
-                        'Authorization': `Bearer ${PUBLIC_TOKEN}`, // Common way to send token
                         'Accept': 'application/json'
+                        // No Authorization header needed here, backend handles it
                     }
                 });
 
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => ({ message: response.statusText }));
-                    throw new Error(`API Error: ${response.status} - ${errorData.error_description || errorData.message || 'Unknown error'}`);
+                    throw new Error(`Server Error: ${response.status} - ${errorData.message || 'Failed to fetch from backend'}`);
                 }
 
-                const externalData = await response.json();
-                console.log("External API Response:", externalData);
+                const backendResponse = await response.json();
+                console.log("Response from /api/external-events:", backendResponse);
+
+                if (!backendResponse.success || !backendResponse.eventsData) {
+                    throw new Error(backendResponse.message || "Backend did not return successful event data.");
+                }
+                const externalData = backendResponse.eventsData; // This is the raw Eventbrite response
 
                 // --- Map API data to your event structure ---
                 // This mapping is an EXAMPLE for Eventbrite-like data. ADJUST IT FOR YOUR API.
@@ -416,7 +409,7 @@
 
             } catch (error) {
                 console.error('Error fetching from external API:', error);
-                noEventsMessageElement.textContent = `Failed to load external events: ${error.message}`;
+                noEventsMessageElement.textContent = `Failed to load external events. ${error.message}`;
                 noEventsMessageElement.style.display = 'block';
                 loadMoreApiEventsBtn.textContent = 'Error Loading';
                 // Keep button disabled on error or allow retry after a delay

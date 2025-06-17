@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome to Campus Connect</title>
+    <title>Email Verified - Campus Connect</title>
     <style>
         * {
             margin: 0;
@@ -13,7 +13,7 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #f5deb3, #deb887, #cd853f);
+            background: linear-gradient(135deg, #f5deb3, #deb887, #cd853f); /* Welcome page gradient */
             background-size: 400% 400%;
             animation: gradientShift 15s ease infinite;
             min-height: 100vh;
@@ -51,7 +51,7 @@
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.25);
-            border-radius: 24px;
+            border-radius: 16px;
             padding: 50px 40px;
             width: 100%;
             max-width: 500px;
@@ -62,32 +62,14 @@
         }
 
         @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(40px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .fade-in {
-            opacity: 0;
-            animation: fadeIn 1s ease-out forwards;
-        }
+        .fade-in { opacity: 0; animation: fadeIn 1s ease-out forwards; }
+        .fade-in-delay { animation-delay: 0.5s; }
+        @keyframes fadeIn { to { opacity: 1; } }
 
-        .fade-in-delay {
-            animation-delay: 0.5s;
-        }
-
-        @keyframes fadeIn {
-            to {
-                opacity: 1;
-            }
-        }
-
-      c
         .app-name {
             font-size: 32px;
             font-weight: 700;
@@ -96,21 +78,14 @@
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
-        .tagline {
-            font-size: 16px;
-            color: #555;
-            opacity: 0.9;
-            margin-bottom: 30px;
-        }
-
-        .welcome-message {
-            font-size: 22px;
+        .status-message { /* Replaces welcome-message */
+            font-size: 24px; /* Slightly larger for status */
             font-weight: 600;
-            color: #444;
+            color: #28a745; /* Green for success */
             margin-bottom: 15px;
         }
 
-        .welcome-description {
+        .status-description { /* Replaces welcome-description */
             font-size: 17px;
             color: #666;
             line-height: 1.6;
@@ -136,95 +111,63 @@
             box-shadow: 0 8px 25px rgba(255, 193, 7, 0.4);
         }
 
-        .buttons a:active {
-            transform: translateY(0) scale(1);
-        }
+        .buttons a:active { transform: translateY(0) scale(1); }
 
         .floating-shapes {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 0;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0;
         }
-
         .shape {
-            position: absolute;
-            opacity: 0.5;
-            font-size: 80px;
-            animation: float 8s ease-in-out infinite;
+            position: absolute; opacity: 0.5; font-size: 80px; animation: float 8s ease-in-out infinite;
         }
-
         .shape:nth-child(1) { top: 15%; left: 10%; animation-delay: 0s; }
         .shape:nth-child(2) { top: 70%; right: 15%; animation-delay: 2.5s; }
         .shape:nth-child(3) { bottom: 10%; left: 25%; animation-delay: 5s; }
-        .shape:nth-child(4) { top: 30%; right: 30%; font-size: 40px; animation-delay: 1s; }
-        .shape:nth-child(5) { bottom: 35%; left: 5%; font-size: 60px; animation-delay: 3.5s; }
-
         @keyframes float {
             0%, 100% { transform: translateY(0px) rotate(0deg) scale(1); }
             50% { transform: translateY(-25px) rotate(15deg) scale(1.1); }
         }
 
         footer {
-            position: absolute;
-            bottom: 20px;
-            font-size: 14px;
-            color: #fff;
-            opacity: 0.7;
-            width: 100%;
-            text-align: center;
+            position: absolute; bottom: 20px; font-size: 14px;
+            color: white;
+            opacity: 0.7; width: 100%; text-align: center;
         }
 
         @media (max-width: 480px) {
-            .container {
-                padding: 40px 25px;
-                margin: 10px;
-            }
+            .container { padding: 40px 25px; margin: 10px; }
             .app-name { font-size: 28px; }
-            .tagline { font-size: 14px; }
-            .welcome-message { font-size: 20px; }
-            .welcome-description { font-size: 15px; }
+            .status-message { font-size: 20px; }
+            .status-description { font-size: 15px; }
             .buttons a { padding: 14px 25px; font-size: 15px; margin: 8px 5px; }
         }
     </style>
 </head>
 <body>
     <div class="floating-shapes">
-        <div class="shape">🎓</div>
-        <div class="shape">🤝</div>
-        <div class="shape">🏛️</div>
+        <div class="shape">✅</div>
         <div class="shape">🎉</div>
-        <div class="shape">💡</div>
+        <div class="shape">🔑</div>
     </div>
 
     <div class="container">
         <div class="logo-section fade-in">
-            
-             <img src="images/logo 1.png" alt="Campus Connect Logo" class="logo" style="height: 100px; margin-bottom: 45px;"> 
+            <img src="images/logo 1.png" alt="Campus Connect Logo" class="logo" style="height: 80px; margin-bottom: 20px;">
             <h1 class="app-name">Campus Connect</h1>
         </div>
 
-        <p class="tagline fade-in" style="animation-delay: 0.3s;">
-            <em>Bringing campus life to your fingertips.</em>
-        </p>
-
-        <p class="welcome-message fade-in fade-in-delay">Welcome Aboard!</p>
-        <p class="welcome-description fade-in fade-in-delay" style="animation-delay: 0.8s;">
-            Discover events, join clubs, and build lasting connections.<br>
-            Campus Connect is your vibrant hub for everything happening on campus.
+        <p class="status-message fade-in fade-in-delay">🎉 Email Verified Successfully!</p>
+        <p class="status-description fade-in fade-in-delay" style="animation-delay: 0.8s;">
+            Thank you for verifying your email address. Your account is now active and ready to use.
         </p>
 
         <div class="buttons fade-in fade-in-delay" style="animation-delay: 1.2s;">
-            <a href="/signup-student">📝 Student Sign Up</a>
             <a href="/login-student">🔐 Student Login</a>
+            <a href="/login-admin">🔒 Admin Login</a>
         </div>
     </div>
 
     <footer>
-        🌟 Explore. Connect. Belong. | © Campus Connect 2025
+        🌟 Your Campus Journey Starts Now! | © Campus Connect 2025
     </footer>
 </body>
 </html>

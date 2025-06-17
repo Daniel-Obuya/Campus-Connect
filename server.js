@@ -5,6 +5,8 @@ const express = require('express');
 const path = require('path');
 const mysql = require('mysql2/promise'); 
 const bcrypt = require('bcrypt');
+const crypto = require('crypto'); // For generating tokens
+const fetch = require('node-fetch'); // For making HTTP requests from the backend
 
 const app = express();
 const PORT = process.env.PORT || 3306;
@@ -14,7 +16,17 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Serve static files
-app.use(express.static(__dirname)); 
+app.use(express.static(__dirname));
+
+// Nodemailer transporter setup
+const nodemailer = require('nodemailer');
+const transporter = nodemailer.createTransport({
+    service: 'gmail', // Or your email provider
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASSWORD,
+    },
+});
 
 // Database connection pool (reuse connections efficiently)
 const pool = mysql.createPool({
@@ -48,6 +60,12 @@ app.get('/welcome', (req, res) => {
   res.sendFile(path.join(__dirname, 'welcome.html'));
 });
 
+// --- Combined Admin Portals Welcome Page ---
+app.get('/welcome-admin-portals', (req, res) => {
+  res.sendFile(path.join(__dirname, 'welcome_admin_portals.html'));
+});
+
+
 // New specific signup and login pages
 app.get('/signup-student', (req, res) => {
   res.sendFile(path.join(__dirname, 'signup-student.html'));
@@ -78,6 +96,58 @@ app.get('/departments-directory', (req, res) => {
 // --- Route for Events Directory ---
 app.get('/events-directory', (req, res) => {
     res.sendFile(path.join(__dirname, 'events_directory.html'));
+});
+
+// --- Route for Interactive Calendar ---
+app.get('/interactive-calendar', (req, res) => {
+    res.sendFile(path.join(__dirname, 'interactive_calendar.html'));
+});
+
+function generateVerificationToken() {
+    return crypto.randomBytes(32).toString('hex');
+}
+
+// --- New API Route to fetch external events (e.g., from Eventbrite) ---
+app.get('/api/external-events', async (req, res) => {
+    const eventbriteToken = process.env.EVENTBRITE_PRIVATE_TOKEN;
+    if (!eventbriteToken) {
+        console.error('Eventbrite Private Token not found in .env file.');
+        return res.status(500).json({ success: false, message: 'Server configuration error for external events.' });
+    }
+
+    // Get page number from query string, default to 1
+    const page = req.query.page || '1';
+    const location = req.query.location || 'Nairobi'; // Example: allow location to be passed
+    const query = req.query.q || 'student'; // Example: allow query to be passed
+
+    // Simplified URL to closely match the successful direct test
+    const eventbriteURL = `https://www.eventbriteapi.com/v3/events/search/?location.address=${encodeURIComponent(location)}&q=${encodeURIComponent(query)}`;
+
+    console.log(`Backend fetching from Eventbrite: ${eventbriteURL}`);
+
+    try {
+        const eventbriteResponse = await fetch(eventbriteURL, {
+            headers: {
+                'Authorization': `Bearer ${eventbriteToken}`,
+                'Accept': 'application/json'
+            }
+        });
+
+        if (!eventbriteResponse.ok) {
+            const errorData = await eventbriteResponse.json().catch(() => ({ message: eventbriteResponse.statusText }));
+            console.error(`Eventbrite API Error: ${eventbriteResponse.status}`, errorData);
+            return res.status(eventbriteResponse.status).json({ 
+                success: false, 
+                message: `Failed to fetch events from Eventbrite: ${errorData.error_description || errorData.error || errorData.message || 'Unknown API error'}` 
+            });
+        }
+
+        const eventbriteData = await eventbriteResponse.json();
+        res.json({ success: true, eventsData: eventbriteData }); // Send the whole Eventbrite response structure
+    } catch (error) {
+        console.error('Error fetching external events from backend:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch external events.' });
+    }
 });
 
 // --- API Routes ---
@@ -132,8 +202,8 @@ app.post('/api/signup', async (req, res) => {
         first_name: firstName,
         last_name: lastName,
         role,
-        email_verified: true, // Set to true for now, implement email verification later
-        is_active: true
+        email_verified: false, // Set to false initially
+        is_active: false // Set to false until email is verified
       };
 
       if (role === 'student') {
@@ -154,6 +224,11 @@ app.post('/api/signup', async (req, res) => {
       const [result] = await connection.query('INSERT INTO users SET ?', userInsertData);
       // The user ID of the newly inserted user
       userId = result.insertId;
+
+      // Generate and store verification token
+      const verificationToken = generateVerificationToken();
+      const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+      await connection.query('UPDATE users SET email_verification_token = ?, email_verification_expires = ? WHERE user_id = ?', [verificationToken, expires, userId]);
 
       if (role === 'club_admin') {
         if (!clubDetails || !clubDetails.name || !clubDetails.category || !clubDetails.advisorName) {
@@ -185,32 +260,33 @@ app.post('/api/signup', async (req, res) => {
         }
 
         let newDepartmentId; // To store the ID of the department
-        // Check if department code already exists (assuming department code should be unique)
-        const [existingDepts] = await connection.query('SELECT department_id FROM departments WHERE code = ?', [departmentDetails.code]);
-        // Also check if department name already exists (optional, but good for data integrity)
-        // const [existingDeptNames] = await connection.query('SELECT department_id FROM departments WHERE name = ?', [departmentDetails.name]);
-        if (existingDepts.length > 0) {
-          await connection.rollback();
-          connection.release();
-          return res.status(409).json({ success: false, message: 'Department code already exists.' });
-        }
+        // Check if department code already exists
+        const [existingDepts] = await connection.query('SELECT department_id, name FROM departments WHERE code = ?', [departmentDetails.code]);
 
-        const [deptInsertResult] = await connection.query(
-          'INSERT INTO departments (name, code, description, head_of_department_user_id, contact_email, contact_phone, website_url, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-          [ // Assuming head_of_department_user_id links to the users table
-            departmentDetails.name,
-            departmentDetails.code,
-            departmentDetails.description || null,
-            userId, // Assign the current user (department_admin) as head_of_department_user_id
-            email, // User's email as department contact email
-            departmentDetails.contact_phone || null,
-            departmentDetails.website_url || null,
-            true 
-          ]
-        );
-        // Note: The above INSERT for departments uses departmentDetails.head_of_department.
-        // It's now set to `userId`.
-        newDepartmentId = deptInsertResult.insertId;
+        if (existingDepts.length > 0) {
+          // Department already exists. Associate this new admin with the existing department.
+          newDepartmentId = existingDepts[0].department_id;
+          console.log(`Department with code ${departmentDetails.code} (Name: ${existingDepts[0].name}, ID: ${newDepartmentId}) already exists. New admin (User ID: ${userId}) will be associated with it.`);
+          // We do not update the department's details (like name or head_of_department_user_id) here.
+          // The head_of_department_user_id remains the ID of the first admin who created it.
+        } else {
+          // Department does not exist, create it.
+          const [deptInsertResult] = await connection.query(
+            'INSERT INTO departments (name, code, description, head_of_department_user_id, contact_email, contact_phone, website_url, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            [ 
+              departmentDetails.name,
+              departmentDetails.code,
+              departmentDetails.description || null,
+              userId, // Assign the current user (department_admin) as head_of_department_user_id
+              email, 
+              departmentDetails.contact_phone || null,
+              departmentDetails.website_url || null,
+              true 
+            ]
+          );
+          newDepartmentId = deptInsertResult.insertId;
+          console.log(`New department "${departmentDetails.name}" (Code: ${departmentDetails.code}) created with ID: ${newDepartmentId}. Head admin ID set to: ${userId}`);
+        }
 
         // IMPORTANT: Update the users table to link this admin to this new department
         await connection.query(
@@ -221,6 +297,23 @@ app.post('/api/signup', async (req, res) => {
 
       await connection.commit();
       connection.release();
+
+      // Send verification email
+      const verificationLink = `http://localhost:${PORT}/api/verify-email?token=${verificationToken}`;
+      const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: 'Campus Connect - Verify Your Email Address',
+        html: `<p>Hello ${firstName},</p>
+               <p>Thank you for registering with Campus Connect!</p>
+               <p>Please click the following link to verify your email address:</p>
+               <a href="${verificationLink}">${verificationLink}</a>
+               <p>This link will expire in 24 hours.</p>
+               <p>If you did not sign up for Campus Connect, please ignore this email.</p>
+               <p>Best regards,<br>The Campus Connect Team</p>`,
+      };
+      await transporter.sendMail(mailOptions);
+      console.log(`Verification email sent to ${email}`);
 
       // Fetch department_id for the department_admin to include in token and response
       let associatedDepartmentId = null;
@@ -240,8 +333,7 @@ app.post('/api/signup', async (req, res) => {
             department_id: associatedDepartmentId // Include department_id
         }, secret, { expiresIn: '2h' });
         res.status(201).json({
-          success: true, message: `Department admin ${email} registered successfully. Redirecting...`,
-          redirectTo: '/department-dashboard', token,
+          success: true, message: `Department admin ${email} registered successfully. Please check your email to verify your account.`,
           user: { id: userId, firstName, lastName, email, role, department_id: associatedDepartmentId }
         });
       } else {
@@ -257,8 +349,8 @@ app.post('/api/signup', async (req, res) => {
         console.log(`User ${email} (role: ${role}) registered, sending token.`);
         res.status(201).json({
           success: true,
-          message: `User ${email} registered successfully as ${role}.`,
-          token,
+          message: `User ${email} registered successfully as ${role}. Please check your email to verify your account.`,
+          // token, // Optionally withhold token until email is verified
           user: {
             id: userId,
             firstName,
@@ -292,6 +384,52 @@ app.post('/api/signup', async (req, res) => {
       message: 'Internal server error' 
     });
   }
+});
+
+// --- API Route for Email Verification ---
+app.get('/api/verify-email', async (req, res) => {
+    const { token } = req.query;
+
+    if (!token) {
+        // return res.status(400).send('Verification token is missing.');
+        return res.status(400).sendFile(path.join(__dirname, 'verification_failed.html'));
+    }
+
+    try {
+        const connection = await pool.getConnection();
+        try {
+            // Find user by verification token and check expiry
+            const [users] = await connection.query(
+                'SELECT * FROM users WHERE email_verification_token = ? AND email_verification_expires > NOW()',
+                [token]
+            );
+
+            if (users.length === 0) {
+                console.log(`Email verification failed: Invalid or expired token "${token}"`);
+                // return res.status(400).send('Invalid or expired verification link.');
+                return res.status(400).sendFile(path.join(__dirname, 'verification_failed.html'));
+            }
+
+            const user = users[0];
+
+            // Update user to verified and clear token
+            await connection.query(
+                'UPDATE users SET email_verified = ?, email_verification_token = NULL, email_verification_expires = NULL, is_active = ? WHERE user_id = ?',
+                [true, true, user.user_id] // Set email_verified to true and is_active to true
+            );
+
+            console.log(`Email verified successfully for user ID: ${user.user_id}, Email: ${user.email}`);
+            // return res.send('Email verified successfully! You can now log in.');
+            res.sendFile(path.join(__dirname, 'verification_success.html'));
+
+        } finally {
+            connection.release();
+        }
+    } catch (error) {
+        console.error('Email verification error:', error);
+        // return res.status(500).send('Internal server error during email verification.');
+        res.status(500).sendFile(path.join(__dirname, 'verification_failed.html'));
+    }
 });
 
 // --- Authentication Middleware ---
@@ -363,10 +501,11 @@ app.post('/api/login', async (req, res) => {
       });
     }
 
+    // Check if email is verified before allowing login
     if (!user.email_verified) {
-      return res.status(403).json({ 
-        success: false, 
-        message: 'Account not verified. Please check your email.' 
+      return res.status(403).json({
+        success: false,
+        message: 'Account not verified. Please check your email for the verification link.'
       });
     }
 
@@ -791,10 +930,13 @@ app.post('/api/announcements', authenticateJWT, async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
   console.log(`Welcome page: http://localhost:${PORT}/welcome`);
+  console.log(`Admin Portals Welcome: http://localhost:${PORT}/welcome-admin-portals`);
   console.log(`Student Signup: http://localhost:${PORT}/signup-student`);
   console.log(`Student Login: http://localhost:${PORT}/login-student`);
   console.log(`Admin Signup: http://localhost:${PORT}/signup-admin`);
   console.log(`Admin Login: http://localhost:${PORT}/login-admin`);
   console.log(`Departments Directory: http://localhost:${PORT}/departments-directory`);
   console.log(`Events Directory: http://localhost:${PORT}/events-directory`);
+  console.log(`Interactive Calendar: http://localhost:${PORT}/interactive-calendar`);
+  console.log(`API for External Events (test): http://localhost:${PORT}/api/external-events?page=1&location=Nairobi&q=tech`);
 });
