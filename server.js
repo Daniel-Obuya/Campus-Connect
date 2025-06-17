@@ -69,6 +69,10 @@ app.get('/events-management', (req, res) => {
 app.get('/department-dashboard', (req, res) => {  // New route
     res.sendFile(path.join(__dirname, 'department_admin.html')); // Corrected filename
 });
+// -- Route for Student Profile Directory --
+app.get('/student-profile', (req, res) => {
+  res.sendFile(path.join(__dirname, 'student-profile.html'))
+});
 
 // --- Route for Departments Directory ---
 app.get('/departments-directory', (req, res) => {
