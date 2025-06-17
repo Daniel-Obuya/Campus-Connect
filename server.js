@@ -69,9 +69,12 @@ app.get('/events-management', (req, res) => {
 app.get('/department-dashboard', (req, res) => {  // New route
     res.sendFile(path.join(__dirname, 'department_admin.html')); // Corrected filename
 });
-app.get('/student-profile', (req, res) => {
-  res.sendFile(path.join(__dirname, 'student-profile.html'))
+
+// --- Route for Departments Directory ---
+app.get('/departments-directory', (req, res) => {
+    res.sendFile(path.join(__dirname, 'departments_directory.html'));
 });
+
 // --- API Routes ---
 
 // VERY SIMPLE TEST ROUTE - Add this just before /api/events/department
@@ -787,4 +790,5 @@ app.listen(PORT, () => {
   console.log(`Student Login: http://localhost:${PORT}/login-student`);
   console.log(`Admin Signup: http://localhost:${PORT}/signup-admin`);
   console.log(`Admin Login: http://localhost:${PORT}/login-admin`);
+  console.log(`Departments Directory: http://localhost:${PORT}/departments-directory`);
 });

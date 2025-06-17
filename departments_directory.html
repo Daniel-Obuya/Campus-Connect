@@ -96,13 +96,23 @@
 
         /* New styles for department list items */
         #departmentsList {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Responsive grid */
+            gap: var(--spacing-lg);
             list-style: none;
             padding: 0;
         }
 
+        /* On larger screens, enforce 3 columns if auto-fit results in more or less */
+        @media (min-width: 992px) { /* Adjust breakpoint as needed */
+            #departmentsList {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
         .department-list-item {
-            display: flex;
-            align-items: center;
+            display: flex; /* Changed to flex column */
+            flex-direction: column;
             padding: var(--spacing-md);
             margin-bottom: var(--spacing-md);
             background: var(--color-bg-glass-secondary);
@@ -111,7 +121,8 @@
             border-radius: var(--border-radius-md);
             border: var(--border-width) solid var(--color-border-glass);
             box-shadow: var(--box-shadow-soft);
-            gap: var(--spacing-md);
+            /* gap: var(--spacing-md); Removed, using margins/padding for children */
+            justify-content: space-between; /* Helps push actions to bottom */
         }
 
         .department-icon {
@@ -119,10 +130,12 @@
             color: var(--theme-color-primary-darker);
             flex-shrink: 0;
             width: 40px; /* Fixed width for icon container */
+            height: 40px; /* Ensure consistent height */
             text-align: center;
+            margin-bottom: var(--spacing-sm); /* Space below icon */
         }
 
-        .department-info {
+        .department-info { /* Takes remaining space and allows text to wrap */
             flex-grow: 1;
         }
         .department-info h3 {
@@ -137,14 +150,16 @@
 
         .department-item-actions {
             display: flex;
-            flex-direction: column; /* Stack buttons vertically on smaller screens if needed, or keep row */
-            gap: var(--spacing-xs);
+            justify-content: space-between; /* Pushes buttons to left and right */
+            align-items: center;
             flex-shrink: 0;
+            margin-top: auto; /* Pushes actions to the bottom of the card */
+            padding-top: var(--spacing-md); /* Space above the buttons */
+            width: 100%; /* Ensure it spans the width of the card */
         }
         .department-item-actions .action-button {
-            width: 150px; /* Fixed width for these buttons, adjust as needed */
-            padding: var(--spacing-xs) var(--spacing-sm); /* Smaller padding for list item buttons */
-            font-size: var(--font-size-small);
+            flex-basis: calc(50% - (var(--spacing-sm) / 2)); /* Distribute space for 2 buttons with a small gap */
+            text-align: center; /* Center text in buttons */
         }
 
         /* Styles for "Followed Departments" section */
@@ -177,6 +192,11 @@
              font-size: var(--font-size-xsmall);
         }
 
+        .load-more-container {
+            text-align: center;
+            margin-top: var(--spacing-lg);
+            margin-bottom: var(--spacing-lg);
+        }
     </style>
 </head>
 <body>
@@ -253,9 +273,14 @@
                         <a href="department_details.html?id=humanities" class="action-button action-button-info">Discover More</a>
                     </div>
                 </li>
-                <!-- More department list items will be dynamically loaded or added here -->
+                <!-- More department list items will be dynamically loaded or added here by JavaScript -->
             </ul>
             <p id="noDepartmentsMessage" style="display:none; text-align:center; padding: 20px;">No departments found matching your criteria.</p>
+
+            <!-- Load More Button -->
+            <div class="load-more-container">
+                <button id="loadMoreBtn" class="action-button" onclick="loadMoreDepartments()">Load More Departments</button>
+            </div>
         </section>
 
         <section class="dashboard-section" id="followedDepartmentsSection">
@@ -283,34 +308,25 @@
 
     <script>
         // Placeholder for JavaScript functionalities
-        const followedDepartments = new Set(); // In a real app, this would be synced with backend/localStorage
+        const followedDepartments = new Set(JSON.parse(localStorage.getItem('followedDepartments')) || []);
 
-        function filterDepartments() {
-            const searchTerm = document.getElementById('departmentSearch').value.toLowerCase();
-            const departmentItems = document.querySelectorAll('#departmentsList .department-list-item');
-            let found = false;
-            departmentItems.forEach(item => {
-                const departmentName = item.querySelector('.department-info h3').textContent.toLowerCase();
-                const departmentDesc = item.querySelector('.department-info p').textContent.toLowerCase();
-                const departmentInfo = departmentName + " " + departmentDesc;
-                if (departmentName.includes(searchTerm) || departmentInfo.includes(searchTerm)) {
-                    item.style.display = 'flex';
-                    found = true;
-                } else {
-                    item.style.display = 'none';
-                }
-            });
-            console.log("Filtering departments by:", searchTerm);
-            // In a real app, this might involve an API call if departments are paginated or fetched on demand.
+        let allDepartmentsData = [];
+        let currentlyDisplayedCount = 0;
+        const departmentsPerLoad = 3;
+        const departmentsListElement = document.getElementById('departmentsList');
+        const loadMoreBtn = document.getElementById('loadMoreBtn');
+        const noDepartmentsMessage = document.getElementById('noDepartmentsMessage');
+        let initialFetchHasError = false; 
+        let staticDepartmentsHTML = ''; // To store the initial static HTML content
+
+        function sanitizeDepartmentId(name) {
+            return name.toLowerCase().replace(/\s+/g, '-').replace(/&/g, 'and');
         }
 
         function toggleFollow(departmentId, buttonElement) {
-            const departmentItem = document.querySelector(`.department-list-item[data-department-id="${departmentId}"]`);
-            const departmentName = departmentItem.querySelector('.department-info h3').textContent;
-            const departmentIconHTML = departmentItem.querySelector('.department-icon').innerHTML;
-
             if (followedDepartments.has(departmentId)) {
                 followedDepartments.delete(departmentId);
+                if (buttonElement) { // buttonElement might not exist if unfollowing from followed list
                 buttonElement.textContent = 'Follow';
                 buttonElement.classList.remove('action-button-secondary'); 
                 // Ensure .action-button is present (it should be, as it's the base)
@@ -318,12 +334,16 @@
                     buttonElement.classList.add('action-button');
                 }
                 console.log(`Unfollowed ${departmentId}`);
+                }
             } else {
                 followedDepartments.add(departmentId);
+                if (buttonElement) {
                 buttonElement.textContent = 'Unfollow';
                 buttonElement.classList.add('action-button-secondary'); // Change style to indicate "unfollow"
+                }
                 console.log(`Followed ${departmentId}`);
             }
+            localStorage.setItem('followedDepartments', JSON.stringify(Array.from(followedDepartments)));
             updateFollowedList();
             // Example:
             // fetch(`/api/departments/${departmentId}/subscribe`, { method: 'POST' })
@@ -347,74 +367,200 @@
             }
 
             followedDepartments.forEach(deptId => {
-                const originalItem = document.querySelector(`.department-list-item[data-department-id="${deptId}"]`);
-                if (!originalItem) return; // Should not happen if data is consistent
+                // Find the department details from the master list
+                const departmentData = allDepartmentsData.find(d => sanitizeDepartmentId(d.name) === deptId);
+                if (!departmentData) {
+                    console.warn(`Followed department ID "${deptId}" not found in allDepartmentsData.`);
+                    return; 
+                }
 
-                const departmentName = originalItem.querySelector('.department-info h3').textContent;
-                const departmentIconHTML = originalItem.querySelector('.department-icon').innerHTML;
+                const departmentName = departmentData.name;
+                const departmentIconHTML = departmentData.icon || '🏛️'; // Default icon
 
                 const listItem = document.createElement('li');
                 listItem.className = 'followed-department-item';
                 listItem.innerHTML = `
                     <div class="department-icon">${departmentIconHTML}</div>
                     <span>${departmentName}</span>
-                    <button class="action-button action-button-secondary" onclick="toggleFollow('${deptId}', document.querySelector('.department-list-item[data-department-id=\\'${deptId}\\'] .department-follow-toggle'))">Unfollow</button>
+                    <button class="action-button action-button-secondary" onclick="handleUnfollowFromList('${deptId}')">Unfollow</button>
                 `;
                 listElement.appendChild(listItem);
             });
         }
 
-        // TODO: Implement dynamic loading of department data from a backend API
-        // async function loadDepartments() {
-        //     const listElement = document.getElementById('departmentsList');
-        //     const noDepartmentsMessage = document.getElementById('noDepartmentsMessage');
-        //     try {
-        //         const response = await fetch('/api/departments'); // Replace with your actual API endpoint
-        //         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        //         const departments = await response.json();
-        //
-        //         container.innerHTML = ''; // Clear existing example cards
-        //         if (departments.length === 0) {
-        //             noDepartmentsMessage.style.display = 'block';
-        //             listElement.style.display = 'none';
-        //             return;
-        //         }
-        //
-        //         noDepartmentsMessage.style.display = 'none';
-        //         listElement.style.display = '';
-        //         listElement.innerHTML = ''; // Clear static examples
-        //
-        //         departments.forEach(dept => {
-        //             const listItem = document.createElement('li');
-        //             listItem.className = 'department-list-item';
-        //             listItem.setAttribute('data-department-id', dept.id);
-        //             listItem.innerHTML = \`
-        //                 <div class="department-icon">\${dept.icon || '❓'}</div>
-        //                 <div class="department-info">
-        //                     <h3>\${dept.name}</h3>
-        //                     <p>\${dept.briefDescription}</p>
-        //                 </div>
-        //                 <div class="department-item-actions">
-        //                     <button class="action-button department-follow-toggle \${followedDepartments.has(dept.id) ? 'action-button-secondary' : ''}" onclick="toggleFollow('\${dept.id}', this)">
-        //                         \${followedDepartments.has(dept.id) ? 'Unfollow' : 'Follow'} // Text content
-        //                     </button>
-        //                     <a href="department_details.html?id=\${dept.id}" class="action-button action-button-info">Discover More</a>
-        //                 </div>
-        //             \`;
-        //             listElement.appendChild(listItem);
-        //         });
-        //     } catch (error) {
-        //         console.error("Could not load departments:", error);
-        //         noDepartmentsMessage.textContent = 'Error loading departments. Please try again later.';
-        //         noDepartmentsMessage.style.display = 'block';
-        //         listElement.style.display = 'none';
-        //     }
-        // }
-        //
-        // document.addEventListener('DOMContentLoaded', () => {
-        //     // loadDepartments(); // Uncomment when API is ready. Also, ensure loaded buttons get 'department-follow-toggle' class.
-        //     updateFollowedList(); // Initial call to render the followed list (empty at first)
-        // });
+        function handleUnfollowFromList(departmentId) {
+            // Find the corresponding follow/unfollow button in the main list and click it programmatically
+            // or directly call toggleFollow and update its button's appearance.
+            const mainListButton = document.querySelector(`.department-list-item[data-department-id='${departmentId}'] .department-follow-toggle`);
+            if (mainListButton) {
+                toggleFollow(departmentId, mainListButton);
+            } else {
+                // If the item is not currently rendered in the main list, just update the state
+                toggleFollow(departmentId, null);
+            }
+        }
+
+
+        function createDepartmentListItem(department) {
+            const listItem = document.createElement('li');
+            listItem.className = 'department-list-item';
+            const departmentId = sanitizeDepartmentId(department.name);
+            listItem.setAttribute('data-department-id', departmentId);
+
+            const isFollowed = followedDepartments.has(departmentId);
+            const followButtonText = isFollowed ? 'Unfollow' : 'Follow';
+            const followButtonClass = isFollowed ? 'action-button department-follow-toggle action-button-secondary' : 'action-button department-follow-toggle';
+
+            listItem.innerHTML = `
+                <div class="department-icon">${department.icon || '🏛️'}</div>
+                <div class="department-info">
+                    <h3>${department.name}</h3>
+                    <p>${department.description}</p>
+                </div>
+                <div class="department-item-actions">
+                    <button class="${followButtonClass}" onclick="toggleFollow('${departmentId}', this)">${followButtonText}</button>
+                    <a href="department_details.html?id=${departmentId}" class="action-button action-button-info">Discover More</a>
+                </div>
+            `;
+            return listItem;
+        }
+
+        function renderDepartments(startIndex, count) {
+            const departmentsToRender = allDepartmentsData.slice(startIndex, startIndex + count);
+            const isInitialRender = startIndex === 0;
+
+            if (departmentsToRender.length === 0 && isInitialRender) {
+                if (initialFetchHasError) {
+                    noDepartmentsMessage.textContent = 'Failed to load initial departments. Please check the console or try refreshing.';
+                } else {
+                    noDepartmentsMessage.textContent = 'No departments available at the moment.';
+                }
+                noDepartmentsMessage.style.display = 'block';
+                // loadMoreBtn.style.display = 'none'; // Button remains visible
+                return;
+            }
+            noDepartmentsMessage.style.display = 'none'; // Hide if previously shown
+
+            departmentsToRender.forEach(dept => {
+                const listItem = createDepartmentListItem(dept);
+                departmentsListElement.appendChild(listItem);
+            });
+
+            currentlyDisplayedCount += departmentsToRender.length;
+
+            if (currentlyDisplayedCount >= allDepartmentsData.length) {
+                loadMoreBtn.textContent = 'All Departments Loaded';
+                loadMoreBtn.disabled = true;
+            } else {
+                loadMoreBtn.textContent = 'Load More Departments';
+                loadMoreBtn.disabled = false;
+                // loadMoreBtn.style.display = 'block'; // Already visible by default
+            }
+        }
+
+        function loadMoreDepartments() {
+            loadMoreBtn.textContent = 'Loading...';
+            loadMoreBtn.disabled = true;
+
+            if (initialFetchHasError || !allDepartmentsData || allDepartmentsData.length === 0) {
+                alert("Could not load more departments. There might have been an issue loading the initial department data. Please try refreshing the page or check the console for errors.");
+                loadMoreBtn.textContent = 'Load More Departments';
+                // Re-enable the button to allow another attempt, though a refresh is often better for initial load issues.
+                loadMoreBtn.disabled = false; 
+                return;
+            }
+
+            if (currentlyDisplayedCount >= allDepartmentsData.length) {
+                // This case is mostly handled by the button being disabled by renderDepartments,
+                // but it's a good safeguard.
+                alert("All available departments have already been loaded.");
+                loadMoreBtn.textContent = 'All Departments Loaded';
+                loadMoreBtn.disabled = true; // Ensure it stays disabled
+                return;
+            }
+
+            renderDepartments(currentlyDisplayedCount, departmentsPerLoad);
+        }
+
+        function filterDepartments() {
+            const searchTerm = document.getElementById('departmentSearch').value.toLowerCase().trim();
+            const currentDepartmentsList = document.getElementById('departmentsList');
+            const currentLoadMoreBtn = document.getElementById('loadMoreBtn');
+            const currentNoDepartmentsMessage = document.getElementById('noDepartmentsMessage');
+
+            if (!currentDepartmentsList || !currentLoadMoreBtn || !currentNoDepartmentsMessage) {
+                console.error("One or more critical elements for filtering not found.");
+                return;
+            }
+
+            currentDepartmentsList.innerHTML = ''; // Clear the list (both static and dynamic)
+
+            if (!searchTerm) {
+                // Search is empty, restore initial state (static + initial JSON batch)
+                currentDepartmentsList.innerHTML = staticDepartmentsHTML; // Restore static items
+                
+                currentlyDisplayedCount = 0; // Reset for JSON items
+                // renderDepartments will append to static HTML and manage its own messages/button for the JSON part.
+                renderDepartments(0, departmentsPerLoad); 
+                return;
+            }
+
+            // Search term is present, filter JSON data from allDepartmentsData
+            const filteredDepartments = allDepartmentsData.filter(dept => {
+                const deptName = dept.name ? dept.name.toLowerCase() : '';
+                const deptDesc = dept.description ? dept.description.toLowerCase() : '';
+                return deptName.includes(searchTerm) || deptDesc.includes(searchTerm);
+            });
+
+            if (filteredDepartments.length > 0) {
+                filteredDepartments.forEach(dept => {
+                    const listItem = createDepartmentListItem(dept);
+                    currentDepartmentsList.appendChild(listItem);
+                });
+                currentNoDepartmentsMessage.style.display = 'none';
+            } else {
+                currentNoDepartmentsMessage.textContent = 'No departments found matching your search in our dynamic list.';
+                currentNoDepartmentsMessage.style.display = 'block';
+            }
+            currentLoadMoreBtn.style.display = 'none'; // Hide "Load More" when displaying search results
+        }
+
+        async function fetchAndInitializeDepartments() {
+            console.log("fetchAndInitializeDepartments called");
+            initialFetchHasError = false; // Reset flag on each attempt
+            try {
+                const response = await fetch('departments.json'); // Assuming departments.json is in the same directory
+                if (!response.ok) {
+                    initialFetchHasError = true;
+                    throw new Error(`HTTP error! status: ${response.status} ${response.statusText}`);
+                }
+                allDepartmentsData = await response.json();
+                if (!Array.isArray(allDepartmentsData)) {
+                    initialFetchHasError = true;
+                    allDepartmentsData = []; // Ensure it's an array to prevent other errors
+                    throw new Error("Fetched data is not in the expected format (array).");
+                }
+                renderDepartments(0, departmentsPerLoad); // Load initial batch
+                updateFollowedList(); // Update followed list based on newly loaded master data
+            } catch (error) {
+                initialFetchHasError = true;
+                console.error("Could not load departments:", error);
+                // Display error message and ensure button is correctly stateful
+                allDepartmentsData = []; // Ensure it's empty on error
+                renderDepartments(0, 0); // Call render to update messages and button state
+                updateFollowedList(); // Still update followed list (it will be empty or from localStorage)
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const listElement = document.getElementById('departmentsList');
+            if (listElement) {
+                staticDepartmentsHTML = listElement.innerHTML; // Store initial static content
+            } else {
+                console.error("Critical element #departmentsList not found on DOMContentLoaded!");
+            }
+            fetchAndInitializeDepartments();
+        });
     </script>
 </body>
 </html>
