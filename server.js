@@ -72,6 +72,18 @@ app.get('/department-dashboard', (req, res) => {  // New route
 app.get('/student-profile', (req, res) => {
   res.sendFile(path.join(__dirname, 'student-profile.html'))
 });
+
+app.get('/club-admin-dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, 'club-admin-dashboard.html'));
+});
+
+app.get('/departments-directory', (req, res) => {
+  res.sendFile(path.join(__dirname, 'departments_directory.html'));
+});
+
+app.get('/clubs-directory', (req, res) => {
+  res.sendFile(path.join(__dirname, 'clubs-directory.html'));
+});
 // --- API Routes ---
 
 // VERY SIMPLE TEST ROUTE - Add this just before /api/events/department
