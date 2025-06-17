@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clubs Directory - Campus Connect</title>
+    <!-- You can link to a shared CSS file or use styles from department_admin.css / departments_directory.html if applicable -->
+    <link rel="stylesheet" href="department_admin.css"> <!-- Example: reusing existing styles -->
+    <style>
+        /* Basic placeholder styles */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #f5deb3 0%, #deb887 50%, #cd853f 100%);
+            color: #333;
+            margin: 0;
+            padding-top: 80px; /* Account for fixed header */
+        }
+        .dashboard-header { /* Assuming you might reuse this class from other pages */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+        main {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 20px auto;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+        .club-list-item {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 12px;
+        }
+        .club-list-item h3 { margin-top: 0; }
+    </style>
+</head>
+<body>
+    <header class="dashboard-header">
+        <div class="logo-section">
+            <img src="images/logo 1.png" alt="Campus Connect Logo" class="logo" style="height: 50px;">
+            <h1 class="app-name">Campus Connect</h1>
+        </div>
+        <h1>Clubs & Societies Directory</h1>
+        <div class="header-actions">
+            <a href="/student-profile" class="action-button header-button">Back to Profile</a>
+            <a href="/welcome" class="action-button header-button action-button-danger">Logout</a>
+        </div>
+    </header>
+
+    <main>
+        <section class="dashboard-section">
+            <h2>Discover Student Clubs</h2>
+            <p>This is a placeholder for the clubs directory. Clubs will be listed here soon!</p>
+            <div id="clubsListContainer">
+                <div class="club-list-item">
+                    <h3>Example Club: The Coding Crew</h3>
+                    <p>A place for aspiring developers to learn, share, and build cool projects.</p>
+                    <button class="action-button">Learn More</button>
+                </div>
+                <div class="club-list-item">
+                    <h3>Example Club: Adventure Seekers</h3>
+                    <p>Join us for outdoor activities, trips, and making new friends.</p>
+                    <button class="action-button">Learn More</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Campus Connect</p>
+    </footer>
+
+    <script>
+        // JavaScript for fetching and displaying clubs will go here
+        console.log("Clubs Directory page loaded.");
+    </script>
+</body>
+</html>

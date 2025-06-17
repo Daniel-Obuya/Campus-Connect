@@ -69,8 +69,9 @@ app.get('/events-management', (req, res) => {
 app.get('/department-dashboard', (req, res) => {  // New route
     res.sendFile(path.join(__dirname, 'department_admin.html')); // Corrected filename
 });
-app.get('/student-profile', (req, res) => {
-  res.sendFile(path.join(__dirname, 'student-profile.html'))
+// -- Route for Student Profile Directory --
+app.get('/student-profile', (req, res) => { // This route was outside the conflict block but is related
+  res.sendFile(path.join(__dirname, 'student-profile.html'));
 });
 
 app.get('/club-admin-dashboard', (req, res) => {
@@ -84,6 +85,16 @@ app.get('/departments-directory', (req, res) => {
 app.get('/clubs-directory', (req, res) => {
   res.sendFile(path.join(__dirname, 'clubs-directory.html'));
 });
+// --- Route for Departments Directory ---
+app.get('/departments-directory', (req, res) => {
+    res.sendFile(path.join(__dirname, 'departments_directory.html'));
+});
+
+// --- Route for Events Directory ---
+app.get('/events-directory', (req, res) => {
+    res.sendFile(path.join(__dirname, 'events_directory.html'));
+});
+
 // --- API Routes ---
 
 // VERY SIMPLE TEST ROUTE - Add this just before /api/events/department
@@ -799,4 +810,6 @@ app.listen(PORT, () => {
   console.log(`Student Login: http://localhost:${PORT}/login-student`);
   console.log(`Admin Signup: http://localhost:${PORT}/signup-admin`);
   console.log(`Admin Login: http://localhost:${PORT}/login-admin`);
+  console.log(`Departments Directory: http://localhost:${PORT}/departments-directory`);
+  console.log(`Events Directory: http://localhost:${PORT}/events-directory`);
 });
