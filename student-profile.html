@@ -111,32 +111,45 @@
         </div>
 
         <div class="profile-section">
-            <h2><i class="fas fa-user-circle"></i>Personal Information</h2>
+            <h2><i class="fas fa-user-circle"></i> Personal Information</h2>
             <div class="profile-details">
-                <div class="detail-item"><i class="fas fa-envelope"></i><strong>Email:</strong> <span id="studentEmail">[Student Email]</span></div>
-                <div class="detail-item"><i class="fas fa-id-card"></i><strong>Student ID:</strong> <span id="studentId">[Student ID]</span></div>
-                <div class="detail-item"><i class="fas fa-building"></i><strong>Department:</strong> <span id="studentDepartment">[Department]</span></div>
-                <div class="detail-item"><i class="fas fa-book-open"></i><strong>Major:</strong> <span id="studentMajor">[Major]</span></div>
-                <div class="detail-item"><i class="fas fa-graduation-cap"></i><strong>Graduation Year:</strong> <span id="studentGradYear">[Graduation Year]</span></div>
+                <div class="detail-item"><i class="fas fa-envelope"></i><strong> Email:</strong> <span id="studentEmail">[Student Email]</span></div>
+                <div class="detail-item"><i class="fas fa-id-card"></i><strong> Student ID:</strong> <span id="studentId">[Student ID]</span></div>
+                <div class="detail-item"><i class="fas fa-building"></i><strong> Department:</strong> <span id="studentDepartment">[Department]</span></div>
+                <div class="detail-item"><i class="fas fa-book-open"></i><strong> Major:</strong> <span id="studentMajor">[Major]</span></div>
+                <div class="detail-item"><i class="fas fa-graduation-cap"></i><strong> Graduation Year:</strong> <span id="studentGradYear">[Graduation Year]</span></div>
                 <!-- Add more personal details if needed -->
             </div>
         </div>
 
         <div class="profile-section about-me">
-            <h2><i class="fas fa-info-circle"></i>About Me</h2>
+            <h2><i class="fas fa-info-circle"></i> About Me</h2>
             <p id="studentBio">This is a placeholder for the student's biography. They can share a bit about their interests, academic goals, or anything else they'd like to share with the community. This section can be updated via the 'Edit Profile' page.</p>
         </div>
 
+        <div class="profile-section">
+            <h2><i class="fas fa-compass"></i>Explore Campus</h2>
+            <ul class="content-list">
+                <li>
+                    <h3><a href="/departments-directory" style="text-decoration: none; color: inherit;">Departments Directory</a></h3>
+                    <p>Discover academic departments, faculty, courses, and more.</p>
+                </li>
+                <li>
+                    <h3><a href="/clubs-directory" style="text-decoration: none; color: inherit;">Clubs Directory</a></h3>
+                    <p>Find and join student clubs and societies.</p>
+                </li>
+            </ul>
+        </div>
         <div class="profile-section">
             <h2><i class="fas fa-bullhorn"></i>Latest Announcements</h2>
             <ul class="content-list" id="announcementsList">
                 <!-- Placeholder, to be populated by JS -->
                 <li>
-                    <h3>Important: Library Hours Extended</h3>
+                    <h3><a href="#" onclick="viewAnnouncement(1); return false;" style="text-decoration: none; color: inherit;">Important: Library Hours Extended</a></h3>
                     <p>The main library will now be open until midnight during exam week. Good luck with your studies!</p>
                     <small>Posted: 2 days ago</small>
                 </li>
-                <li><h3>No new announcements at this time.</h3></li>
+                <li><p>No new announcements at this time.</p></li>
             </ul>
         </div>
 
@@ -145,21 +158,28 @@
             <ul class="content-list" id="eventsList">
                 <!-- Placeholder -->
                 <li>
-                    <h3>Tech Symposium 2024</h3>
+                    <h3><a href="#" onclick="viewEventDetails(1); return false;" style="text-decoration: none; color: inherit;">Tech Symposium 2024</a></h3>
                     <p>Join us for a day of insightful talks and workshops on the latest in technology. Keynote by Dr. Ada Lovelace.</p>
                     <p><small>Date: 2024-12-10 | Location: Grand Hall</small></p>
-                    <button class="action-btn" onclick="registerForEvent(1)">Register</button>
+                    <button class="action-btn" onclick="viewEventDetails(1)">View & Register</button>
                 </li>
-                <li><h3>No upcoming events scheduled. Check back soon!</h3></li>
+                <li><p>No upcoming events scheduled. Check back soon!</p></li>
             </ul>
         </div>
 
         <div class="profile-section">
-            <h2><i class="fas fa-users"></i>Explore Clubs</h2>
-            <ul class="content-list" id="clubsList">
-                <!-- Placeholder -->
-                <li><h3>Coding Club</h3><p>Weekly meetups for coding enthusiasts. All skill levels welcome.</p><button class="action-btn" onclick="joinClub(1)">Join Club</button></li>
-                <li><h3>No clubs listed currently.</h3></li>
+            <h2><i class="fas fa-tasks"></i>My Campus Activity</h2>
+            <ul class="content-list" id="myActivityList">
+                <!-- Placeholder, to be populated by JS -->
+                <li>
+                    <h3>Registered: Tech Symposium 2024</h3>
+                    <p>Status: Attending | <a href="#" onclick="viewEventDetails(1); return false;">View Details</a></p>
+                </li>
+                <li>
+                    <h3>Member: Coding Club</h3>
+                    <p><a href="/clubs-directory#coding-club" onclick="navigateToClub('coding-club'); return false;">Go to Club Page</a></p>
+                </li>
+                <li><p>You haven't joined any activities yet. Explore events and clubs!</p></li>
             </ul>
         </div>
 
@@ -168,7 +188,7 @@
             <ul class="content-list" id="projectsList">
                 <!-- Placeholder -->
                 <li><h3>Campus Sustainability Initiative</h3><p>Seeking volunteers for a project to improve campus recycling programs.</p><button class="action-btn" onclick="collaborateProject(1)">Collaborate</button></li>
-                <li><h3>No active projects seeking collaborators at the moment.</h3></li>
+                <li><p>No active projects seeking collaborators at the moment.</p></li>
             </ul>
         </div>
 
@@ -229,15 +249,25 @@
         });
 
         // Placeholder functions for interactions - to be implemented with API calls
-        function registerForEvent(eventId) {
-            alert(`Attempting to register for event ID: ${eventId}. (Backend not implemented)`);
-            // TODO: API call to register for event
+        function viewEventDetails(eventId) {
+            alert(`Redirecting to details for event ID: ${eventId}. (Page to be implemented)`);
+            // Example: window.location.href = `/event-details?id=${eventId}`;
+            // Registration would happen on the event details page.
         }
 
-        function joinClub(clubId) {
-            alert(`Attempting to join club ID: ${clubId}. (Backend not implemented)`);
-            // TODO: API call to join club
+        function viewAnnouncement(announcementId) {
+            alert(`Displaying full announcement ID: ${announcementId}. (Modal or page to be implemented)`);
+            // Example: Show a modal with announcement content or navigate to a page
+            // showAnnouncementModal(announcementId);
         }
+
+        function navigateToClub(clubId) {
+            // This is a conceptual function. If your clubs directory can deep link, use that.
+            // Otherwise, it just goes to the main directory.
+            alert(`Navigating to club: ${clubId}. (Functionality depends on clubs directory)`);
+            window.location.href = `/clubs-directory#${clubId}`; // Example deep link
+        }
+
 
         function collaborateProject(projectId) {
             alert(`Expressing interest in project ID: ${projectId}. (Backend not implemented)`);
@@ -248,6 +278,7 @@
         // async function fetchAnnouncements() { /* ... */ }
         // async function fetchEvents() { /* ... */ }
         // async function fetchClubs() { /* ... */ }
+        // async function fetchMyActivity() { /* ... */ }
         // async function fetchProjects() { /* ... */ }
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script> <!-- Font Awesome for icons -->

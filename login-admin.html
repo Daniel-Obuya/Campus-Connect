@@ -225,21 +225,20 @@
         });
 
         function redirectToDashboard(user) {
-            let dashboardUrl = '/welcome'; // Default redirect
+            let dashboardUrl; 
             if (user.role === 'club_admin') {
-                // dashboardUrl = '/club-dashboard'; // Uncomment when ready
-                console.log("Redirecting to Club Admin Dashboard (placeholder)");
+                dashboardUrl = '/club-admin-dashboard'; // Correct dashboard URL
                 alert(`Welcome ${user.firstName}! Redirecting to Club Admin dashboard...`);
+                console.log("Redirecting to Club Admin Dashboard (placeholder)");
             } else if (user.role === 'department_admin') {
                 dashboardUrl = '/department-dashboard'; // This route exists
                 alert(`Welcome ${user.firstName}! Redirecting to Department Admin dashboard...`);
             } else {
-                showAlert(`Login successful, but dashboard not configured for role: ${user.role}`);
+                showAlert(`Login successful for ${user.firstName}, but dashboard not configured for role: ${user.role}`);
                 return;
             }
             window.location.href = dashboardUrl;
         }
-
         function showForgotPassword() {
             const email = prompt('Enter your admin email address to reset password:');
             if (email) {
