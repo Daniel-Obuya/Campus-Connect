@@ -75,6 +75,11 @@ app.get('/departments-directory', (req, res) => {
     res.sendFile(path.join(__dirname, 'departments_directory.html'));
 });
 
+// --- Route for Events Directory ---
+app.get('/events-directory', (req, res) => {
+    res.sendFile(path.join(__dirname, 'events_directory.html'));
+});
+
 // --- API Routes ---
 
 // VERY SIMPLE TEST ROUTE - Add this just before /api/events/department
@@ -791,4 +796,5 @@ app.listen(PORT, () => {
   console.log(`Admin Signup: http://localhost:${PORT}/signup-admin`);
   console.log(`Admin Login: http://localhost:${PORT}/login-admin`);
   console.log(`Departments Directory: http://localhost:${PORT}/departments-directory`);
+  console.log(`Events Directory: http://localhost:${PORT}/events-directory`);
 });
