@@ -118,6 +118,11 @@ app.get('/interactive-calendar', (req, res) => {
     res.sendFile(path.join(__dirname, 'interactive_calendar.html'));
 });
 
+// --- Route for Reset Password Page ---
+app.get('/reset-password', (req, res) => {
+    res.sendFile(path.join(__dirname, 'reset_password.html'));
+});
+
 function generateVerificationToken() {
     return crypto.randomBytes(32).toString('hex');
 }
@@ -446,6 +451,66 @@ app.get('/api/verify-email', async (req, res) => {
         res.status(500).sendFile(path.join(__dirname, 'verification_failed.html'));
     }
 });
+
+// --- API Route for Resetting Password ---
+app.post('/api/reset-password', async (req, res) => {
+    const { token, newPassword, confirmPassword } = req.body;
+
+    if (!token || !newPassword || !confirmPassword) {
+        return res.status(400).json({ success: false, message: 'Token and new passwords are required.' });
+    }
+
+    if (newPassword.length < 8) {
+        return res.status(400).json({ success: false, message: 'Password must be at least 8 characters long.' });
+    }
+
+    if (newPassword !== confirmPassword) {
+        return res.status(400).json({ success: false, message: 'Passwords do not match.' });
+    }
+
+    try {
+        const connection = await pool.getConnection();
+        try {
+            // Find user by reset token and check expiry
+            const [users] = await connection.query(
+                'SELECT * FROM users WHERE password_reset_token = ? AND password_reset_expires > NOW()',
+                [token]
+            );
+
+            if (users.length === 0) {
+                console.log(`Password reset attempt with invalid or expired token: ${token}`);
+                return res.status(400).json({ success: false, message: 'Invalid or expired password reset token. Please request a new one.' });
+            }
+
+            const user = users[0];
+
+            // Hash the new password
+            const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+            // Update password and clear reset token fields
+            await connection.query(
+                'UPDATE users SET password_hash = ?, password_reset_token = NULL, password_reset_expires = NULL WHERE user_id = ?',
+                [hashedPassword, user.user_id]
+            );
+
+            console.log(`Password reset successfully for user ID: ${user.user_id}, Email: ${user.email}`);
+
+            // Optionally, send an email confirming password change
+            // const mailOptions = { ... };
+            // await transporter.sendMail(mailOptions);
+
+            res.json({ success: true, message: 'Your password has been reset successfully! You can now log in with your new password.' });
+
+        } finally {
+            connection.release();
+        }
+    } catch (error) {
+        console.error('Reset password error:', error);
+        res.status(500).json({ success: false, message: 'Internal server error. Please try again later.' });
+    }
+});
+
+
 
 // --- Authentication Middleware ---
 const authenticateJWT = (req, res, next) => {
