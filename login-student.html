@@ -207,9 +207,9 @@
         function redirectToDashboard(user) {
             // Assuming student dashboard is at '/student-dashboard'
             if (user.role === 'student') {
-                alert(`Welcome ${user.firstName}! Redirecting to your Profile...`);
-                 console.log("Redirecting to student profile page");
-                 window.location.href = '/student-profile';
+                alert(`Welcome ${user.firstName}! Redirecting to Student Dashboard...`);
+                 console.log("Redirecting to student dashboard page");
+                 window.location.href = '/student-dashboard';
             } else if (user.role === 'club_admin') {
                 alert(`Welcome Club Admin ${user.firstName}! Redirecting to your dashboard...`);
                 console.log("Redirecting to Club Admin dashboard");

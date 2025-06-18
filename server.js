@@ -88,8 +88,8 @@ app.get('/department-dashboard', (req, res) => {  // New route
     res.sendFile(path.join(__dirname, 'department_admin.html')); // Corrected filename
 });
 // -- Route for Student Profile Directory --
-app.get('/student-profile', (req, res) => { // This route was outside the conflict block but is related
-  res.sendFile(path.join(__dirname, 'student-profile.html'));
+app.get('/student-dashboard', (req, res) => { // This route was outside the conflict block but is related
+  res.sendFile(path.join(__dirname, 'student_dashboard.html'));
 });
 
 app.get('/club-admin-dashboard', (req, res) => {

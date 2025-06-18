@@ -1,0 +1,288 @@
+:root {
+    /* Theme Colors (from login/welcome pages) */
+    --theme-color-primary: #ffc107; /* Bright yellow/orange */
+    --theme-color-primary-darker: #ff9800; /* Darker orange for hover/gradients */
+    --theme-color-background-start: #f5deb3; /* Wheat */
+    --theme-color-background-mid: #deb887;   /* Burlywood */
+    --theme-color-background-end: #cd853f;   /* Peru */
+
+    /* Glassmorphism Component Backgrounds */
+    --color-bg-glass-primary: rgba(255, 255, 255, 0.15); /* Main component background */
+    --color-bg-glass-secondary: rgba(255, 255, 255, 0.1);  /* Slightly more transparent for inputs, list items */
+    --color-bg-glass-focus: rgba(255, 255, 255, 0.2);   /* For focused inputs */
+
+    /* Borders */
+    --color-border-glass: rgba(255, 255, 255, 0.25); /* Slightly more opaque for better visibility */
+    --color-border-input: rgba(255, 255, 255, 0.3);
+    --color-border-focus: var(--theme-color-primary);
+    --color-border-divider: rgba(0,0,0,0.08); /* For subtle dividers like h2 border-bottom */
+    --border-width: 1px;
+    --border-width-input: 1.5px; /* Adjusted for a slightly softer look than 2px */
+
+    /* Text Colors */
+    --color-text-base: #3a3a3a;        /* Dark grey/black for primary text, slightly softer than #333 */
+    --color-text-secondary: #555;   /* Medium grey for secondary text */
+    --color-text-muted: #777;       /* Lighter grey for muted text */
+    --color-text-on-accent: #333;   /* Text color on accent buttons */
+    --color-text-placeholder: #888;
+
+    /* Typography */
+    --font-family-sans-serif: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    --font-weight-normal: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700; /* Common in login/welcome */
+    --line-height-base: 1.6;
+    --font-size-base: 1rem; /* Approx 16px */
+    --font-size-small: 0.9em;
+    --font-size-xsmall: 0.8em;
+
+    /* Spacing */
+    --spacing-xs: 5px;
+    --spacing-sm: 10px;
+    --spacing-md: 15px;
+    --spacing-lg: 20px;
+    --spacing-xl: 30px;
+    --spacing-xxl: 40px;
+
+    /* Borders Radii (from login/welcome pages) */
+    --border-radius-sm: 8px;   /* Smaller elements, list items */
+    --border-radius-md: 12px;  /* Inputs, buttons */
+    --border-radius-lg: 16px;  /* Section cards */
+
+    /* Shadows */
+    --box-shadow-soft: 0 8px 20px rgba(0,0,0,0.08);
+    --box-shadow-medium: 0 10px 25px rgba(0,0,0,0.1);
+    --box-shadow-button: 0 4px 12px rgba(255,193,7,0.25);
+    --box-shadow-button-hover: 0 6px 18px rgba(255,193,7,0.35);
+    --box-shadow-focus-ring: 0 0 0 3px rgba(255,193,7,0.2);
+
+    /* Layout */
+    --container-max-width: 1200px;
+
+    /* Blur */
+    --backdrop-blur-strong: 12px; /* For main sections */
+    --backdrop-blur-medium: 8px; /* For inputs or nested elements */
+}
+
+body {
+    font-family: var(--font-family-sans-serif);
+    margin: 0;
+    background: linear-gradient(135deg, var(--theme-color-background-start) 0%, var(--theme-color-background-mid) 50%, var(--theme-color-background-end) 100%);
+    background-attachment: fixed;
+    color: var(--color-text-base);
+    line-height: var(--line-height-base);
+    padding: var(--spacing-lg);
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+
+header {
+    background: var(--color-bg-glass-primary);
+    backdrop-filter: blur(var(--backdrop-blur-strong));
+    -webkit-backdrop-filter: blur(var(--backdrop-blur-strong));
+    color: var(--color-text-base);
+    padding: var(--spacing-md) var(--spacing-lg);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: var(--box-shadow-soft);
+    border-radius: var(--border-radius-lg);
+    border: var(--border-width) solid var(--color-border-glass);
+    margin-bottom: var(--spacing-lg);
+}
+
+header h1 {
+    margin: 0;
+    font-size: 1.6em; /* Align with department_admin header h1 */
+    font-weight: var(--font-weight-semibold);
+}
+
+header nav a {
+    color: var(--color-text-base);
+    text-decoration: none;
+    margin-left: var(--spacing-md);
+    font-weight: var(--font-weight-semibold);
+}
+
+header nav a:hover {
+    color: var(--theme-color-primary-darker);
+    text-decoration: underline;
+}
+
+#notification-icon {
+    display: inline-block;
+    position: relative;
+    cursor: pointer;
+    color: var(--color-text-base); /* Ensure bell icon inherits text color */
+}
+
+#notification-count {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background-color: var(--theme-color-primary); /* Use theme color */
+    color: var(--color-text-on-accent);
+    border-radius: 50%;
+    padding: 2px 6px;
+    font-size: 0.75rem;
+    font-weight: var(--font-weight-bold);
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--spacing-lg);
+    padding: 0; /* Body has padding */
+    max-width: var(--container-max-width);
+    margin: 0 auto var(--spacing-lg) auto; /* Adjust margin */
+}
+
+.dashboard-widget {
+    background: var(--color-bg-glass-primary);
+    backdrop-filter: blur(var(--backdrop-blur-strong));
+    -webkit-backdrop-filter: blur(var(--backdrop-blur-strong));
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius-lg);
+    border: var(--border-width) solid var(--color-border-glass);
+    box-shadow: var(--box-shadow-medium);
+}
+
+.dashboard-widget h2 {
+    margin-top: 0;
+    color: var(--color-text-base);
+    border-bottom: var(--border-width) solid var(--color-border-divider);
+    padding-bottom: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+    font-weight: var(--font-weight-bold);
+}
+
+.dashboard-widget p a {
+    color: var(--theme-color-primary);
+    text-decoration: none;
+    font-weight: var(--font-weight-medium);
+}
+
+.dashboard-widget p a:hover {
+    color: var(--theme-color-primary-darker);
+    text-decoration: underline;
+}
+
+.progress-bar-container {
+    width: 100%;
+    background-color: #e0e0e0;
+    border-radius: var(--border-radius-sm);
+    overflow: hidden;
+    margin-bottom: var(--spacing-sm);
+}
+
+#profile-progress {
+    height: 20px;
+    background-color: var(--theme-color-primary); /* Use theme color for progress */
+    text-align: center;
+    line-height: 20px;
+    color: var(--color-text-on-accent);
+    font-weight: var(--font-weight-bold);
+    transition: width 0.5s ease-in-out;
+}
+
+.sidebar-widgets {
+    display: grid;
+    gap: var(--spacing-lg);
+}
+
+footer {
+    text-align: center;
+    padding: var(--spacing-lg);
+    background: var(--color-bg-glass-primary);
+    backdrop-filter: blur(var(--backdrop-blur-strong));
+    -webkit-backdrop-filter: blur(var(--backdrop-blur-strong));
+    color: var(--color-text-base);
+    border-radius: var(--border-radius-lg);
+    border: var(--border-width) solid var(--color-border-glass);
+    box-shadow: var(--box-shadow-soft);
+    margin-top: var(--spacing-xl);
+}
+
+#notification-center-panel {
+    display: none; /* Hidden by default */
+    position: absolute;
+    right: var(--spacing-lg);
+    top: calc(var(--spacing-md) * 2 + 1.6em + var(--spacing-lg) + 10px); /* Approximate header height + margin */
+    background: var(--color-bg-glass-primary);
+    backdrop-filter: blur(var(--backdrop-blur-strong));
+    -webkit-backdrop-filter: blur(var(--backdrop-blur-strong));
+    border: var(--border-width) solid var(--color-border-glass);
+    box-shadow: var(--box-shadow-medium);
+    padding: var(--spacing-md) var(--spacing-lg);
+    z-index: 1000;    /* Ensure it's above other content */
+    min-width: 300px;
+    border-radius: var(--border-radius-lg);
+    color: var(--color-text-base);
+}
+
+#notification-center-panel.is-visible {
+    display: block;
+}
+
+/* Floating Icons Background Effect */
+.floating-icons-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none; /* Allows clicks to pass through */
+    z-index: -1; /* Behind all normally flowed content, part of the far background */
+    overflow: hidden; /* Prevent icons from causing scrollbars */
+}
+
+.floating-icon {
+    position: absolute;
+    background-color: rgba(255, 255, 255, 0.08); /* Very subtle white */
+    border-radius: 50%;
+    opacity: 0; /* Start hidden, fade in with animation */
+    animation: floatAnimation 20s infinite ease-in-out;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.1), 0 0 20px rgba(255, 255, 255, 0.05);
+}
+
+/* Variations for different icons - adjust positions, sizes, and delays as you like */
+.floating-icon.icon1 { width: 60px; height: 60px; top: 10%; left: 15%; animation-duration: 22s; animation-delay: 0s; }
+.floating-icon.icon2 { width: 80px; height: 80px; top: 30%; left: 70%; animation-duration: 25s; animation-delay: -5s; }
+.floating-icon.icon3 { width: 40px; height: 40px; top: 60%; left: 10%; animation-duration: 18s; animation-delay: -10s; }
+.floating-icon.icon4 { width: 70px; height: 70px; top: 80%; left: 80%; animation-duration: 20s; animation-delay: -3s; }
+.floating-icon.icon5 { width: 50px; height: 50px; top: 5%; left: 40%; animation-duration: 28s; animation-delay: -15s; }
+.floating-icon.icon6 { width: 90px; height: 90px; top: 50%; left: 50%; animation-duration: 15s; animation-delay: -8s; }
+
+@keyframes floatAnimation {
+    0% {
+        transform: translateY(30px) translateX(0px) rotate(0deg) scale(0.8);
+        opacity: 0;
+    }
+    20% { /* Fade in and grow */
+        opacity: 0.5;
+        transform: translateY(0px) translateX(10px) rotate(72deg) scale(1);
+    }
+    80% { /* Move and fade slightly */
+        opacity: 0.3;
+        transform: translateY(-30px) translateX(-10px) rotate(288deg) scale(0.9);
+    }
+    100% { /* Fade out and return towards start Y */
+        transform: translateY(30px) translateX(0px) rotate(360deg) scale(0.8);
+        opacity: 0;
+    }
+}
+
+/* Basic responsiveness */
+@media (max-width: 768px) {
+    header {
+        flex-direction: column;
+        text-align: center;
+    }
+    header nav {
+        margin-top: 10px;
+    }
+    .dashboard-grid {
+        grid-template-columns: 1fr; /* Stack widgets on smaller screens */
+    }
+}
