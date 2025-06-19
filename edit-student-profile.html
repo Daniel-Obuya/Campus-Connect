@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Profile - Campus Connect</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #f5deb3 0%, #deb887 50%, #cd853f 100%);
+            min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+            padding: 20px; position: relative; overflow-x: hidden;
+        }
+        body::before {
+            content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(255,255,255,0.05) 0%, transparent 50%);
+            pointer-events: none; z-index: -1;
+        }
+        .header {
+            width: 100%;
+            max-width: 800px;
+            padding: 20px;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header .app-name { font-size: 24px; font-weight: 700; color: #333; }
+        .header .nav-link {
+            padding: 10px 18px; background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+            border: none; border-radius: 10px; font-size: 14px; font-weight: 600; color: #333;
+            cursor: pointer; text-decoration: none; transition: all 0.3s ease;
+        }
+        .header .nav-link:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(255,193,7,0.3); }
+
+        .edit-profile-container {
+            background: rgba(255,255,255,0.15); backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.2); border-radius: 24px; padding: 30px 40px;
+            width: 100%; max-width: 700px; box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+        .edit-profile-container h1 {
+            font-size: 26px; color: #333; margin-bottom: 25px; text-align: center;
+            border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 15px;
+        }
+        .form-group { margin-bottom: 20px; }
+        .form-group label {
+            display: block; font-size: 16px; color: #444; margin-bottom: 8px; font-weight: 500;
+        }
+        .form-group input[type="text"],
+        .form-group input[type="email"],
+        .form-group input[type="url"],
+        .form-group textarea {
+            width: 100%; padding: 12px;
+            border: 1px solid rgba(0,0,0,0.1); border-radius: 8px;
+            background: rgba(255,255,255,0.5); font-size: 15px; color: #333;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .form-group input[type="text"]:focus,
+        .form-group input[type="email"]:focus,
+        .form-group input[type="url"]:focus,
+        .form-group textarea:focus {
+            outline: none; border-color: #ff9800;
+            box-shadow: 0 0 0 2px rgba(255, 152, 0, 0.2);
+        }
+        .form-group textarea { min-height: 100px; resize: vertical; }
+
+        .form-actions { text-align: right; margin-top: 30px; }
+        .form-actions .btn {
+            padding: 12px 25px; border: none; border-radius: 10px;
+            font-size: 15px; font-weight: 600; cursor: pointer;
+            text-decoration: none; transition: all 0.3s ease; margin-left: 10px;
+        }
+        .form-actions .btn-save {
+            background: linear-gradient(135deg, #4CAF50 0%, #8BC34A 100%); color: white;
+        }
+        .form-actions .btn-save:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(76,175,80,0.3); }
+        .form-actions .btn-cancel {
+            background: linear-gradient(135deg, #f44336 0%, #e57373 100%); color: white;
+        }
+        .form-actions .btn-cancel:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(244,67,54,0.3); }
+
+        .profile-picture-section { text-align: center; margin-bottom: 25px; }
+        .profile-picture-preview {
+            width: 120px; height: 120px; border-radius: 50%;
+            background: #e0e0e0 url('https://via.placeholder.com/120') no-repeat center center;
+            background-size: cover; margin: 0 auto 15px auto;
+            border: 3px solid rgba(255,255,255,0.3);
+        }
+        .profile-picture-section input[type="file"] { display: none; }
+        .profile-picture-section .upload-btn {
+            padding: 10px 20px; background: #ffc107; border:none; border-radius:8px;
+            font-size:14px; font-weight:500; color:#333; cursor:pointer;
+        }
+        .profile-picture-section .upload-btn:hover { background: #ff9800; }
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <span class="app-name">Campus Connect</span>
+        <a href="student-profile.html" class="nav-link">Back to Profile</a>
+    </div>
+
+    <div class="edit-profile-container">
+        <h1>Edit Your Profile</h1>
+        <form id="editProfileForm">
+            <div class="profile-picture-section">
+                <div class="profile-picture-preview" id="profilePicturePreview"></div>
+                <label for="profilePictureInput" class="upload-btn">Change Picture</label>
+                <input type="file" id="profilePictureInput" accept="image/*">
+            </div>
+
+            <div class="form-group">
+                <label for="firstName">First Name</label>
+                <input type="text" id="firstName" name="firstName" required>
+            </div>
+            <div class="form-group">
+                <label for="lastName">Last Name</label>
+                <input type="text" id="lastName" name="lastName" required>
+            </div>
+            <div class="form-group">
+                <label for="bio">About Me / Biography</label>
+                <textarea id="bio" name="bio" rows="4"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="department">Department</label>
+                <input type="text" id="department" name="department">
+            </div>
+            <div class="form-group">
+                <label for="major">Major</label>
+                <input type="text" id="major" name="major">
+            </div>
+            <div class="form-group">
+                <label for="graduationYear">Expected Graduation Year</label>
+                <input type="text" id="graduationYear" name="graduationYear" placeholder="YYYY">
+            </div>
+            <!-- Add more fields as needed: e.g., LinkedIn, GitHub, Skills -->
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-cancel" onclick="window.location.href='student-profile.html'">Cancel</button>
+                <button type="submit" class="btn btn-save">Save Changes</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            const form = document.getElementById('editProfileForm');
+            const profilePicturePreview = document.getElementById('profilePicturePreview');
+            const profilePictureInput = document.getElementById('profilePictureInput');
+
+            if (!currentUser || currentUser.role !== 'student') {
+                alert('User not found or not authorized. Redirecting to login.');
+                window.location.href = '/login-student'; // Adjust as needed
+                return;
+            }
+
+            // Populate form with existing data
+            form.firstName.value = currentUser.firstName || '';
+            form.lastName.value = currentUser.lastName || '';
+            form.bio.value = currentUser.bio || '';
+            if (currentUser.studentDetails) {
+                form.department.value = currentUser.studentDetails.department || '';
+                form.major.value = currentUser.studentDetails.major || '';
+                form.graduationYear.value = currentUser.studentDetails.graduationYear || '';
+            }
+            if (currentUser.profilePictureUrl) {
+                profilePicturePreview.style.backgroundImage = `url('${currentUser.profilePictureUrl}')`;
+            }
+
+            profilePictureInput.addEventListener('change', function(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        profilePicturePreview.style.backgroundImage = `url('${e.target.result}')`;
+                        // Store as base64 for simplicity in localStorage, or handle upload to server
+                        currentUser.profilePictureUrl = e.target.result; 
+                    }
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            form.addEventListener('submit', function(event) {
+                event.preventDefault();
+
+                // Update currentUser object
+                currentUser.firstName = form.firstName.value;
+                currentUser.lastName = form.lastName.value;
+                currentUser.bio = form.bio.value;
+
+                if (!currentUser.studentDetails) {
+                    currentUser.studentDetails = {}; // Initialize if not present
+                }
+                currentUser.studentDetails.department = form.department.value;
+                currentUser.studentDetails.major = form.major.value;
+                currentUser.studentDetails.graduationYear = form.graduationYear.value;
+
+                // Save updated currentUser to localStorage
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+
+                alert('Profile updated successfully!');
+                window.location.href = 'student-profile.html'; // Redirect back to profile
+            });
+        });
+    </script>
+</body>
+</html>

@@ -32,12 +32,13 @@
             align-items: center;
         }
         .header .app-name { font-size: 24px; font-weight: 700; color: #333; }
-        .header .logout-btn {
+        .header .nav-btn { /* Renamed for general use */
             padding: 10px 18px; background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
             border: none; border-radius: 10px; font-size: 14px; font-weight: 600; color: #333;
             cursor: pointer; text-decoration: none; transition: all 0.3s ease;
+            margin-left: 10px; /* Add some spacing between buttons */
         }
-        .header .logout-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(255,193,7,0.3); }
+        .header .nav-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(255,193,7,0.3); }
 
         .profile-container {
             background: rgba(255,255,255,0.15); backdrop-filter: blur(20px);
@@ -98,7 +99,10 @@
 <body>
     <div class="header">
         <span class="app-name">Campus Connect</span>
-        <a href="/welcome" class="logout-btn" id="logoutButton">Logout</a>
+        <div>
+            <a href="student_dashboard.html" class="nav-btn">Back to Dashboard</a>
+            <a href="/welcome" class="nav-btn" id="logoutButton">Logout</a>
+        </div>
     </div>
 
     <div class="profile-container">
@@ -127,68 +131,28 @@
             <p id="studentBio">This is a placeholder for the student's biography. They can share a bit about their interests, academic goals, or anything else they'd like to share with the community. This section can be updated via the 'Edit Profile' page.</p>
         </div>
 
+        
         <div class="profile-section">
-            <h2><i class="fas fa-compass"></i>Explore Campus</h2>
-            <ul class="content-list">
-                <li>
-                    <h3><a href="/departments-directory" style="text-decoration: none; color: inherit;">Departments Directory</a></h3>
-                    <p>Discover academic departments, faculty, courses, and more.</p>
-                </li>
-                <li>
-                    <h3><a href="/clubs-directory" style="text-decoration: none; color: inherit;">Clubs Directory</a></h3>
-                    <p>Find and join student clubs and societies.</p>
-                </li>
-            </ul>
-        </div>
-        <div class="profile-section">
-            <h2><i class="fas fa-bullhorn"></i>Latest Announcements</h2>
-            <ul class="content-list" id="announcementsList">
-                <!-- Placeholder, to be populated by JS -->
-                <li>
-                    <h3><a href="#" onclick="viewAnnouncement(1); return false;" style="text-decoration: none; color: inherit;">Important: Library Hours Extended</a></h3>
-                    <p>The main library will now be open until midnight during exam week. Good luck with your studies!</p>
-                    <small>Posted: 2 days ago</small>
-                </li>
-                <li><p>No new announcements at this time.</p></li>
+            <h2><i class="fas fa-calendar-check"></i> My Registered Events</h2>
+            <ul class="content-list" id="registeredEventsList">
+                <!-- Student's registered events will be populated here by JavaScript -->
+                <li><p class="placeholder-message">Loading your registered events...</p></li>
             </ul>
         </div>
 
         <div class="profile-section">
-            <h2><i class="fas fa-calendar-alt"></i>Upcoming Events</h2>
-            <ul class="content-list" id="eventsList">
-                <!-- Placeholder -->
-                <li>
-                    <h3><a href="#" onclick="viewEventDetails(1); return false;" style="text-decoration: none; color: inherit;">Tech Symposium 2024</a></h3>
-                    <p>Join us for a day of insightful talks and workshops on the latest in technology. Keynote by Dr. Ada Lovelace.</p>
-                    <p><small>Date: 2024-12-10 | Location: Grand Hall</small></p>
-                    <button class="action-btn" onclick="viewEventDetails(1)">View & Register</button>
-                </li>
-                <li><p>No upcoming events scheduled. Check back soon!</p></li>
+            <h2><i class="fas fa-users"></i> My Joined Clubs</h2>
+            <ul class="content-list" id="joinedClubsList">
+                <!-- Student's joined clubs will be populated here by JavaScript -->
+                <li><p class="placeholder-message">Loading your joined clubs...</p></li>
             </ul>
         </div>
 
         <div class="profile-section">
-            <h2><i class="fas fa-tasks"></i>My Campus Activity</h2>
-            <ul class="content-list" id="myActivityList">
-                <!-- Placeholder, to be populated by JS -->
-                <li>
-                    <h3>Registered: Tech Symposium 2024</h3>
-                    <p>Status: Attending | <a href="#" onclick="viewEventDetails(1); return false;">View Details</a></p>
-                </li>
-                <li>
-                    <h3>Member: Coding Club</h3>
-                    <p><a href="/clubs-directory#coding-club" onclick="navigateToClub('coding-club'); return false;">Go to Club Page</a></p>
-                </li>
-                <li><p>You haven't joined any activities yet. Explore events and clubs!</p></li>
-            </ul>
-        </div>
-
-        <div class="profile-section">
-            <h2><i class="fas fa-lightbulb"></i>Collaborative Projects</h2>
-            <ul class="content-list" id="projectsList">
-                <!-- Placeholder -->
-                <li><h3>Campus Sustainability Initiative</h3><p>Seeking volunteers for a project to improve campus recycling programs.</p><button class="action-btn" onclick="collaborateProject(1)">Collaborate</button></li>
-                <li><p>No active projects seeking collaborators at the moment.</p></li>
+            <h2><i class="fas fa-project-diagram"></i> My Active Projects</h2>
+            <ul class="content-list" id="myActiveProjectsList">
+                <!-- Student's active projects will be populated here by JavaScript -->
+                <li><p class="placeholder-message">Loading your active projects...</p></li>
             </ul>
         </div>
 
@@ -205,11 +169,8 @@
             if (currentUser && currentUser.role === 'student') {
                 document.getElementById('studentName').textContent = `${currentUser.firstName || 'Student'} ${currentUser.lastName || ''}`;
                 document.getElementById('studentEmail').textContent = currentUser.email || 'N/A';
-                
-                // Example: Set profile picture if URL is available
+                document.getElementById('studentBio').textContent = currentUser.bio || 'No biography provided yet. You can add this by editing your profile.';
                 // if(currentUser.profilePictureUrl) document.getElementById('profilePicture').style.backgroundImage = `url('${currentUser.profilePictureUrl}')`;
-                // Placeholder for bio - you'd fetch this from currentUser if it exists
-                // document.getElementById('studentBio').textContent = currentUser.bio || 'No bio provided yet.';
 
                 if (currentUser.studentDetails) {
                     document.getElementById('studentId').textContent = currentUser.studentDetails.studentId || 'N/A';
@@ -222,16 +183,16 @@
                         document.getElementById(id).textContent = 'N/A';
                     });
                 }
+
+                populateRegisteredEvents(currentUser);
+                populateJoinedClubs(currentUser);
+                populateMyActiveProjects(currentUser);
+                // TODO: Fetch and populate "Collaborative Projects" (projectsList) if it's for discovery
+                // fetchProjectsToCollaborate(); 
             } else {
                 // If no user data, or not a student, redirect to login
                 window.location.href = '/login-student';
             }
-
-            // TODO: Fetch and populate Announcements, Events, Clubs, Projects
-            // fetchAnnouncements();
-            // fetchEvents();
-            // fetchClubs();
-            // fetchProjects();
 
             document.getElementById('logoutButton').addEventListener('click', function(e) {
                 e.preventDefault();
@@ -243,10 +204,70 @@
             document.getElementById('editProfileButton').addEventListener('click', function(e) {
                 e.preventDefault();
                 // You'll need to create an edit-profile.html page
-                alert('Redirecting to edit profile page (to be implemented).');
-                // window.location.href = '/edit-student-profile';
+                window.location.href = '/edit-student-profile'; // Redirect to the edit profile page
             });
         });
+
+        function populateRegisteredEvents(user) {
+            const eventsList = document.getElementById('registeredEventsList');
+            eventsList.innerHTML = ''; // Clear existing placeholders
+
+            if (user.registeredEvents && user.registeredEvents.length > 0) {
+                user.registeredEvents.forEach(event => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <h3>Registered: ${event.name || 'Unnamed Event'}</h3>
+                        <p>Status: ${event.status || 'N/A'} | Date: ${event.date || 'N/A'}</p>
+                        <a href="#" onclick="viewEventDetails(${event.id || 0}); return false;" class="action-btn" style="margin-top:5px;">View Details</a>
+                    `;
+                    eventsList.appendChild(li);
+                });
+            } else {
+                eventsList.innerHTML = '<li><p class="placeholder-message">You haven\'t registered for any events yet.</p></li>';
+            }
+        }
+
+        function populateJoinedClubs(user) {
+            const clubsList = document.getElementById('joinedClubsList');
+            clubsList.innerHTML = ''; // Clear existing placeholders
+
+            if (user.joinedClubs && user.joinedClubs.length > 0) {
+                user.joinedClubs.forEach(club => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <h3>Member: ${club.name || 'Unnamed Club'}</h3>
+                        <p>Role: ${club.role || 'Member'}</p>
+                        <a href="#" onclick="navigateToClub('${club.id || ''}'); return false;" class="action-btn" style="margin-top:5px;">Go to Club Page</a>
+                    `;
+                    clubsList.appendChild(li);
+                });
+            } else {
+                clubsList.innerHTML = '<li><p class="placeholder-message">You haven\'t joined any clubs yet. Explore the clubs directory!</p></li>';
+            }
+        }
+
+        function populateMyActiveProjects(user) {
+            const myProjectsList = document.getElementById('myActiveProjectsList');
+            myProjectsList.innerHTML = ''; // Clear existing placeholders
+
+            if (user.activeProjects && user.activeProjects.length > 0) {
+                user.activeProjects.forEach(project => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <h3>${project.name || 'Unnamed Project'}</h3>
+                        <p>Your Role: ${project.role || 'Contributor'}</p>
+                        ${project.detailsLink ? `<a href="${project.detailsLink}" class="action-btn" style="margin-top:5px;">View Project</a>` : ''}
+                    `;
+                    myProjectsList.appendChild(li);
+                });
+            } else {
+                myProjectsList.innerHTML = '<li><p class="placeholder-message">You are not currently active in any projects. Find one to collaborate on!</p></li>';
+            }
+        }
+
+        // Placeholder for fetching projects available for collaboration
+        // async function fetchProjectsToCollaborate() { /* ... populate #projectsList ... */ }
+
 
         // Placeholder functions for interactions - to be implemented with API calls
         function viewEventDetails(eventId) {
@@ -273,13 +294,6 @@
             alert(`Expressing interest in project ID: ${projectId}. (Backend not implemented)`);
             // TODO: API call to collaborate on project
         }
-
-        // Placeholder fetch functions - to be implemented
-        // async function fetchAnnouncements() { /* ... */ }
-        // async function fetchEvents() { /* ... */ }
-        // async function fetchClubs() { /* ... */ }
-        // async function fetchMyActivity() { /* ... */ }
-        // async function fetchProjects() { /* ... */ }
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script> <!-- Font Awesome for icons -->
 </body>

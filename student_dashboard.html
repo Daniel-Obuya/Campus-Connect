@@ -17,7 +17,7 @@
     </div>
 
     <header>
-        <h1>Welcome, [Student Name]!</h1>
+        <h1 id="welcome-message">Welcome, [Student Name]!</h1>
         <nav>
             <a href="student-profile.html">Profile</a>
             <div id="notification-icon">
@@ -76,5 +76,17 @@
     </footer>
 
     <script src="dashboard_script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            const welcomeMessage = document.getElementById('welcome-message');
+
+            if (currentUser && currentUser.firstName) {
+                welcomeMessage.textContent = `Welcome, ${currentUser.firstName}!`;
+            } else {
+                welcomeMessage.textContent = 'Welcome, Student!'; // Fallback message
+            }
+        });
+    </script>
 </body>
 </html>

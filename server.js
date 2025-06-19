@@ -118,6 +118,11 @@ app.get('/interactive-calendar', (req, res) => {
     res.sendFile(path.join(__dirname, 'interactive_calendar.html'));
 });
 
+// --- Route for Edit Student Profile Page ---
+app.get('/edit-student-profile', (req, res) => {
+    res.sendFile(path.join(__dirname, 'edit-student-profile.html'));
+});
+
 // --- Route for Reset Password Page ---
 app.get('/reset-password', (req, res) => {
     res.sendFile(path.join(__dirname, 'reset_password.html'));
