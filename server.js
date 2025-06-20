@@ -52,9 +52,9 @@ const pool = mysql.createPool({
 // --- HTML Serving Routes ---
 
 // Root redirects to welcome
-app.get('/', (req, res) => {
-  res.redirect('/welcome');
-});
+// app.get('/', (req, res) => {
+//   res.redirect('/welcome');
+// });
 
 app.get('/welcome', (req, res) => {
   res.sendFile(path.join(__dirname, 'welcome.html'));
