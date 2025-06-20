@@ -7,6 +7,7 @@ const mysql = require('mysql2/promise');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto'); // For generating tokens
 const fetch = require('node-fetch'); // For making HTTP requests from the backend
+const { google } = require('googleapis'); // For Google Calendar API
 
 const app = express();
 const PORT = process.env.PORT || 3306;
@@ -14,6 +15,14 @@ const PORT = process.env.PORT || 3306;
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Google OAuth2 Client Setup
+const oauth2Client = new google.auth.OAuth2(
+  process.env.GOOGLE_CLIENT_ID,
+  process.env.GOOGLE_CLIENT_SECRET,
+  process.env.GOOGLE_REDIRECT_URI
+);
+
 
 // Serve static files
 app.use(express.static(__dirname));
@@ -123,6 +132,55 @@ app.get('/reset-password', (req, res) => {
     res.sendFile(path.join(__dirname, 'reset_password.html'));
 });
 
+// --- Google Calendar Auth Routes ---
+const G_SCOPES = [
+    'https://www.googleapis.com/auth/calendar.readonly',
+    'https://www.googleapis.com/auth/calendar.events'
+];
+
+app.get('/auth/google', (req, res) => {
+    // Check if user is logged into Campus Connect first
+    // For simplicity, we'll assume this check happens on the frontend before calling this.
+    // Or, you can use authenticateJWT middleware here if the user must be logged in.
+
+    const authUrl = oauth2Client.generateAuthUrl({
+        access_type: 'offline', // To get a refresh token
+        scope: G_SCOPES,
+        // prompt: 'consent', // Optional: forces consent screen every time, useful for testing refresh tokens
+    });
+    console.log('Generated Google Auth URL:', authUrl);
+    res.redirect(authUrl);
+});
+
+app.get('/auth/google/callback', async (req, res) => {
+    const { code } = req.query;
+    if (!code) {
+        return res.status(400).send('Authorization code missing.');
+    }
+    try {
+        const { tokens } = await oauth2Client.getToken(code);
+        oauth2Client.setCredentials(tokens);
+
+        console.log('Google OAuth tokens received:', tokens);
+
+        // TODO: Securely store these tokens (access_token, refresh_token, expiry_date, id_token)
+        // associated with the logged-in Campus Connect user.
+        // For example, update the user's record in your database.
+        // The id_token contains user profile information if you need it.
+        // const idTokenInfo = await oauth2Client.getTokenInfo(tokens.id_token);
+        // console.log('ID Token Info:', idTokenInfo);
+
+        // For now, just send a success message and redirect back to the calendar or a success page.
+        // In a real app, you'd store tokens and then redirect.
+        // res.send('Google authentication successful! Tokens received. You can now close this tab or be redirected.');
+        res.redirect('/interactive-calendar?google_auth_success=true'); // Redirect back to calendar
+
+    } catch (error) {
+        console.error('Error exchanging Google auth code for tokens:', error.response ? error.response.data : error.message);
+        res.status(500).send('Failed to authenticate with Google. Please try again.');
+    }
+});
+
 function generateVerificationToken() {
     return crypto.randomBytes(32).toString('hex');
 }
@@ -141,7 +199,8 @@ app.get('/api/external-events', async (req, res) => {
     const query = req.query.q || 'student'; // Example: allow query to be passed
 
     // Simplified URL to closely match the successful direct test
-    const eventbriteURL = `https://www.eventbriteapi.com/v3/events/search/?location.address=${encodeURIComponent(location)}&q=${encodeURIComponent(query)}`;
+            // Ensure the base path ends with a slash before query parameters
+            const eventbriteURL = `https://www.eventbriteapi.com/v3/events/search/?location.address=${encodeURIComponent(location)}&q=${encodeURIComponent(query)}&expand=organizer,venue`;
 
     console.log(`Backend fetching from Eventbrite: ${eventbriteURL}`);
 
@@ -842,6 +901,8 @@ app.get('/api/events/:eventId', authenticateJWT, async (req, res) => {
 app.put('/api/events/:eventId', authenticateJWT, async (req, res) => {
     try {
         const { eventId } = req.params;
+        console.log(`Received PUT /api/events/${eventId} request body:`, req.body); // Log request body
+
         const eventData = req.body; // Contains all fields from the form
 
         // Authorization: Ensure user is department_admin and owns this event
@@ -856,28 +917,51 @@ app.put('/api/events/:eventId', authenticateJWT, async (req, res) => {
         // For simplicity, this example updates all provided fields.
         // In a real app, you'd carefully construct the SET clause based on what's in eventData
         // and perform more robust validation similar to the POST /api/events route.
-        // The SQL query below needs to be made robust to include all editable fields, including registration_deadline.
-        // It's better to explicitly list columns to update.
         const { title, description, event_type, start_datetime, end_datetime, location, virtual_link, max_attendees, registration_required, tags, image_url } = eventData;
 
-        // Basic validation (should be more comprehensive like in POST)
-        if (!title || !event_type || !start_datetime || !end_datetime) {
-            return res.status(400).json({ success: false, message: 'Missing required fields for update.' });
+        // --- Comprehensive Validation (similar to POST /api/events) ---
+        const errors = [];
+        if (typeof title !== 'string' || title.trim() === '') {
+            errors.push('Title is required and must be a non-empty string.');
         }
+        if (typeof event_type !== 'string' || event_type.trim() === '') {
+            errors.push('Event type is required.');
+        }
+        if (typeof start_datetime !== 'string' || !start_datetime.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/)) {
+            errors.push('Start date and time is required and must be in YYYY-MM-DDTHH:MM format.');
+        }
+        if (typeof end_datetime !== 'string' || !end_datetime.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/)) {
+            errors.push('End date and time is required and must be in YYYY-MM-DDTHH:MM format.');
+        }
+        if ((typeof location !== 'string' || location.trim() === '') && (typeof virtual_link !== 'string' || virtual_link.trim() === '')) {
+            errors.push('Either a physical location or a virtual link must be provided.');
+        }
+        // Note: organizer_id and organizer_type are not part of eventData for update, they are for authorization.
+
+        if (errors.length > 0) {
+            console.warn(`Event update (ID: ${eventId}) validation errors:`, errors);
+            return res.status(400).json({ success: false, message: 'Validation failed. Please check the following: ' + errors.join(' ') });
+        }
+        // --- End of Comprehensive Validation ---
+
         if (new Date(start_datetime) >= new Date(end_datetime)) {
             return res.status(400).json({ success: false, message: 'Start date and time must be before end date and time.' });
         }
+
         const parsedMaxAttendees = max_attendees ? parseInt(max_attendees, 10) : null;
         if (max_attendees && (isNaN(parsedMaxAttendees) || parsedMaxAttendees < 0)) {
             return res.status(400).json({ success: false, message: 'Max attendees must be a non-negative number.' });
         }
+
+        // Ensure tags is an array before stringifying, default to empty array if not provided or not an array
+        const tagsToStore = (Array.isArray(tags) ? JSON.stringify(tags) : JSON.stringify([]));
 
         const sql = `
             UPDATE events SET 
             title = ?, description = ?, event_type = ?, 
             start_datetime = ?, end_datetime = ?, location = ?, 
             virtual_link = ?, max_attendees = ?, registration_required = ?, 
-            tags = ?, image_url = ?
+            tags = ?, image_url = ? 
             ${eventData.hasOwnProperty('registration_deadline') ? ', registration_deadline = ?' : ''}
             WHERE event_id = ? AND organizer_id = ? AND organizer_type = 'department' 
         `; // Added organizer_id and organizer_type to WHERE for extra safety
@@ -885,7 +969,9 @@ app.put('/api/events/:eventId', authenticateJWT, async (req, res) => {
         const values = [
             title, description || null, event_type || null, start_datetime, end_datetime,
             location || null, virtual_link || null, parsedMaxAttendees,
-            registration_required || false, tags || JSON.stringify([]), image_url || null
+            registration_required || false, 
+            tagsToStore, // Use the processed tagsToStore
+            image_url || null
         ];
         if (eventData.hasOwnProperty('registration_deadline')) {
             values.push(eventData.registration_deadline || null);
