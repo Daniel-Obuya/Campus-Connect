@@ -216,8 +216,7 @@
                 <div class="actions-group">
                     <h3>Actions</h3>
                     <button id="addPersonalEventBtn" class="action-button action-button-info">Add Personal Event</button>
-                    <button id="syncGoogleBtn" class="action-button">Sync with Google</button>
-                    <button id="syncOutlookBtn" class="action-button">Sync with Outlook</button>
+                    <a href="/auth/google" id="syncGoogleBtn" class="action-button">Sync with Google</a>
                     <button id="exportCalendarBtn" class="action-button">Export (.ics)</button>
                 </div>
 
@@ -386,8 +385,8 @@
         });
         // TODO: Add event listeners for monthViewBtn, weekViewBtn, dayViewBtn to change `currentView` and re-render
 
-        // --- Sidebar Actions (Placeholders) ---
         document.getElementById('addPersonalEventBtn').onclick = () => alert('Add Personal Event form would appear here.');
+        // Sync with Google button is now an <a> tag, so direct click handled by href.
         document.getElementById('syncGoogleBtn').onclick = () => alert('Initiate Google Calendar Sync (OAuth flow needed).');
         document.getElementById('syncOutlookBtn').onclick = () => alert('Initiate Outlook Calendar Sync (OAuth flow needed).');
         document.getElementById('exportCalendarBtn').onclick = () => alert('Exporting calendar as .ics file (to be implemented).');
@@ -403,6 +402,12 @@
         // --- Initial Load ---
         document.addEventListener('DOMContentLoaded', () => {
             renderCalendar();
+            // Check for Google Auth success query parameter
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('google_auth_success') === 'true') {
+                alert('Successfully connected to Google Calendar! You may need to refresh or fetch events now.');
+                // Optionally, remove the query param from URL: window.history.replaceState({}, document.title, "/interactive-calendar");
+            }
             // TODO: Fetch user preferences for filters, reminders, etc.
         });
 
