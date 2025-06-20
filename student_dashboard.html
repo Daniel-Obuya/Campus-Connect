@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard - Campus Connect</title>
+    <link rel="stylesheet" href="dashboard_styles.css">
+</head>
+<body>
+    <div class="floating-icons-container">
+        <div class="floating-icon icon1"></div>
+        <div class="floating-icon icon2"></div>
+        <div class="floating-icon icon3"></div>
+        <div class="floating-icon icon4"></div>
+        <div class="floating-icon icon5"></div>
+        <div class="floating-icon icon6"></div>
+    </div>
+
+    <header>
+        <h1 id="welcome-message">Welcome, [Student Name]!</h1>
+        <nav>
+            <a href="student-profile.html">Profile</a>
+            <div id="notification-icon">
+                <span>🔔</span>
+                <span id="notification-count">0</span>
+            </div>
+            <a href="/logout">Logout</a>
+        </nav>
+    </header>
+
+    <main class="dashboard-grid">
+        <section id="profile-completion-widget" class="dashboard-widget">
+            <h2>Profile Status</h2>
+            <div class="progress-bar-container">
+                <div id="profile-progress" style="width: 0%;">0%</div>
+            </div>
+            <p><a href="/profile/edit">Complete your profile</a></p>
+        </section>
+
+        <section id="personalized-feed" class="dashboard-widget">
+            <h2>Your Feed</h2>
+            <!-- Feed items will be loaded here by JavaScript -->
+            <p>Loading feed...</p>
+        </section>
+
+        <aside class="sidebar-widgets">
+            <section id="events-calendar-widget" class="dashboard-widget">
+                <h2>Upcoming Events</h2>
+                <div id="calendar-placeholder">
+                    <!-- Calendar will be rendered here by JavaScript -->
+                    <p>Loading calendar...</p>
+                </div>
+            </section>
+
+            <section id="recent-announcements" class="dashboard-widget">
+                <h2>Announcements</h2>
+                <!-- Announcements will be loaded here -->
+                <p>Loading announcements...</p>
+            </section>
+        </aside>
+
+        <section id="project-showcase-quick-access" class="dashboard-widget">
+            <h2>Project Showcase</h2>
+            <!-- Links or previews to projects -->
+            <p><a href="/projects">View All Projects</a></p>
+        </section>
+
+        <div id="notification-center-panel">
+            <h3>Notifications</h3>
+            <!-- Notifications will be listed here -->
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; Campus Connect <span id="current-year"></span></p>
+    </footer>
+
+    <script src="dashboard_script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            const welcomeMessage = document.getElementById('welcome-message');
+
+            if (currentUser && currentUser.firstName) {
+                welcomeMessage.textContent = `Welcome, ${currentUser.firstName}!`;
+            } else {
+                welcomeMessage.textContent = 'Welcome, Student!'; // Fallback message
+            }
+        });
+    </script>
+</body>
+</html>

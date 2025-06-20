@@ -97,8 +97,8 @@ app.get('/department-dashboard', (req, res) => {  // New route
     res.sendFile(path.join(__dirname, 'department_admin.html')); // Corrected filename
 });
 // -- Route for Student Profile Directory --
-app.get('/student-profile', (req, res) => { // This route was outside the conflict block but is related
-  res.sendFile(path.join(__dirname, 'student-profile.html'));
+app.get('/student-dashboard', (req, res) => { // This route was outside the conflict block but is related
+  res.sendFile(path.join(__dirname, 'student_dashboard.html'));
 });
 
 app.get('/club-admin-dashboard', (req, res) => {
@@ -125,6 +125,11 @@ app.get('/events-directory', (req, res) => {
 // --- Route for Interactive Calendar ---
 app.get('/interactive-calendar', (req, res) => {
     res.sendFile(path.join(__dirname, 'interactive_calendar.html'));
+});
+
+// --- Route for Edit Student Profile Page ---
+app.get('/edit-student-profile', (req, res) => {
+    res.sendFile(path.join(__dirname, 'edit-student-profile.html'));
 });
 
 // --- Route for Reset Password Page ---
