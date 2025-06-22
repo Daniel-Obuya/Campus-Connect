@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Dashboard - Campus Connect</title>
     <link rel="stylesheet" href="dashboard_styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="floating-icons-container">
@@ -17,57 +20,140 @@
     </div>
 
     <header>
+    <div class="header-left">
+        <img src="images/default-avatar.png" alt="Profile Picture" class="profile-avatar-header">
         <h1 id="welcome-message">Welcome, [Student Name]!</h1>
+    </div>
         <nav>
-            <a href="student-profile.html">Profile</a>
-            <div id="notification-icon">
-                <span>🔔</span>
+            <a href="student-profile.html" class="nav-link">
+                <span class="nav-icon">👤</span>
+                Profile
+            </a>
+            <div id="notification-icon" class="notification-wrapper">
+                <span class="bell-icon">🔔</span>
                 <span id="notification-count">0</span>
             </div>
-            <a href="/logout">Logout</a>
+            <a href="#" id="logoutButton" class="nav-link">
+                <span class="nav-icon">🚪</span>
+                Logout
+            </a>
         </nav>
     </header>
 
     <main class="dashboard-grid">
-        <section id="profile-completion-widget" class="dashboard-widget">
-            <h2>Profile Status</h2>
-            <div class="progress-bar-container">
-                <div id="profile-progress" style="width: 0%;">0%</div>
+        <section id="profile-completion-widget" class="dashboard-widget profile-widget">
+            <div class="widget-header">
+                <h2>
+                    <span class="widget-icon">📊</span>
+                    Profile Status
+                </h2>
             </div>
-            <p><a href="/profile/edit">Complete your profile</a></p>
+            <div class="progress-bar-container">
+                <div id="profile-progress" style="width: 0%">
+                    <span class="progress-text">0%</span>
+                </div>
+            </div>
+            <p class="widget-action">
+                <a href="edit-student-profile.html" class="action-link">
+                    Complete your profile
+                    <span class="arrow">→</span>
+                </a>
+            </p>
         </section>
 
-        <section id="personalized-feed" class="dashboard-widget">
-            <h2>Your Feed</h2>
-            <!-- Feed items will be loaded here by JavaScript -->
-            <p>Loading feed...</p>
+        <section id="personalized-feed" class="dashboard-widget feed-widget">
+            <div class="widget-header">
+                <h2>
+                    <span class="widget-icon">📰</span>
+                    Your Feed
+                </h2>
+            </div>
+            <div class="loading-state">
+                <div class="loading-spinner"></div>
+                <p>Loading feed...</p>
+            </div>
         </section>
 
         <aside class="sidebar-widgets">
-            <section id="events-calendar-widget" class="dashboard-widget">
-                <h2>Upcoming Events</h2>
+            <section id="events-calendar-widget" class="dashboard-widget calendar-widget">
+                <div class="widget-header">
+                    <h2>
+                        <span class="widget-icon">📅</span>
+                        Upcoming Events
+                    </h2>
+                </div>
                 <div id="calendar-placeholder">
-                    <!-- Calendar will be rendered here by JavaScript -->
-                    <p>Loading calendar...</p>
+                    <div class="loading-state">
+                        <div class="loading-spinner"></div>
+                        <p>Loading calendar...</p>
+                    </div>
                 </div>
             </section>
 
-            <section id="recent-announcements" class="dashboard-widget">
-                <h2>Announcements</h2>
-                <!-- Announcements will be loaded here -->
-                <p>Loading announcements...</p>
+            <section id="recent-announcements" class="dashboard-widget announcements-widget">
+                <div class="widget-header">
+                    <h2>
+                        <span class="widget-icon">📢</span>
+                        Announcements
+                    </h2>
+                </div>
+                <div class="loading-state">
+                    <div class="loading-spinner"></div>
+                    <p>Loading announcements...</p>
+                </div>
             </section>
         </aside>
 
-        <section id="project-showcase-quick-access" class="dashboard-widget">
-            <h2>Project Showcase</h2>
-            <!-- Links or previews to projects -->
-            <p><a href="/projects">View All Projects</a></p>
+        <section id="project-showcase-quick-access" class="dashboard-widget projects-widget">
+            <div class="widget-header">
+                <h2>
+                    <span class="widget-icon">🚀</span>
+                    Project Showcase
+                </h2>
+            </div>
+            <p class="widget-description">Discover amazing student projects and showcase your own work.</p>
+            <p class="widget-action">
+                <a href="projects_directory.html" class="action-link">
+                    View All Projects
+                    <span class="arrow">→</span>
+                </a>
+            </p>
         </section>
 
-        <div id="notification-center-panel">
-            <h3>Notifications</h3>
-            <!-- Notifications will be listed here -->
+        <section id="discover-clubs-widget" class="dashboard-widget clubs-widget">
+            <div class="widget-header">
+                <h2>
+                    <span class="widget-icon">🎭</span>
+                    Discover Clubs
+                </h2>
+            </div>
+            <p class="widget-description">Explore a wide range of student clubs and organizations. Find your community!</p>
+            <a href="clubs-directory.html" class="action-button">
+                <span>View All Clubs</span>
+                <span class="button-arrow">→</span>
+            </a>
+        </section>
+
+        <section id="explore-departments-widget" class="dashboard-widget departments-widget">
+            <div class="widget-header">
+                <h2>
+                    <span class="widget-icon">🏛️</span>
+                    Departments
+                </h2>
+            </div>
+            <p class="widget-description">Explore the academic departments and their offerings.</p>
+            <a href="departments_directory.html" class="action-button">
+                <span>View All Departments</span>
+                <span class="button-arrow">→</span>
+            </a>
+        </section>
+
+        <div id="notification-center-panel" class="notification-panel">
+            <div class="notification-header">
+                <h3>Notifications</h3>
+                <button class="close-notifications">✕</button>
+            </div>
+            <ul id="notification-list"></ul>
         </div>
     </main>
 
@@ -78,14 +164,48 @@
     <script src="dashboard_script.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
             const welcomeMessage = document.getElementById('welcome-message');
+            let currentUser = null;
 
-            if (currentUser && currentUser.firstName) {
-                welcomeMessage.textContent = `Welcome, ${currentUser.firstName}!`;
-            } else {
-                welcomeMessage.textContent = 'Welcome, Student!'; // Fallback message
+            try {
+                // Attempt to get user data from localStorage
+                currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            } catch (e) {
+                console.error('Could not parse user data from localStorage:', e);
+                // If data is corrupted, treat as not logged in
             }
+
+            // Check if a valid student user is logged in
+            if (currentUser && currentUser.role === 'student' && currentUser.firstName) {
+                welcomeMessage.textContent = `Welcome, ${currentUser.firstName}! 👋`;
+        // Display profile picture
+        const avatar = document.querySelector('.profile-avatar-header');
+        if (avatar && currentUser.profilePictureUrl) {
+            avatar.src = currentUser.profilePictureUrl;
+        }
+            } else {
+                // If not logged in or not a student, redirect to the login page
+                console.warn('No valid student user found. Redirecting to login.');
+                window.location.href = '/login-student.html';
+                return; // Stop script execution
+            }
+
+            // Add entrance animation
+            welcomeMessage.style.opacity = '0';
+            welcomeMessage.style.transform = 'translateY(-20px)';
+            setTimeout(() => { // Using a timeout to apply transition after initial render
+                welcomeMessage.style.transition = 'all 0.6s ease';
+                welcomeMessage.style.opacity = '1';
+                welcomeMessage.style.transform = 'translateY(0)';
+            }, 100);
+
+            // Logout functionality
+            document.getElementById('logoutButton').addEventListener('click', function(e) {
+                e.preventDefault();
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('currentUser');
+                window.location.href = '/welcome.html'; // Redirect to a neutral welcome page
+            });
         });
     </script>
 </body>

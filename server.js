@@ -10,10 +10,10 @@ const fetch = require('node-fetch'); // For making HTTP requests from the backen
 const { google } = require('googleapis'); // For Google Calendar API
 
 const app = express();
-const PORT = process.env.PORT || 3306;
+const PORT = process.env.PORT || 3001; // Changed default port to 3001 to avoid conflict with MySQL default
 
 // Middleware
-app.use(express.json());
+app.use(express.json({ limit: '50mb' })); // Increased Limit to 50mb to accomodate image uploads
 app.use(express.urlencoded({ extended: true }));
 
 // Google OAuth2 Client Setup
@@ -57,6 +57,7 @@ const pool = mysql.createPool({
     console.error('❌ Failed to connect to the database:', err);
   }
 })();
+exports.pool = pool; // Export the pool for use in other modules
 
 // --- HTML Serving Routes ---
 
@@ -113,6 +114,10 @@ app.get('/clubs-directory', (req, res) => {
   res.sendFile(path.join(__dirname, 'clubs-directory.html'));
 });
 // --- Route for Departments Directory ---
+app.get('/projects', (req, res) => {
+  res.sendFile(path.join(__dirname, 'projects_directory.html'));
+});
+
 app.get('/departments-directory', (req, res) => {
     res.sendFile(path.join(__dirname, 'departments_directory.html'));
 });
@@ -693,7 +698,10 @@ app.post('/api/login', async (req, res) => {
             email: user.email,
             role: user.role,
             firstName: user.first_name,
-            lastName: user.last_name
+    lastName: user.last_name,
+    profilePictureUrl: user.profile_picture_url,
+    bio: user.bio,
+    studentDetails: user.role === 'student' ? { studentId: user.student_id, major: user.major, graduationYear: user.graduation_year, department: user.department } : null
         }, secret, { expiresIn: '2h' });
 
         console.log(`User ${user.email} (role: ${user.role}) logged in, sending token.`);

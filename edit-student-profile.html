@@ -140,6 +140,14 @@
                 <label for="graduationYear">Expected Graduation Year</label>
                 <input type="text" id="graduationYear" name="graduationYear" placeholder="YYYY">
             </div>
+             <div class="form-group">
+                <label for="linkedin">LinkedIn</label>
+                <input type="text" id="linkedin" name="linkedin">
+            </div>
+             <div class="form-group">
+                <label for="github">GitHub</label>
+                <input type="text" id="github" name="github">
+            </div>zz
             <!-- Add more fields as needed: e.g., LinkedIn, GitHub, Skills -->
 
             <div class="form-actions">
@@ -188,13 +196,15 @@
                 }
             });
 
-            form.addEventListener('submit', function(event) {
+            form.addEventListener('submit', async function(event) {
                 event.preventDefault();
 
-                // Update currentUser object
+                // Update currentUser object from form fields
                 currentUser.firstName = form.firstName.value;
                 currentUser.lastName = form.lastName.value;
                 currentUser.bio = form.bio.value;
+                // The profilePictureUrl is already updated on the currentUser object
+                // by its 'change' event listener if a new image was selected.
 
                 if (!currentUser.studentDetails) {
                     currentUser.studentDetails = {}; // Initialize if not present
@@ -203,11 +213,46 @@
                 currentUser.studentDetails.major = form.major.value;
                 currentUser.studentDetails.graduationYear = form.graduationYear.value;
 
-                // Save updated currentUser to localStorage
-                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                // Prepare data for the API
+                const profileData = {
+                    firstName: currentUser.firstName,
+                    lastName: currentUser.lastName,
+                    bio: currentUser.bio,
+                    profilePictureUrl: currentUser.profilePictureUrl,
+                    studentDetails: currentUser.studentDetails
+                };
 
-                alert('Profile updated successfully!');
-                window.location.href = 'student-profile.html'; // Redirect back to profile
+                const authToken = localStorage.getItem('authToken');
+                if (!authToken) {
+                    alert('You are not logged in. Please log in again.');
+                    window.location.href = '/login-student';
+                    return;
+                }
+
+                try {
+                    const response = await fetch('/api/user/profile', {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${authToken}`
+                        },
+                        body: JSON.stringify(profileData)
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        // IMPORTANT: Save the updated user object back to localStorage
+                        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                        alert('Profile updated successfully!');
+                        window.location.href = 'student-profile.html'; // Redirect back to profile
+                    } else {
+                        alert(`Failed to update profile: ${result.message}`);
+                    }
+                } catch (error) {
+                    console.error('Error updating profile:', error);
+                    alert('An error occurred while updating your profile. Please try again.');
+                }
             });
         });
     </script>
