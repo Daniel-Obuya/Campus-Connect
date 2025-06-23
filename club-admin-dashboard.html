@@ -3,38 +3,1526 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Club Admin Dashboard - Campus Connect</title>
+    <title>Campus Connect - Club Admin Dashboard</title>
+    <meta name="description" content="Club Admin Dashboard for Campus Connect" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; background-color: #f4f4f4; margin: 0; }
-        .container { background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); text-align: center; }
-        h1 { color: #333; }
-        p { color: #555; }
-        a.logout-btn { display: inline-block; margin-top: 20px; padding: 10px 20px; background-color: #ff9800; color: #333; text-decoration: none; border-radius: 5px; font-weight: bold; }
-        a.logout-btn:hover { background-color: #e68a00; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #f5deb3 0%, #deb887 50%, #cd853f 100%);
+            color: #333;
+            min-height: 100vh;
+            padding-top: 100px;
+        }
+
+        /* Header Styles */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: #fff8dc;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ffc107, #ff9800);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            box-shadow: 0 4px 15px rgba(255,193,7,0.3);
+            border: 3px solid rgba(255,255,255,0.3);
+        }
+
+        .brand-name {
+            margin-left: 15px;
+            font-size: 20px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #333, #666);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 600;
+            text-align: center;
+            flex: 1;
+            margin: 0 20px;
+            background: linear-gradient(135deg, #cd853f, #8b4513);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 10px 18px;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4682b4, #2c5282);
+            box-shadow: 0 3px 10px rgba(70,130,180,0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545, #b02a37);
+            box-shadow: 0 3px 10px rgba(220,53,69,0.3);
+        }
+
+        /* Navigation */
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .nav-tab {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.15);
+            color: #555;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .nav-tab.active {
+            background: linear-gradient(135deg, #ffc107, #ff9800);
+            color: #333;
+            border: 2px solid rgba(255,193,7,0.5);
+            box-shadow: 0 4px 15px rgba(255,193,7,0.3);
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 40px 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Dashboard Overview */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .dashboard-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #8b4513, #cd853f);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .metric-number {
+            font-size: 36px;
+            font-weight: bold;
+            color: #cd853f;
+            margin-bottom: 8px;
+        }
+
+        .metric-label {
+            color: #555;
+            font-size: 14px;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            color: #333;
+            font-size: 14px;
+        }
+
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .form-button {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #ffc107, #ff9800);
+            color: #333;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255,193,7,0.3);
+        }
+
+        .form-button:hover {
+            background: linear-gradient(135deg, #ff9800, #ffc107);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255,193,7,0.4);
+        }
+
+        /* Member Management */
+        .member-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .member-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .member-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ffc107, #ff9800);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .member-details h4 {
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+
+        .member-role {
+            font-size: 12px;
+            color: #666;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 8px;
+            border-radius: 12px;
+        }
+
+        .member-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 6px;
+        }
+
+        /* Event Management */
+        .event-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .event-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .event-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .event-date {
+            background: linear-gradient(135deg, #ffc107, #ff9800);
+            color: #333;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .event-stats {
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .event-stat {
+            text-align: center;
+        }
+
+        .event-stat-number {
+            font-size: 20px;
+            font-weight: bold;
+            color: #cd853f;
+        }
+
+        .event-stat-label {
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* Announcements */
+        .announcement-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .announcement-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .announcement-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .announcement-time {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .announcement-content {
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .announcement-stats {
+            display: flex;
+            gap: 20px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* Analytics Charts */
+        .chart-container {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .chart-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #8b4513, #cd853f);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Notifications */
+        .notification-item {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
+            border-radius: 12px;
+            padding: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-title {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .notification-time {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .notification-badge {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ffc107;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,248,220,0.95));
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 600px;
+            width: 90%;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.3);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #666;
+            transition: color 0.3s ease;
+        }
+
+        .modal-close:hover {
+            color: #333;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #8b4513, #cd853f);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 10px;
+                padding: 20px;
+            }
+            
+            .page-title {
+                font-size: 20px;
+                margin: 10px 0;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .member-card, .event-header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Welcome, Club Administrator!</h1>
-        <p id="clubAdminName">Your dashboard is under construction.</p>
-        <p>Here you will be able to manage your club, members, events, and announcements.</p>
-        <a href="/welcome" class="logout-btn" id="logoutButton">Logout</a>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-left">
+            <div class="logo">CC</div>
+            <div class="brand-name">Campus Connect</div>
+        </div> 
+        <div class="page-title" id="dashboardTitle">Club Admin Dashboard</div>
+        <div class="header-actions">
+            <button class="btn btn-primary" onclick="openNotifications()">🔔 Notifications</button>
+            <button class="btn btn-danger">🚪 Logout</button>
+        </div>
     </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Navigation Tabs -->
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('dashboard')">📊 Dashboard</button>
+            <button class="nav-tab" onclick="showTab('members')">👥 Members</button>
+            <button class="nav-tab" onclick="showTab('events')">📅 Events</button>
+            <button class="nav-tab" onclick="showTab('announcements')">📢 Announcements</button>
+            <button class="nav-tab" onclick="showTab('analytics')">📈 Analytics</button>
+            <button class="nav-tab" onclick="showTab('profile')">⚙️ Club Profile</button>
+        </div>
+
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content active">
+            <h2 class="card-title" style="text-align: center; font-size: 32px; margin-bottom: 30px;" id="welcomeMessage">Welcome back, Club Admin!</h2>
+            
+            <div class="dashboard-grid">
+                <div class="dashboard-card">
+                    <div class="card-title">📊 Club Overview</div>
+                    <div class="metric-number">127</div>
+                    <div class="metric-label">Total Members</div>
+                    <div style="margin-top: 15px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="font-size: 14px;">Active Members:</span>
+                            <span style="font-weight: bold;">115</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="font-size: 14px;">Pending Requests:</span>
+                            <span style="font-weight: bold; color: #ffc107;">5</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <div class="card-title">📅 Upcoming Events</div>
+                    <div class="metric-number">3</div>
+                    <div class="metric-label">Events This Week</div>
+                    <div style="margin-top: 15px;">
+                        <div style="font-size: 14px; color: #555;">Next Event:</div>
+                        <div style="font-weight: bold;">Hackathon 2024</div>
+                        <div style="font-size: 12px; color: #666;">Tomorrow, 6:00 PM</div>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <div class="card-title">📢 Recent Activity</div>
+                    <div class="metric-number">24</div>
+                    <div class="metric-label">New Interactions Today</div>
+                    <div style="margin-top: 15px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="font-size: 14px;">Event RSVPs:</span>
+                            <span style="font-weight: bold;">18</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="font-size: 14px;">Announcement Views:</span>
+                            <span style="font-weight: bold;">89</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <div class="card-title">🎯 Engagement Rate</div>
+                    <div class="metric-number">78%</div>
+                    <div class="metric-label">This Month</div>
+                    <div style="margin-top: 15px;">
+                        <div style="font-size: 14px; color: #555;">Trend: ↗️ +12% from last month</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="dashboard-card">
+                <div class="card-title">⚡ Quick Actions</div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 20px;">
+                    <button class="form-button" onclick="showTab('events'); openModal('createEventModal')">Create New Event</button>
+                    <button class="form-button" onclick="showTab('announcements'); openModal('createAnnouncementModal')">Post Announcement</button>
+                    <button class="form-button" onclick="showTab('members')">Manage Members</button>
+                    <button class="form-button" onclick="showTab('analytics')">View Analytics</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Members Tab -->
+        <div id="members" class="tab-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                <h2 class="card-title" style="font-size: 28px;">Member Management</h2>
+                <button class="form-button" onclick="openModal('inviteMemberModal')">+ Invite Member</button>
+            </div> 
+
+            <!-- Pending Requests -->
+            <div class="dashboard-card" style="margin-bottom: 30px;">
+                <div class="card-title">⏳ Pending Membership Requests (5)</div>
+                <div id="pendingRequests">
+                    <div class="member-card">
+                        <div class="member-info">
+                            <div class="member-avatar">JS</div>
+                            <div class="member-details">
+                                    <h4 id="pendingMemberName">John Smith</h4>
+                                    <div class="member-role" id="pendingMemberRole">Computer Science • Sophomore</div>
+                            </div>
+                        </div>
+                        <div class="member-actions">
+                            <button class="btn btn-primary btn-small" onclick="acceptMember('john-smith')">Accept</button>
+                            <button class="btn btn-danger btn-small" onclick="rejectMember('john-smith')">Reject</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Current Members -->
+            <div class="dashboard-card">
+                <div class="card-title">👥 Current Members (127)</div>
+                <div style="margin: 20px 0;">
+                    <input type="text" class="form-input" placeholder="Search members..." style="margin-bottom: 15px;">
+                    <select class="form-select" style="width: auto;">
+                        <option>All Roles</option>
+                        <option>President</option>
+                        <option>Vice President</option>
+                        <option>Secretary</option>
+                        <option>Treasurer</option>
+                        <option>Member</option>
+                    </select>
+                </div>
+                <div id="membersList">
+                    <div class="member-card">
+                        <div class="member-info">
+                            <div class="member-avatar">AM</div>
+                            <div class="member-details" id="currentMemberName">
+                                <h4>Alice Mitchell</h4> 
+                                <div class="member-role">President</div>
+                            </div>
+                        </div>
+                        <div class="member-actions">
+                            <button class="btn btn-primary btn-small" onclick="editMemberRole('alice-mitchell')">Edit Role</button>
+                            <button class="btn btn-danger btn-small">Remove</button>
+                        </div>
+                    </div>
+                    <div class="member-card">
+                        <div class="member-info">
+                            <div class="member-avatar">BJ</div>
+                            <div class="member-details" id="currentMemberName">
+                                <h4>Bob Johnson</h4> 
+                                <div class="member-role">Vice President</div>
+                            </div>
+                        </div>
+                        <div class="member-actions">
+                            <button class="btn btn-primary btn-small" onclick="editMemberRole('bob-johnson')">Edit Role</button>
+                            <button class="btn btn-danger btn-small">Remove</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Events Tab -->
+        <div id="events" class="tab-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                <h2 class="card-title" style="font-size: 28px;">Event Management</h2>
+                <button class="form-button" onclick="openModal('createEventModal')">+ Create Event</button>
+            </div>
+
+            <div id="eventsList">
+                <div class="event-card">
+                    <div class="event-header">
+                        <div class="event-title" id="eventTitle">🚀 Hackathon 2024</div>
+                        <div class="event-date" id="eventDate">Dec 23, 2024</div>
+                    </div>
+                    <p style="color: #555; margin-bottom: 15px;">Join us for our annual 48-hour hackathon! Build amazing projects, network with peers, and compete for prizes.</p>
+                    <div class="event-stats">
+                        <div class="event-stat">
+                            <div class="event-stat-number">45</div>
+                            <div class="event-stat-label">RSVPs</div>
+                        </div>
+                        <div class="event-stat">
+                            <div class="event-stat-number">12</div>
+                            <div class="event-stat-label">Teams</div>
+                        </div>
+                        <div class="event-stat">
+                            <div class="event-stat-number">3</div>
+                            <div class="event-stat-label">Days Left</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px; display: flex; gap: 10px;">
+                        <button class="btn btn-primary btn-small">Edit Event</button>
+                        <button class="btn btn-danger btn-small">Cancel Event</button>
+                        <button class="btn btn-primary btn-small">View RSVPs</button>
+                    </div>
+                </div>
+
+                <div class="event-card">
+                    <div class="event-header">
+                        <div class="event-title" id="eventTitle">💻 Weekly Coding Workshop</div>
+                        <div class="event-date" id="eventDate">Dec 26, 2024</div>
+                    </div>
+                    <p style="color: #555; margin-bottom: 15px;">Learn React.js fundamentals in this hands-on workshop. Perfect for beginners!</p>
+                    <div class="event-stats">
+                        <div class="event-stat">
+                            <div class="event-stat-number">28</div>
+                            <div class="event-stat-label">RSVPs</div>
+                        </div>
+                        <div class="event-stat">
+                            <div class="event-stat-number">30</div>
+                            <div class="event-stat-label">Max Capacity</div>
+                        </div>
+                        <div class="event-stat">
+                            <div class="event-stat-number">6</div>
+                            <div class="event-stat-label">Days Left</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px; display: flex; gap: 10px;">
+                        <button class="btn btn-primary btn-small">Edit Event</button>
+                        <button class="btn btn-danger btn-small">Cancel Event</button>
+                        <button class="btn btn-primary btn-small">View RSVPs</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Announcements Tab -->
+        <div id="announcements" class="tab-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                <h2 class="card-title" style="font-size: 28px;">Announcements</h2>
+                <button class="form-button" onclick="openModal('createAnnouncementModal')">+ New Announcement</button>
+            </div>
+
+            <div id="announcementsList">
+                <div class="announcement-card">
+                    <div class="announcement-header">
+                        <div class="announcement-title" id="announcementTitle">🎉 Hackathon Registration Open!</div>
+                        <div class="announcement-time" id="announcementTime">2 hours ago</div>
+                    </div>
+                    <div class="announcement-content">
+                        Registration for our annual hackathon is now open! Early bird pricing available until December 15th. Don't miss out on this amazing opportunity to showcase your skills and win awesome prizes!
+                    </div>
+                    <div class="announcement-stats">
+                        <span>👁️ 156 views</span>
+                        <span>💬 12 comments</span>
+                        <span>❤️ 23 likes</span>
+                    </div>
+                    <div style="margin-top: 15px; display: flex; gap: 10px;">
+                        <button class="btn btn-primary btn-small">Edit</button>
+                        <button class="btn btn-danger btn-small">Delete</button>
+                        <button class="btn btn-primary btn-small">Pin</button>
+                    </div>
+                </div>
+
+                <div class="announcement-card">
+                    <div class="announcement-header">
+                        <div class="announcement-title" id="announcementTitle">📚 New Study Group Schedule</div>
+                        <div class="announcement-time" id="announcementTime">1 day ago</div>
+                    </div>
+                    <div class="announcement-content">
+                        We've updated our weekly study group schedule. Sessions will now be held on Tuesdays and Thursdays from 7-9 PM in the computer lab. Topics will include data structures, algorithms, and interview preparation.
+                    </div>
+                    <div class="announcement-stats">
+                        <span>👁️ 89 views</span>
+                        <span>💬 8 comments</span>
+                        <span>❤️ 15 likes</span>
+                    </div>
+                    <div style="margin-top: 15px; display: flex; gap: 10px;">
+                        <button class="btn btn-primary btn-small">Edit</button>
+                        <button class="btn btn-danger btn-small">Delete</button>
+                        <button class="btn btn-primary btn-small">Pin</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Tab -->
+        <div id="analytics" class="tab-content">
+            <h2 class="card-title" style="text-align: center; font-size: 28px; margin-bottom: 30px;">📈 Club Analytics</h2>
+
+            <div class="chart-container">
+                <div class="chart-title">Member Growth Trends</div>
+                <canvas id="memberGrowthChart" width="400" height="200"></canvas>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-title">Event Attendance Over Time</div>
+                <canvas id="attendanceChart" width="400" height="200"></canvas>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px;">
+                <div class="chart-container">
+                    <div class="chart-title">Content Engagement</div>
+                    <canvas id="engagementChart" width="300" height="300"></canvas>
+                </div>
+
+                <div class="dashboard-card">
+                    <div class="card-title">📊 Key Metrics</div>
+                    <div style="space-y: 15px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                            <span>Average Event Attendance:</span>
+                            <span style="font-weight: bold; color: #cd853f;">32 people</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                            <span>Engagement Rate:</span>
+                            <span style="font-weight: bold; color: #cd853f;">78%</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                            <span>Member Retention:</span>
+                            <span style="font-weight: bold; color: #cd853f;">91%</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                            <span>Active Members:</span>
+                            <span style="font-weight: bold; color: #cd853f;">115/127</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Club Profile Tab -->
+        <div id="profile" class="tab-content">
+            <h2 class="card-title" style="text-align: center; font-size: 28px; margin-bottom: 30px;">⚙️ Club Profile Settings</h2>
+
+            <div class="dashboard-card">
+                <div class="card-title">Club Information</div>
+                <form id="clubProfileForm">
+                    <div class="form-group">
+                        <label for="clubName" class="form-label">Club Name</label>
+                        <input type="text" id="clubName" class="form-input" value="Programming Club" placeholder="Enter club name">
+                    </div>
+                    <div class="form-group">
+                        <label for="clubDescription" class="form-label">Description</label>
+                        <textarea id="clubDescription" class="form-textarea" placeholder="Enter club description">A community of passionate programmers dedicated to learning, sharing knowledge, and building amazing projects together. We welcome students of all skill levels!</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="clubContactEmail" class="form-label">Contact Email</label>
+                        <input type="email" id="clubContactEmail" class="form-input" value="programming.club@university.edu" placeholder="Enter contact email">
+                    </div>
+                    <div class="form-group">
+                        <label for="clubMeetingSchedule" class="form-label">Meeting Schedule</label>
+                        <input type="text" id="clubMeetingSchedule" class="form-input" value="Wednesdays 6:00 PM - 8:00 PM" placeholder="Enter meeting schedule">
+                    </div>
+                    <div class="form-group">
+                        <label for="clubMeetingLocation" class="form-label">Meeting Location</label>
+                        <input type="text" id="clubMeetingLocation" class="form-input" value="Computer Science Building, Room 203" placeholder="Enter meeting location">
+                    </div>
+                    <div class="form-group">
+                        <label for="clubCategory" class="form-label">Club Category</label>
+                        <select class="form-select">
+                            <option selected>Technology</option>
+                            <option>Academic</option>
+                            <option>Sports</option>
+                            <option>Arts</option>
+                            <option>Service</option>
+                            <option>Social</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="clubLogoUrl" class="form-label">Club Logo URL</label>
+                        <input type="url" id="clubLogoUrl" class="form-input" placeholder="Enter logo URL">
+                    </div>
+                    <button type="submit" class="form-button">Update Club Profile</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications Modal -->
+    <div id="notificationsModal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('notificationsModal')">&times;</button>
+            <div class="modal-title">🔔 Notifications</div>
+            <div id="notificationsList">
+                <div class="notification-item">
+                    <div class="notification-content">
+                        <div class="notification-title">New member request from Sarah Wilson</div>
+                        <div class="notification-time">5 minutes ago</div>
+                    </div>
+                    <div class="notification-badge"></div>
+                </div>
+                <div class="notification-item">
+                    <div class="notification-content">
+                        <div class="notification-title">Hackathon event has 10 new RSVPs</div>
+                        <div class="notification-time">1 hour ago</div>
+                    </div>
+                </div>
+                <div class="notification-item">
+                    <div class="notification-content">
+                        <div class="notification-title">Monthly meeting reminder: Tomorrow at 6 PM</div>
+                        <div class="notification-time">3 hours ago</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Event Modal -->
+    <div id="createEventModal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('createEventModal')">&times;</button>
+            <div class="modal-title">📅 Create New Event</div>
+            <form id="createEventForm">
+                <div class="form-group">
+                    <label class="form-label">Event Title</label>
+                    <input type="text" class="form-input" placeholder="Enter event title" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-textarea" placeholder="Enter event description" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Date & Time</label>
+                    <input type="datetime-local" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Location</label>
+                    <input type="text" class="form-input" placeholder="Enter event location" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Max Capacity</label>
+                    <input type="number" class="form-input" placeholder="Enter maximum attendees">
+                </div>
+                <button type="submit" class="form-button">Create Event</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Create Announcement Modal -->
+    <div id="createAnnouncementModal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('createAnnouncementModal')">&times;</button>
+            <div class="modal-title">📢 Create New Announcement</div>
+            <form id="createAnnouncementForm">
+                <div class="form-group">
+                    <label class="form-label">Announcement Title</label>
+                    <input type="text" class="form-input" placeholder="Enter announcement title" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Content</label>
+                    <textarea class="form-textarea" placeholder="Enter announcement content" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Priority</label>
+                    <select class="form-select">
+                        <option>Normal</option>
+                        <option>High</option>
+                        <option>Urgent</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 10px;">
+                        <input type="checkbox" style="width: auto;">
+                        <span>Pin this announcement</span>
+                    </label>
+                </div>
+                <button type="submit" class="form-button">Post Announcement</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Invite Member Modal -->
+    <div id="inviteMemberModal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('inviteMemberModal')">&times;</button>
+            <div class="modal-title">👥 Invite New Member</div>
+            <form id="inviteMemberForm">
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" class="form-input" placeholder="Enter member's email" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Role</label>
+                    <select class="form-select">
+                        <option selected>Member</option>
+                        <option>Secretary</option>
+                        <option>Treasurer</option>
+                        <option>Vice President</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Personal Message (Optional)</label>
+                    <textarea class="form-textarea" placeholder="Add a personal invitation message"></textarea>
+                </div>
+                <button type="submit" class="form-button">Send Invitation</button>
+            </form>
+        </div>
+    </div>
+
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-            if (currentUser && currentUser.role === 'club_admin') {
-                document.getElementById('clubAdminName').textContent = `Welcome, ${currentUser.firstName || 'Admin'}! Your dashboard is under construction.`;
-            } else {
-                // Optional: Redirect if not a club admin or no user data
-                // window.location.href = '/login-admin'; // Or appropriate login page
+        // Tab Navigation
+        function showTab(tabName) {
+            // Hide all tab contents
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(tab => tab.classList.remove('active'));
+            
+            // Remove active class from all nav tabs
+            const navTabs = document.querySelectorAll('.nav-tab');
+            navTabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked nav tab
+            event.target.classList.add('active');
+
+            // Initialize charts if analytics tab is shown
+            if (tabName === 'analytics') {
+                setTimeout(initializeCharts, 100);
             }
-            document.getElementById('logoutButton').addEventListener('click', function(e) {
-                e.preventDefault();
-                localStorage.removeItem('authToken');
-                localStorage.removeItem('currentUser');
-                window.location.href = '/welcome';
+        }
+
+        // Modal Functions
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'flex';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        function openNotifications() {
+            openModal('notificationsModal');
+        }
+
+        // Member Management Functions
+        async function acceptMember(membershipId) {
+            await handleMembershipAction(membershipId, 'approve', 'Accepted');
+        }
+
+        async function rejectMember(membershipId) {
+            await handleMembershipAction(membershipId, 'reject', 'Rejected');
+        }
+
+        function editMemberRole(memberId) {
+            const newRole = prompt("Enter new role:");
+            if (newRole) {
+                alert(`Updated role for ${memberId} to: ${newRole}`);
+                // In a real app, this would make an API call
+            }
+        }
+
+        async function handleMembershipAction(membershipId, actionType, successMessage) {
+            if (!confirm(`Are you sure you want to ${actionType} this membership?`)) {
+                return;
+            }
+
+            const authToken = localStorage.getItem('authToken');
+            if (!authToken) {
+                alert('You are not authorized. Please log in as a Club Admin.');
+                window.location.href = '/login-admin';
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/club/memberships/${actionType}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ membershipId })
+                });
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    alert(`${successMessage} membership successfully!`);
+                    // Re-fetch dashboard data to update the lists
+                    await fetchDashboardData();
+                } else {
+                    alert(`Failed to ${actionType} membership: ${data.message || 'Server error'}`);
+                }
+            } catch (error) {
+                console.error(`Error ${actionType} membership:`, error);
+                alert('An unexpected error occurred. Please try again.');
+            }
+        }
+
+        // Charts Initialization
+        function initializeCharts(analyticsData) {
+            // Member Growth Chart
+            const memberCtx = document.getElementById('memberGrowthChart');
+            if (memberCtx && !memberCtx.chartInitialized) {
+                new Chart(memberCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                        datasets: [{ // Replace with analyticsData.memberGrowth
+                            label: 'Members',
+                            data: [45, 52, 61, 78, 95, 127],
+                            borderColor: '#ffc107',
+                            backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: '#333'
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                ticks: {
+                                    color: '#666'
+                                }
+                            },
+                            x: {
+                                ticks: {
+                                    color: '#666'
+                                }
+                            }
+                        }
+                    }
+                });
+                memberCtx.chartInitialized = true;
+            }
+
+            // Attendance Chart
+            const attendanceCtx = document.getElementById('attendanceChart');
+            if (attendanceCtx && !attendanceCtx.chartInitialized) {
+                new Chart(attendanceCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                        datasets: [{ // Replace with analyticsData.eventAttendance
+                            label: 'Attendance',
+                            data: [32, 28, 35, 42],
+                            backgroundColor: '#cd853f',
+                            borderColor: '#8b4513',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: '#333'
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    color: '#666'
+                                }
+                            },
+                            x: {
+                                ticks: {
+                                    color: '#666'
+                                }
+                            }
+                        }
+                    }
+                });
+                attendanceCtx.chartInitialized = true;
+            }
+
+            // Engagement Chart
+            const engagementCtx = document.getElementById('engagementChart');
+            if (engagementCtx && !engagementCtx.chartInitialized) {
+                new Chart(engagementCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Events', 'Announcements', 'Discussions', 'Resources'],
+                        datasets: [{ // Replace with analyticsData.engagement
+                            data: [35, 25, 25, 15],
+                            backgroundColor: ['#ffc107', '#cd853f', '#deb887', '#f5deb3'],
+                            borderWidth: 2,
+                            borderColor: '#fff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    color: '#333',
+                                    padding: 20
+                                }
+                            }
+                        }
+                    }
+                });
+                engagementCtx.chartInitialized = true;
+            }
+        }
+
+        // Form Submissions
+        document.getElementById('createEventForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Event created successfully!');
+            closeModal('createEventModal');
+            this.reset();
+        });
+
+        document.getElementById('createAnnouncementForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Announcement posted successfully!');
+            closeModal('createAnnouncementModal');
+            this.reset();
+        });
+
+        document.getElementById('inviteMemberForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Invitation sent successfully!');
+            closeModal('inviteMemberModal');
+            this.reset();
+        });
+
+        document.getElementById('clubProfileForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Club profile updated successfully!');
+        });
+
+        // Close modals when clicking outside
+        window.addEventListener('click', function(e) {
+            if (e.target.classList.contains('modal-overlay')) {
+                e.target.style.display = 'none';
+            }
+        });
+
+        // --- Dynamic Data Loading and Personalization ---
+        let currentClubData = null; // Store fetched club data
+
+        async function fetchDashboardData() {
+            const authToken = localStorage.getItem('authToken');
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+
+            if (!authToken || !currentUser || currentUser.role !== 'club_admin') {
+                alert('You are not authorized to view this page. Please log in as a Club Admin.');
+                window.location.href = '/login-admin'; // Redirect to admin login
+                return;
+            }
+
+            // Personalize welcome message and title immediately
+            const clubName = currentUser.clubDetails ? currentUser.clubDetails.name : 'Your Club';
+            document.getElementById('welcomeMessage').textContent = `Welcome back, ${currentUser.firstName || 'Admin'} of ${clubName}!`;
+            document.getElementById('dashboardTitle').textContent = `${clubName} Admin Dashboard`;
+
+            // --- Mock Data for Demonstration ---
+            // In a real application, you would make an API call here:
+            // try {
+            //     const response = await fetch('/api/club/dashboard', {
+            //         headers: {
+            //             'Authorization': `Bearer ${authToken}`
+            //         }
+            //     });
+            //     if (!response.ok) {
+            //         throw new Error(`HTTP error! status: ${response.status}`);
+            //     }
+            //     currentClubData = await response.json();
+            // } catch (error) {
+            //     console.error('Error fetching dashboard data:', error);
+            //     alert('Failed to load dashboard data. Please try again later.');
+            //     // Optionally, redirect or show a more persistent error message
+            //     return;
+            // }
+
+            // Mock Data (replace with actual API response)
+            currentClubData = {
+                overview: {
+                    totalMembers: 135,
+                    activeMembers: 120,
+                    pendingRequests: 7,
+                    upcomingEvents: 4,
+                    nextEvent: { title: 'Annual General Meeting', date: 'Tomorrow, 7:00 PM' },
+                    newInteractionsToday: 30,
+                    eventRSVPs: 22,
+                    announcementViews: 110,
+                    engagementRate: '82%',
+                    engagementTrend: '↗️ +15%'
+                },
+                members: {
+                    pending: [
+                        { id: 'req1', name: 'Sarah Lee', role: 'Journalism • Freshman' },
+                        { id: 'req2', name: 'Mike Chen', role: 'Electrical Eng. • Junior' }
+                    ],
+                    current: [
+                        { id: 'mem1', name: 'Alice Mitchell', role: 'President' },
+                        { id: 'mem2', name: 'Bob Johnson', role: 'Vice President' },
+                        { id: 'mem3', name: 'Carol White', role: 'Secretary' },
+                        { id: 'mem4', name: 'David Green', role: 'Treasurer' },
+                        { id: 'mem5', name: 'Eve Black', role: 'Member' }
+                    ]
+                },
+                events: [
+                    { id: 'evt1', title: '🚀 Hackathon 2024', date: 'Dec 23, 2024', description: 'Join us for our annual 48-hour hackathon! Build amazing projects, network with peers, and compete for prizes.', rsvps: 55, teams: 15, daysLeft: 2 },
+                    { id: 'evt2', title: '💻 Weekly Coding Workshop', date: 'Dec 26, 2024', description: 'Learn React.js fundamentals in this hands-on workshop. Perfect for beginners!', rsvps: 35, maxCapacity: 40, daysLeft: 5 }
+                ],
+                announcements: [
+                    { id: 'ann1', title: '🎉 Hackathon Registration Open!', time: '2 hours ago', content: 'Registration for our annual hackathon is now open! Early bird pricing available until December 15th. Don\'t miss out on this amazing opportunity to showcase your skills and win awesome prizes!', views: 180, comments: 15, likes: 30 },
+                    { id: 'ann2', title: '📚 New Study Group Schedule', time: '1 day ago', content: 'We\'ve updated our weekly study group schedule. Sessions will now be held on Tuesdays and Thursdays from 7-9 PM in the computer lab. Topics will include data structures, algorithms, and interview preparation.', views: 100, comments: 10, likes: 20 }
+                ],
+                analytics: {
+                    memberGrowth: [45, 52, 61, 78, 95, 135],
+                    eventAttendance: [32, 28, 35, 42],
+                    engagement: [40, 30, 20, 10] // Events, Announcements, Discussions, Resources
+                },
+                profile: {
+                    name: clubName,
+                    description: 'A community of passionate programmers dedicated to learning, sharing knowledge, and building amazing projects together. We welcome students of all skill levels!',
+                    contactEmail: currentUser.email,
+                    meetingSchedule: 'Wednesdays 6:00 PM - 8:00 PM',
+                    meetingLocation: 'Computer Science Building, Room 203',
+                    category: 'Technology',
+                    logoUrl: 'https://via.placeholder.com/150/FFC107/000000?text=ClubLogo'
+                }
+            };
+            // --- End Mock Data ---
+
+            populateDashboard(currentClubData);
+        }
+
+        function populateDashboard(data) {
+            // Overview Tab
+            document.querySelector('#dashboard .metric-number:nth-child(2)').textContent = data.overview.totalMembers;
+            document.querySelector('#dashboard .metric-label:nth-child(3)').textContent = 'Total Members';
+            document.querySelector('#dashboard .metric-number:nth-child(6)').textContent = data.overview.upcomingEvents;
+            document.querySelector('#dashboard .metric-label:nth-child(7)').textContent = 'Events This Week';
+            document.querySelector('#dashboard .metric-number:nth-child(10)').textContent = data.overview.newInteractionsToday;
+            document.querySelector('#dashboard .metric-label:nth-child(11)').textContent = 'New Interactions Today';
+            document.querySelector('#dashboard .metric-number:nth-child(14)').textContent = data.overview.engagementRate;
+            document.querySelector('#dashboard .metric-label:nth-child(15)').textContent = 'This Month';
+
+            // Update specific overview details
+            document.querySelector('#dashboard .dashboard-card:nth-child(1) div:nth-child(4) span:nth-child(2)').textContent = data.overview.activeMembers;
+            document.querySelector('#dashboard .dashboard-card:nth-child(1) div:nth-child(5) span:nth-child(2)').textContent = data.overview.pendingRequests;
+            document.querySelector('#dashboard .dashboard-card:nth-child(2) div:nth-child(4) + div').textContent = data.overview.nextEvent.title;
+            document.querySelector('#dashboard .dashboard-card:nth-child(2) div:nth-child(4) + div + div').textContent = data.overview.nextEvent.date;
+            document.querySelector('#dashboard .dashboard-card:nth-child(3) div:nth-child(4) span:nth-child(2)').textContent = data.overview.eventRSVPs;
+            document.querySelector('#dashboard .dashboard-card:nth-child(3) div:nth-child(5) span:nth-child(2)').textContent = data.overview.announcementViews;
+            document.querySelector('#dashboard .dashboard-card:nth-child(4) div:nth-child(4)').textContent = `Trend: ${data.overview.engagementTrend} from last month`;
+
+            // Members Tab
+            populateMembers(data.members);
+
+            // Events Tab
+            populateEvents(data.events);
+
+            // Announcements Tab
+            populateAnnouncements(data.announcements);
+
+            // Club Profile Tab
+            populateClubProfile(data.profile);
+
+            // Analytics Tab (charts initialized when tab is active)
+            // The initializeCharts function will be called when the analytics tab is clicked.
+        }
+
+        function populateMembers(membersData) {
+            const pendingList = document.getElementById('pendingRequests');
+            pendingList.innerHTML = ''; // Clear existing
+            membersData.pending.forEach(member => { // member.id here is membership_id from DB
+                pendingList.innerHTML += `
+                    <div class="member-card">
+                        <div class="member-info">
+                            <div class="member-avatar">${member.name.split(' ').map(n => n[0]).join('')}</div>
+                            <div class="member-details">
+                                <h4>${member.name}</h4>
+                                <div class="member-role">${member.role}</div>
+                            </div>
+                        </div>
+                        <div class="member-actions">
+                            <button class="btn btn-primary btn-small" onclick="acceptMember('${member.id}')">Accept</button>
+                            <button class="btn btn-danger btn-small" onclick="rejectMember('${member.id}')">Reject</button>
+                        </div>
+                    </div>
+                `;
             });
+
+            const currentMembersList = document.getElementById('membersList');
+            currentMembersList.innerHTML = ''; // Clear existing
+            membersData.current.forEach(member => {
+                currentMembersList.innerHTML += `
+                    <div class="member-card">
+                        <div class="member-info">
+                            <div class="member-avatar">${member.name.split(' ').map(n => n[0]).join('')}</div>
+                            <div class="member-details">
+                                <h4>${member.name}</h4>
+                                <div class="member-role">${member.role}</div>
+                            </div>
+                        </div>
+                        <div class="member-actions">
+                            <button class="btn btn-primary btn-small" onclick="editMemberRole('${member.id}')">Edit Role</button>
+                            <button class="btn btn-danger btn-small">Remove</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function populateEvents(eventsData) {
+            const eventsList = document.getElementById('eventsList');
+            eventsList.innerHTML = ''; // Clear existing
+            eventsData.forEach(event => {
+                eventsList.innerHTML += `
+                    <div class="event-card">
+                        <div class="event-header">
+                            <div class="event-title">${event.title}</div>
+                            <div class="event-date">${event.date}</div>
+                        </div>
+                        <p style="color: #555; margin-bottom: 15px;">${event.description}</p>
+                        <div class="event-stats">
+                            <div class="event-stat">
+                                <div class="event-stat-number">${event.rsvps}</div>
+                                <div class="event-stat-label">RSVPs</div>
+                            </div>
+                            <div class="event-stat">
+                                <div class="event-stat-number">${event.teams || event.maxCapacity || 'N/A'}</div>
+                                <div class="event-stat-label">${event.teams ? 'Teams' : 'Capacity'}</div>
+                            </div>
+                            <div class="event-stat">
+                                <div class="event-stat-number">${event.daysLeft}</div>
+                                <div class="event-stat-label">Days Left</div>
+                            </div>
+                        </div>
+                        <div style="margin-top: 15px; display: flex; gap: 10px;">
+                            <button class="btn btn-primary btn-small">Edit Event</button>
+                            <button class="btn btn-danger btn-small">Cancel Event</button>
+                            <button class="btn btn-primary btn-small">View RSVPs</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function populateAnnouncements(announcementsData) {
+            const announcementsList = document.getElementById('announcementsList');
+            announcementsList.innerHTML = ''; // Clear existing
+            announcementsData.forEach(announcement => {
+                announcementsList.innerHTML += `
+                    <div class="announcement-card">
+                        <div class="announcement-header">
+                            <div class="announcement-title">${announcement.title}</div>
+                            <div class="announcement-time">${announcement.time}</div>
+                        </div>
+                        <div class="announcement-content">
+                            ${announcement.content}
+                        </div>
+                        <div class="announcement-stats">
+                            <span>👁️ ${announcement.views} views</span>
+                            <span>💬 ${announcement.comments} comments</span>
+                            <span>❤️ ${announcement.likes} likes</span>
+                        </div>
+                        <div style="margin-top: 15px; display: flex; gap: 10px;">
+                            <button class="btn btn-primary btn-small">Edit</button>
+                            <button class="btn btn-danger btn-small">Delete</button>
+                            <button class="btn btn-primary btn-small">Pin</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function populateClubProfile(profileData) {
+            document.getElementById('clubName').value = profileData.name;
+            document.getElementById('clubDescription').value = profileData.description;
+            document.getElementById('clubContactEmail').value = profileData.contactEmail;
+            document.getElementById('clubMeetingSchedule').value = profileData.meetingSchedule;
+            document.getElementById('clubMeetingLocation').value = profileData.meetingLocation;
+            // For select, you might need to iterate options or set selected based on value
+            document.querySelector('#clubCategory').value = profileData.category;
+            document.getElementById('clubLogoUrl').value = profileData.logoUrl;
+        }
+
+        // Initial data fetch on page load
+        document.addEventListener('DOMContentLoaded', fetchDashboardData);
+
+        // Logout functionality
+        document.querySelector('.header-actions .btn-danger').addEventListener('click', function(event) {
+            event.preventDefault();
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('currentUser');
+            alert('You have been logged out.');
+
+            window.location.href = '/welcome'; // Redirect to welcome or login page
         });
     </script>
 </body>

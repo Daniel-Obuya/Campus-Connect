@@ -11,13 +11,10 @@ const fetch = require('node-fetch'); // For making HTTP requests from the backen
 const { google } = require('googleapis'); // For Google Calendar API
 
 const app = express();
-// Configure multer for file uploads (store in memory for now, then upload to cloud storage)
-// Note: For attachment_urls, we assume the frontend handles file uploads to cloud storage
-// and sends the URLs. If direct file upload via this API is needed, this part needs more logic.
 const PORT = process.env.PORT || 3306;
 
 // Middleware
-app.use(express.json());
+app.use(express.json({ limit: '50mb' })); // Increased Limit to 50mb to accomodate image uploads
 app.use(express.urlencoded({ extended: true }));
 
 // Google OAuth2 Client Setup
@@ -61,13 +58,14 @@ const pool = mysql.createPool({
     console.error('❌ Failed to connect to the database:', err);
   }
 })();
+exports.pool = pool; // Export the pool for use in other modules
 
 // --- HTML Serving Routes ---
 
 // Root redirects to welcome
-app.get('/', (req, res) => {
-  res.redirect('/welcome');
-});
+// app.get('/', (req, res) => {
+//   res.redirect('/welcome');
+// });
 
 app.get('/welcome', (req, res) => {
   res.sendFile(path.join(__dirname, 'welcome.html'));
@@ -117,6 +115,10 @@ app.get('/clubs-directory', (req, res) => {
   res.sendFile(path.join(__dirname, 'clubs-directory.html'));
 });
 // --- Route for Departments Directory ---
+app.get('/projects', (req, res) => {
+  res.sendFile(path.join(__dirname, 'projects_directory.html'));
+});
+
 app.get('/departments-directory', (req, res) => {
     res.sendFile(path.join(__dirname, 'departments_directory.html'));
 });
@@ -779,7 +781,10 @@ app.post('/api/login', async (req, res) => {
             email: user.email,
             role: user.role,
             firstName: user.first_name,
-            lastName: user.last_name
+    lastName: user.last_name,
+    profilePictureUrl: user.profile_picture_url,
+    bio: user.bio,
+    studentDetails: user.role === 'student' ? { studentId: user.student_id, major: user.major, graduationYear: user.graduation_year, department: user.department } : null
         }, secret, { expiresIn: '2h' });
 
         console.log(`User ${user.email} (role: ${user.role}) logged in, sending token.`);
@@ -804,6 +809,61 @@ app.post('/api/login', async (req, res) => {
       message: 'Server error during login.' 
     });
   }
+});
+
+// --- API Route for Updating Student Profile ---
+app.put('/api/user/profile', authenticateJWT, async (req, res) => {
+    // Ensure the user is a student
+    if (req.user.role !== 'student') {
+        return res.status(403).json({ success: false, message: 'Forbidden: Only students can update their profile.' });
+    }
+
+    const userId = req.user.id;
+    const { firstName, lastName, bio, profilePictureUrl, studentDetails } = req.body;
+
+    // Basic validation
+    if (!firstName || !lastName) {
+        return res.status(400).json({ success: false, message: 'First name and last name are required.' });
+    }
+
+    try {
+        const connection = await pool.getConnection();
+        try {
+            // Prepare the update query
+            // This assumes your 'users' table has columns like 'bio', 'profile_picture_url', 'department', etc.
+            // Adjust column names if they are different in your schema.
+            const sql = `
+                UPDATE users SET
+                    first_name = ?,
+                    last_name = ?,
+                    bio = ?,
+                    profile_picture_url = ?,
+                    department = ?,
+                    major = ?,
+                    graduation_year = ?
+                WHERE user_id = ?
+            `;
+
+            const values = [
+                firstName,
+                lastName,
+                bio || null,
+                profilePictureUrl || null,
+                studentDetails.department || null,
+                studentDetails.major || null,
+                studentDetails.graduationYear || null,
+                userId
+            ];
+
+            await connection.query(sql, values);
+            res.json({ success: true, message: 'Profile updated successfully!' });
+        } finally {
+            connection.release();
+        }
+    } catch (error) {
+        console.error('Error updating user profile:', error);
+        res.status(500).json({ success: false, message: 'Internal server error while updating profile.' });
+    }
 });
 
 // API Endpoint to Create a New Event

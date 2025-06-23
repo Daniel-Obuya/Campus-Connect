@@ -122,6 +122,9 @@
                 <div class="detail-item"><i class="fas fa-building"></i><strong> Department:</strong> <span id="studentDepartment">[Department]</span></div>
                 <div class="detail-item"><i class="fas fa-book-open"></i><strong> Major:</strong> <span id="studentMajor">[Major]</span></div>
                 <div class="detail-item"><i class="fas fa-graduation-cap"></i><strong> Graduation Year:</strong> <span id="studentGradYear">[Graduation Year]</span></div>
+                <div class="detail-item"><i class="fab fa-linkedin"></i> LinkedIn: <span id="studentLinkedIn"></span></div>
+                <div class="detail-item"><i class="fab fa-github"></i> GitHub: <span id="studentGithub"></span></div>
+                <div class="detail-item"><i class="fas fa-globe"></i> Portfolio: <span id="studentPortfolio"></span></div>
                 <!-- Add more personal details if needed -->
             </div>
         </div>
@@ -169,7 +172,11 @@
             if (currentUser && currentUser.role === 'student') {
                 document.getElementById('studentName').textContent = `${currentUser.firstName || 'Student'} ${currentUser.lastName || ''}`;
                 document.getElementById('studentEmail').textContent = currentUser.email || 'N/A';
-                document.getElementById('studentBio').textContent = currentUser.bio || 'No biography provided yet. You can add this by editing your profile.';
+        document.getElementById('studentBio').textContent = currentUser.bio || 'No biography provided yet. You can add one by editing your profile.';
+                const profilePicDiv = document.getElementById('profilePicture');
+                if (profilePicDiv && currentUser.profilePictureUrl) {
+                    profilePicDiv.style.backgroundImage = `url('${currentUser.profilePictureUrl}')`;
+                }
                 // if(currentUser.profilePictureUrl) document.getElementById('profilePicture').style.backgroundImage = `url('${currentUser.profilePictureUrl}')`;
 
                 if (currentUser.studentDetails) {

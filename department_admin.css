@@ -495,9 +495,7 @@ footer {
 }
 
 /* Stats Card Styling */
-.stats-section {
-    /* .dashboard-section already provides glassmorphism */
-}
+
 .stats-card {
     text-align: center;
 }
@@ -542,7 +540,7 @@ footer {
      color: var(--theme-color-primary-darker);
      background-color: rgba(255,193,7,0.15);
 }
-}
+
 
 /* Secondary Action Button Style (e.g., for Edit) */
 .action-button-secondary {

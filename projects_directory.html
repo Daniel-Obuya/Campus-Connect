@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campus Connect - Projects Dashboard</title>
+    <meta name="description" content="Discover and showcase student projects across the university" />
+    <link rel="stylesheet" href="projects.css">
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-left">
+            <div class="logo">CC</div>
+            <div class="brand-name">Campus Connect</div>
+        </div>
+        <div class="page-title">Projects Dashboard</div>
+        <div class="header-actions">
+            <button class="btn btn-primary" onclick="openCreateProjectModal()">+ Create Project</button>
+            <button class="btn btn-danger">🚪 Logout</button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Hero Section -->
+        <div class="hero-section">
+            <h1 class="hero-title">🚀 Discover Amazing Projects</h1>
+            <p class="hero-description">
+                Explore innovative student-led projects, research initiatives, and collaborative ventures across the university. 
+                Find projects to join, showcase your own work, and connect with fellow innovators.
+            </p>
+        </div>
+
+        <!-- Search and Filter Section -->
+        <div class="search-filter-section">
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="Search projects by title, technology, or skills..." class="search-input">
+                <button class="search-btn" onclick="searchProjects()">🔍</button>
+            </div>
+            
+            <div class="filter-section">
+                <div class="category-filter">
+                    <button class="category-btn active" data-category="all" onclick="filterByCategory('all')">All Projects</button>
+                    <button class="category-btn" data-category="academic" onclick="filterByCategory('academic')">Academic</button>
+                    <button class="category-btn" data-category="startup" onclick="filterByCategory('startup')">Startup</button>
+                    <button class="category-btn" data-category="research" onclick="filterByCategory('research')">Research</button>
+                    <button class="category-btn" data-category="competition" onclick="filterByCategory('competition')">Competition</button>
+                    <button class="category-btn" data-category="open-source" onclick="filterByCategory('open-source')">Open Source</button>
+                </div>
+                
+                <div class="status-filter">
+                    <select id="statusFilter" class="filter-select" onchange="filterByStatus()">
+                        <option value="all">All Status</option>
+                        <option value="planning">Planning</option>
+                        <option value="in-progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                        <option value="seeking-collaborators">Seeking Collaborators</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Projects Grid -->
+        <div class="projects-grid" id="projectsGrid">
+            <!-- Project cards will be populated by JavaScript -->
+        </div>
+
+        <!-- Stats Section -->
+        <div class="stats-section">
+            <h2 class="stats-title">📊 Platform Statistics</h2>
+            <div class="stats-grid">
+                <div>
+                    <div class="stat-number">247</div>
+                    <div class="stat-label">Active Projects</div>
+                </div>
+                <div>
+                    <div class="stat-number">1,856</div>
+                    <div class="stat-label">Student Contributors</div>
+                </div>
+                <div>
+                    <div class="stat-number">89</div>
+                    <div class="stat-label">Seeking Collaborators</div>
+                </div>
+                <div>
+                    <div class="stat-number">156</div>
+                    <div class="stat-label">Completed Projects</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Project Detail Modal -->
+    <div id="projectModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+            <div id="modalContent">
+                <!-- Modal content will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Project Modal -->
+    <div id="createProjectModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeCreateProjectModal()">&times;</button>
+            <div class="modal-title">🚀 Create New Project</div>
+            <form id="createProjectForm" class="create-project-form">
+                <div class="form-group">
+                    <label for="projectTitle">Project Title</label>
+                    <input type="text" id="projectTitle" required>
+                </div>
+                <div class="form-group">
+                    <label for="projectDescription">Description</label>
+                    <textarea id="projectDescription" rows="4" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="projectCategory">Category</label>
+                    <select id="projectCategory" required>
+                        <option value="">Select Category</option>
+                        <option value="academic">Academic</option>
+                        <option value="startup">Startup</option>
+                        <option value="research">Research</option>
+                        <option value="competition">Competition</option>
+                        <option value="open-source">Open Source</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="projectStatus">Status</label>
+                    <select id="projectStatus" required>
+                        <option value="">Select Status</option>
+                        <option value="planning">Planning</option>
+                        <option value="in-progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                        <option value="seeking-collaborators">Seeking Collaborators</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="projectTechnologies">Technologies (comma-separated)</label>
+                    <input type="text" id="projectTechnologies" placeholder="React, Node.js, MongoDB">
+                </div>
+                <div class="form-group">
+                    <label for="projectSkills">Skills Required (comma-separated)</label>
+                    <input type="text" id="projectSkills" placeholder="JavaScript, UI/UX Design, Project Management">
+                </div>
+                <button type="submit" class="modal-join-btn">Create Project</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <p>&copy; 2024 Campus Connect - Fostering Innovation and Collaboration</p>
+    </div>
+
+    <script src="projects.js"></script>
+</body>
+</html>
