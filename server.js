@@ -728,6 +728,61 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
+// --- API Route for Updating Student Profile ---
+app.put('/api/user/profile', authenticateJWT, async (req, res) => {
+    // Ensure the user is a student
+    if (req.user.role !== 'student') {
+        return res.status(403).json({ success: false, message: 'Forbidden: Only students can update their profile.' });
+    }
+
+    const userId = req.user.id;
+    const { firstName, lastName, bio, profilePictureUrl, studentDetails } = req.body;
+
+    // Basic validation
+    if (!firstName || !lastName) {
+        return res.status(400).json({ success: false, message: 'First name and last name are required.' });
+    }
+
+    try {
+        const connection = await pool.getConnection();
+        try {
+            // Prepare the update query
+            // This assumes your 'users' table has columns like 'bio', 'profile_picture_url', 'department', etc.
+            // Adjust column names if they are different in your schema.
+            const sql = `
+                UPDATE users SET
+                    first_name = ?,
+                    last_name = ?,
+                    bio = ?,
+                    profile_picture_url = ?,
+                    department = ?,
+                    major = ?,
+                    graduation_year = ?
+                WHERE user_id = ?
+            `;
+
+            const values = [
+                firstName,
+                lastName,
+                bio || null,
+                profilePictureUrl || null,
+                studentDetails.department || null,
+                studentDetails.major || null,
+                studentDetails.graduationYear || null,
+                userId
+            ];
+
+            await connection.query(sql, values);
+            res.json({ success: true, message: 'Profile updated successfully!' });
+        } finally {
+            connection.release();
+        }
+    } catch (error) {
+        console.error('Error updating user profile:', error);
+        res.status(500).json({ success: false, message: 'Internal server error while updating profile.' });
+    }
+});
+
 // API Endpoint to Create a New Event
 app.post('/api/events', authenticateJWT, async (req, res) => { // Protected route
     // Log the raw request body as received by the server

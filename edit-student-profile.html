@@ -241,13 +241,13 @@
 
                     const result = await response.json();
 
-                    if (result.success) {
+                    if (response.ok && result.success) {
                         // IMPORTANT: Save the updated user object back to localStorage
                         localStorage.setItem('currentUser', JSON.stringify(currentUser));
                         alert('Profile updated successfully!');
                         window.location.href = 'student-profile.html'; // Redirect back to profile
                     } else {
-                        alert(`Failed to update profile: ${result.message}`);
+                        alert(`Failed to update profile: ${result.message || 'An unknown server error occurred.'}`);
                     }
                 } catch (error) {
                     console.error('Error updating profile:', error);
