@@ -3,6 +3,7 @@ const secret = process.env.JWT_SECRET;
 const jwt = require('jsonwebtoken');
 const express = require('express');
 const path = require('path');
+const multer = require('multer'); // For handling file uploads
 const mysql = require('mysql2/promise'); 
 const bcrypt = require('bcrypt');
 const crypto = require('crypto'); // For generating tokens
@@ -10,6 +11,9 @@ const fetch = require('node-fetch'); // For making HTTP requests from the backen
 const { google } = require('googleapis'); // For Google Calendar API
 
 const app = express();
+// Configure multer for file uploads (store in memory for now, then upload to cloud storage)
+// Note: For attachment_urls, we assume the frontend handles file uploads to cloud storage
+// and sends the URLs. If direct file upload via this API is needed, this part needs more logic.
 const PORT = process.env.PORT || 3306;
 
 // Middleware
@@ -133,8 +137,8 @@ app.get('/edit-student-profile', (req, res) => {
 });
 
 // --- Route for Reset Password Page ---
-app.get('/reset-password', (req, res) => {
-    res.sendFile(path.join(__dirname, 'reset_password.html'));
+app.get('/reset-password.html', (req, res) => { // The URL path remains the same as frontend expects
+    res.sendFile(path.join(__dirname, 'reset_password.html')); // Corrected to match the actual filename
 });
 
 // --- Google Calendar Auth Routes ---
@@ -516,20 +520,94 @@ app.get('/api/verify-email', async (req, res) => {
     }
 });
 
+// --- API Route for Requesting Password Reset ---
+app.post('/api/request-password-reset', async (req, res) => {
+    const { email, role } = req.body;
+
+    if (!email) {
+        return res.status(400).json({ success: false, message: 'Email is required.' });
+    }
+
+    // Determine the expected database role based on the request
+    let expectedDbRole;
+    if (role === 'club') {
+        expectedDbRole = 'club_admin';
+    } else if (role === 'department') {
+        expectedDbRole = 'department_admin';
+    } else {
+        expectedDbRole = 'student';
+    }
+
+    const connection = await pool.getConnection();
+    try {
+        // Find user by email and role
+        const [users] = await connection.query(
+            'SELECT * FROM users WHERE email = ? AND role = ?',
+            [email, expectedDbRole]
+        );
+
+        // IMPORTANT: For security, always return a generic success message
+        // This prevents attackers from discovering which emails are registered.
+        if (users.length === 0) {
+            console.log(`Password reset requested for non-existent or role-mismatched email: ${email}`);
+            return res.json({ success: true, message: 'If an account with that email exists, a password reset link has been sent.' });
+        }
+
+        const user = users[0];
+        const userId = user.user_id;
+        const firstName = user.first_name;
+
+        // Generate a secure, unique token
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        const expires = new Date(Date.now() + 3600000); // Token is valid for 1 hour
+
+        // Store the token and its expiry in the database
+        await connection.query(
+            'UPDATE users SET password_reset_token = ?, password_reset_expires = ? WHERE user_id = ?',
+            [resetToken, expires, userId]
+        );
+
+        // Construct the password reset link
+        const resetLink = `http://localhost:${PORT}/reset-password.html?token=${resetToken}`;
+
+        // Send the email
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: 'Campus Connect - Password Reset Request',
+            html: `<p>Hello ${firstName},</p>
+                   <p>You requested a password reset for your Campus Connect account.</p>
+                   <p>Please click the following link to set a new password:</p>
+                   <a href="${resetLink}">${resetLink}</a>
+                   <p>This link will expire in 1 hour.</p>
+                   <p>If you did not request this, please ignore this email.</p>
+                   <p>Best regards,<br>The Campus Connect Team</p>`,
+        };
+
+        await transporter.sendMail(mailOptions);
+        console.log(`Password reset email sent to ${email}`);
+
+        res.json({ success: true, message: 'If an account with that email exists, a password reset link has been sent.' });
+
+    } catch (error) {
+        console.error('Request password reset error:', error);
+        // Still send a generic message to the client for security
+        res.json({ success: true, message: 'If an account with that email exists, a password reset link has been sent.' });
+    } finally {
+        connection.release();
+    }
+});
+
 // --- API Route for Resetting Password ---
 app.post('/api/reset-password', async (req, res) => {
-    const { token, newPassword, confirmPassword } = req.body;
+    const { token, newPassword } = req.body;
 
-    if (!token || !newPassword || !confirmPassword) {
-        return res.status(400).json({ success: false, message: 'Token and new passwords are required.' });
+    if (!token || !newPassword) {
+        return res.status(400).json({ success: false, message: 'Token and new password are required.' });
     }
 
     if (newPassword.length < 8) {
         return res.status(400).json({ success: false, message: 'Password must be at least 8 characters long.' });
-    }
-
-    if (newPassword !== confirmPassword) {
-        return res.status(400).json({ success: false, message: 'Passwords do not match.' });
     }
 
     try {
@@ -560,8 +638,16 @@ app.post('/api/reset-password', async (req, res) => {
             console.log(`Password reset successfully for user ID: ${user.user_id}, Email: ${user.email}`);
 
             // Optionally, send an email confirming password change
-            // const mailOptions = { ... };
-            // await transporter.sendMail(mailOptions);
+            const mailOptions = {
+                from: process.env.EMAIL_USER,
+                to: user.email,
+                subject: 'Campus Connect - Your Password Has Been Changed',
+                html: `<p>Hello ${user.first_name},</p>
+                       <p>This is a confirmation that the password for your Campus Connect account has just been changed.</p>
+                       <p>If you did not make this change, please contact support immediately.</p>
+                       <p>Best regards,<br>The Campus Connect Team</p>`,
+            };
+            await transporter.sendMail(mailOptions);
 
             res.json({ success: true, message: 'Your password has been reset successfully! You can now log in with your new password.' });
 
@@ -1096,6 +1182,321 @@ app.post('/api/announcements', authenticateJWT, async (req, res) => {
         res.status(500).json({ success: false, message: 'Failed to create announcement.' });
     } // This closes the try-catch block
 }); // This correctly closes the app.post('/api/announcements', ...) route handler
+
+// --- Messaging System API Endpoints ---
+
+// 1. Create a Direct Message Conversation
+app.post('/api/messages/conversations/direct', authenticateJWT, async (req, res) => {
+    const { recipientId } = req.body;
+    const senderId = req.user.id;
+
+    if (!recipientId || typeof recipientId !== 'number') {
+        return res.status(400).json({ success: false, message: 'Recipient ID is required and must be a number.' });
+    }
+    if (senderId === recipientId) {
+        return res.status(400).json({ success: false, message: 'Cannot create a direct conversation with yourself.' });
+    }
+
+    const connection = await pool.getConnection();
+    try {
+        await connection.beginTransaction();
+
+        // Check if a direct conversation already exists between these two users
+        // A direct conversation has exactly two participants.
+        const [existingConversations] = await connection.query(
+            `SELECT c.conversation_id
+             FROM conversations c
+             JOIN conversation_participants cp1 ON c.conversation_id = cp1.conversation_id
+             JOIN conversation_participants cp2 ON c.conversation_id = cp2.conversation_id
+             WHERE c.type = 'direct'
+               AND cp1.user_id = ? AND cp2.user_id = ?
+               AND cp1.user_id != cp2.user_id`, // Ensure it's not a self-chat
+            [senderId, recipientId]
+        );
+
+        if (existingConversations.length > 0) {
+            await connection.rollback();
+            return res.status(200).json({
+                success: true,
+                message: 'Direct conversation already exists.',
+                conversationId: existingConversations[0].conversation_id
+            });
+        }
+
+        // Create new conversation
+        const [convResult] = await connection.query(
+            "INSERT INTO conversations (type) VALUES ('direct')"
+        );
+        const conversationId = convResult.insertId;
+
+        // Add participants
+        await connection.query(
+            "INSERT INTO conversation_participants (conversation_id, user_id) VALUES (?, ?), (?, ?)",
+            [conversationId, senderId, conversationId, recipientId]
+        );
+
+        await connection.commit();
+        res.status(201).json({
+            success: true,
+            message: 'Direct conversation created successfully.',
+            conversationId: conversationId
+        });
+
+    } catch (error) {
+        await connection.rollback();
+        console.error('Error creating direct conversation:', error);
+        res.status(500).json({ success: false, message: 'Failed to create direct conversation.' });
+    } finally {
+        connection.release();
+    }
+});
+
+// 2. Create a Group Message Conversation
+app.post('/api/messages/conversations/group', authenticateJWT, async (req, res) => {
+    const { name, participantIds, description } = req.body;
+    const creatorId = req.user.id;
+
+    if (!name || typeof name !== 'string' || name.trim() === '') {
+        return res.status(400).json({ success: false, message: 'Group name is required.' });
+    }
+    if (!participantIds || !Array.isArray(participantIds) || participantIds.length < 1) {
+        return res.status(400).json({ success: false, message: 'At least one participant ID is required for a group.' });
+    }
+
+    // Ensure creator is included and unique in the participant list
+    const uniqueParticipantIds = [...new Set([...participantIds, creatorId])];
+
+    const connection = await pool.getConnection();
+    try {
+        await connection.beginTransaction();
+
+        // Create new group conversation
+        const [convResult] = await connection.query(
+            "INSERT INTO conversations (type, name, description) VALUES ('group', ?, ?)",
+            [name, description || null]
+        );
+        const conversationId = convResult.insertId;
+
+        // Add participants, marking the creator as admin
+        const participantInsertValues = uniqueParticipantIds.map(id => [conversationId, id, id === creatorId]);
+        await connection.query(
+            "INSERT INTO conversation_participants (conversation_id, user_id, is_admin) VALUES ?",
+            [participantInsertValues]
+        );
+
+        await connection.commit();
+        res.status(201).json({
+            success: true,
+            message: 'Group conversation created successfully.',
+            conversationId: conversationId
+        });
+
+    } catch (error) {
+        await connection.rollback();
+        console.error('Error creating group conversation:', error);
+        res.status(500).json({ success: false, message: 'Failed to create group conversation.' });
+    } finally {
+        connection.release();
+    }
+});
+
+// 3. Get User's Conversations
+app.get('/api/messages/conversations', authenticateJWT, async (req, res) => {
+    const userId = req.user.id;
+
+    try {
+        const [conversations] = await pool.query(
+            `SELECT
+                c.conversation_id,
+                c.type,
+                c.name,
+                c.description,
+                c.last_message_at,
+                (SELECT m.content FROM messages m WHERE m.conversation_id = c.conversation_id ORDER BY m.timestamp DESC LIMIT 1) AS last_message_content,
+                (SELECT COUNT(m.message_id) FROM messages m
+                 JOIN conversation_participants cp ON m.conversation_id = cp.conversation_id
+                 WHERE m.conversation_id = c.conversation_id AND m.message_id > IFNULL(cp.last_read_message_id, 0) AND cp.user_id = ?) AS unread_count
+             FROM conversations c
+             JOIN conversation_participants cp ON c.conversation_id = cp.conversation_id
+             WHERE cp.user_id = ? AND cp.is_active = TRUE
+             ORDER BY c.last_message_at DESC`,
+            [userId, userId]
+        );
+
+        res.json({ success: true, conversations });
+
+    } catch (error) {
+        console.error('Error fetching user conversations:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch conversations.' });
+    }
+});
+
+// 4. Get Messages for a Conversation (Paginated)
+app.get('/api/messages/conversations/:conversationId/messages', authenticateJWT, async (req, res) => {
+    const { conversationId } = req.params;
+    const userId = req.user.id;
+    const beforeId = req.query.beforeId ? parseInt(req.query.beforeId, 10) : null;
+    const limit = req.query.limit ? parseInt(req.query.limit, 10) : 50; // Default limit
+
+    if (isNaN(limit) || limit <= 0) {
+        return res.status(400).json({ success: false, message: 'Limit must be a positive number.' });
+    }
+
+    try {
+        // Verify user is a participant in the conversation
+        const [participants] = await pool.query(
+            "SELECT * FROM conversation_participants WHERE conversation_id = ? AND user_id = ? AND is_active = TRUE",
+            [conversationId, userId]
+        );
+
+        if (participants.length === 0) {
+            return res.status(403).json({ success: false, message: 'You are not a participant in this conversation.' });
+        }
+
+        let query = `
+            SELECT message_id, sender_id, subject, content, attachment_urls, timestamp, type, is_deleted, reply_to_message_id
+            FROM messages
+            WHERE conversation_id = ?
+        `;
+        const queryParams = [conversationId];
+
+        if (beforeId) {
+            query += ` AND message_id < ?`;
+            queryParams.push(beforeId);
+        }
+
+        query += ` ORDER BY timestamp DESC LIMIT ?`;
+        queryParams.push(limit);
+
+        const [messages] = await pool.query(query, queryParams);
+
+        // Optionally, mark messages as read up to the latest fetched message
+        if (messages.length > 0) {
+            const latestMessageId = messages[0].message_id; // Messages are ordered DESC, so first is latest
+            await pool.query(
+                "UPDATE conversation_participants SET last_read_message_id = ? WHERE conversation_id = ? AND user_id = ? AND (last_read_message_id IS NULL OR last_read_message_id < ?)",
+                [latestMessageId, conversationId, userId, latestMessageId]
+            );
+        }
+
+        res.json({ success: true, messages: messages.reverse() }); // Reverse to show oldest first for chat display
+
+    } catch (error) {
+        console.error('Error fetching messages for conversation:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch messages.' });
+    }
+});
+
+// 5. Send a Message (Text or with Attachment URLs)
+// Note: This endpoint assumes attachment_urls are already generated (e.g., from a cloud storage upload on the frontend).
+// If you need direct file upload via this API, a multer middleware would be required here.
+app.post('/api/messages/conversations/:conversationId/send', authenticateJWT, async (req, res) => {
+    const { conversationId } = req.params;
+    const { subject, content, attachment_urls, reply_to_message_id, type } = req.body;
+    const senderId = req.user.id;
+
+    // Basic validation
+    if (!content && (!attachment_urls || attachment_urls.length === 0)) {
+        return res.status(400).json({ success: false, message: 'Message content or attachment URLs are required.' });
+    }
+
+    const connection = await pool.getConnection();
+    try {
+        // Verify user is a participant in the conversation
+        const [participants] = await connection.query(
+            "SELECT * FROM conversation_participants WHERE conversation_id = ? AND user_id = ? AND is_active = TRUE",
+            [conversationId, senderId]
+        );
+
+        if (participants.length === 0) {
+            return res.status(403).json({ success: false, message: 'You are not a participant in this conversation.' });
+        }
+
+        // Insert the message
+        const [messageResult] = await connection.query(
+            `INSERT INTO messages (conversation_id, sender_id, subject, content, attachment_urls, reply_to_message_id, type)
+             VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [
+                conversationId,
+                senderId,
+                subject || null,
+                content || '',
+                (attachment_urls && Array.isArray(attachment_urls)) ? JSON.stringify(attachment_urls) : null,
+                reply_to_message_id || null,
+                type || 'text' // Default to 'text' if not specified
+            ]
+        );
+        const messageId = messageResult.insertId;
+
+        // Update last_message_at in conversations table
+        await connection.query(
+            "UPDATE conversations SET last_message_at = NOW() WHERE conversation_id = ?",
+            [conversationId]
+        );
+
+        // In a real-time system, you would emit a WebSocket event here (e.g., using Socket.IO)
+        // io.to(conversationId).emit('newMessage', { messageId, conversationId, senderId, content, ... });
+        console.log(`Message sent in conversation ${conversationId} by user ${senderId}. Message ID: ${messageId}`);
+
+        res.status(201).json({
+            success: true,
+            message: 'Message sent successfully.',
+            messageData: {
+                messageId,
+                conversationId,
+                senderId,
+                subject,
+                content,
+                attachment_urls,
+                reply_to_message_id,
+                type,
+                timestamp: new Date().toISOString()
+            }
+        });
+
+    } catch (error) {
+        console.error('Error sending message:', error);
+        res.status(500).json({ success: false, message: 'Failed to send message.' });
+    } finally {
+        connection.release();
+    }
+});
+
+// 6. Mark Message as Read
+app.put('/api/messages/:messageId/read', authenticateJWT, async (req, res) => {
+    const { messageId } = req.params;
+    const userId = req.user.id;
+
+    try {
+        // Get conversation_id from message_id
+        const [messageRows] = await pool.query("SELECT conversation_id FROM messages WHERE message_id = ?", [messageId]);
+        if (messageRows.length === 0) {
+            return res.status(404).json({ success: false, message: 'Message not found.' });
+        }
+        const conversationId = messageRows[0].conversation_id;
+
+        // Update last_read_message_id for the user in that conversation
+        // Only update if the new messageId is greater than the current last_read_message_id
+        const [updateResult] = await pool.query(
+            "UPDATE conversation_participants SET last_read_message_id = ? WHERE conversation_id = ? AND user_id = ? AND (last_read_message_id IS NULL OR last_read_message_id < ?)",
+            [messageId, conversationId, userId, messageId]
+        );
+
+        if (updateResult.affectedRows === 0) {
+            // This could mean the message was already read, or the user is not a participant
+            return res.status(400).json({ success: false, message: 'Message already marked as read or user not participant.' });
+        }
+
+        // In a real-time system, you might emit a WebSocket event to update sender's UI
+        // io.to(conversationId).emit('messageRead', { messageId, readerId: userId });
+
+        res.json({ success: true, message: 'Message marked as read.' });
+
+    } catch (error) {
+        console.error('Error marking message as read:', error);
+        res.status(500).json({ success: false, message: 'Failed to mark message as read.' });
+    }
+});
 
 // Start server
 app.listen(PORT, () => {
