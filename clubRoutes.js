@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { protect } = require('../middleware/authMiddleware');
-const db = require('../config/db'); // Assuming you have a db connection setup file
+const { pool } = require('./server'); // Use the exported pool from server.js
+const { authenticateJWT } = require('./middleware/authMiddleware'); // Use the new auth middleware
 
 /**
  * @route   GET /api/club/dashboard
@@ -17,8 +17,8 @@ router.get('/dashboard', protect, async (req, res) => {
     const adminUserId = req.user.id;
 
     try {
-        // First, get the club_id managed by this admin using president_user_id
-        const [clubData] = await db.promise().query('SELECT club_id FROM clubs_societies WHERE president_user_id = ?', [adminUserId]);
+        // First, get the club_id and name managed by this admin using president_user_id
+        const [clubData] = await pool.query('SELECT club_id, name FROM clubs_societies WHERE president_user_id = ?', [adminUserId]);
 
         if (!clubData.length || !clubData[0].club_id) {
             return res.status(404).json({ success: false, message: 'No club associated with this admin account. Please ensure your admin account is linked to a club.' });
@@ -36,64 +36,55 @@ router.get('/dashboard', protect, async (req, res) => {
         ] = await Promise.all([
             // Query for overview stats
             Promise.all([
-                db.promise().query('SELECT COUNT(*) as count FROM club_memberships WHERE club_id = ? AND status = "active"', [clubId]),
-                db.promise().query('SELECT COUNT(*) as count FROM club_memberships WHERE club_id = ? AND status = "pending"', [clubId]),
-                db.promise().query('SELECT COUNT(*) as count FROM events WHERE organizer_id = ? AND organizer_type = "club" AND start_datetime > NOW()', [clubId]),
-                db.promise().query('SELECT title, start_datetime FROM events WHERE organizer_id = ? AND organizer_type = "club" AND start_datetime > NOW() ORDER BY start_datetime ASC LIMIT 1', [clubId])
+                pool.query('SELECT COUNT(*) as count FROM club_memberships WHERE club_id = ? AND status = "active"', [clubId]),
+                pool.query('SELECT COUNT(*) as count FROM club_memberships WHERE club_id = ? AND status = "pending"', [clubId]),
+                pool.query('SELECT COUNT(*) as count FROM events WHERE organizer_id = ? AND organizer_type = "club" AND start_datetime > NOW()', [clubId])
             ]),
             // Query for pending members
-            db.promise().query(`
-                SELECT u.id, u.firstName, u.lastName, sd.major, sd.graduationYear 
+            pool.query(`
+                SELECT u.user_id, u.first_name, u.last_name, u.major, u.graduation_year, cm.membership_id
                 FROM users u 
-                JOIN club_memberships cm ON u.id = cm.user_id 
-                LEFT JOIN student_details sd ON u.id = sd.user_id
+                JOIN club_memberships cm ON u.user_id = cm.user_id
                 WHERE cm.club_id = ? AND cm.status = 'pending' LIMIT 5`, [clubId]),
             // Query for current members
-            db.promise().query(`
-                SELECT u.id, u.firstName, u.lastName, cm.role 
+            pool.query(`
+                SELECT u.user_id, u.first_name, u.last_name, cm.role
                 FROM users u 
-                JOIN club_memberships cm ON u.id = cm.user_id 
+                JOIN club_memberships cm ON u.user_id = cm.user_id
                 WHERE cm.club_id = ? AND cm.status = 'active' ORDER BY 
                 CASE cm.role 
                     WHEN 'President' THEN 1 
                     WHEN 'Vice President' THEN 2 
                     ELSE 3 
-                END, u.firstName ASC LIMIT 10`, [clubId]),
+                END, u.first_name ASC LIMIT 10`, [clubId]),
             // Query for upcoming events
-            db.promise().query('SELECT * FROM events WHERE organizer_id = ? AND organizer_type = "club" AND start_datetime > NOW() ORDER BY start_datetime ASC LIMIT 3', [clubId]),
+            pool.query('SELECT * FROM events WHERE organizer_id = ? AND organizer_type = "club" AND start_datetime > NOW() ORDER BY start_datetime ASC LIMIT 3', [clubId]),
             // Query for recent announcements
-            db.promise().query('SELECT * FROM announcements WHERE author_entity_id = ? AND author_type = "club" ORDER BY created_at DESC LIMIT 3', [clubId]),
+            pool.query('SELECT * FROM announcements WHERE author_entity_id = ? AND author_type = "club" ORDER BY created_at DESC LIMIT 3', [clubId]),
             // Query for club profile
-            db.promise().query('SELECT * FROM clubs_societies WHERE club_id = ?', [clubId])
+            pool.query('SELECT * FROM clubs_societies WHERE club_id = ?', [clubId])
         ]);
 
         // --- Assemble the final dashboard data object ---
 
         // Process overview data
         const overview = {
-            totalMembers: overviewResults[0][0][0].count,
             activeMembers: overviewResults[0][0][0].count, // Same for this simplified query
             pendingRequests: overviewResults[1][0][0].count,
             upcomingEvents: overviewResults[2][0][0].count,
-            nextEvent: overviewResults[3][0].length ? {
-                title: overviewResults[3][0][0].title,
-                date: new Date(overviewResults[3][0][0].start_datetime).toLocaleString()
-            } : { title: 'No upcoming events', date: '' },
-            // These would require more complex queries/logging
-            newInteractionsToday: 0, 
             engagementRate: 'N/A'
         };
 
         // Process members data
         const members = {
-            pending: pendingMembers[0].map(m => ({ // Note: m.id here is the user_id, we need membership_id for actions
-                id: m.id,
-                name: `${m.firstName} ${m.lastName}`,
-                role: `${m.major || 'Undecided'} • ${m.graduationYear || 'N/A'}`
+            pending: pendingMembers[0].map(m => ({
+                id: m.membership_id, // Use membership_id for actions
+                name: `${m.first_name} ${m.last_name}`,
+                role: `${m.major || 'Undecided'} • ${m.graduation_year || 'N/A'}`
             })),
             current: currentMembers[0].map(m => ({
-                id: m.id,
-                name: `${m.firstName} ${m.lastName}`,
+                id: m.user_id,
+                name: `${m.first_name} ${m.last_name}`,
                 role: m.role
             }))
         };
@@ -102,25 +93,13 @@ router.get('/dashboard', protect, async (req, res) => {
         const events = upcomingEvents[0].map(e => ({
             ...e,
             date: new Date(e.start_datetime).toLocaleDateString(),
-            rsvps: 0, // Placeholder
-            daysLeft: Math.ceil((new Date(e.start_datetime) - new Date()) / (1000 * 60 * 60 * 24))
         }));
 
         // Process announcements data (add dummy stats for UI)
         const announcements = recentAnnouncements[0].map(a => ({
             ...a,
             time: new Date(a.created_at).toLocaleString(),
-            views: 0, // Placeholder
-            comments: 0, // Placeholder
-            likes: 0 // Placeholder
         }));
-
-        // Mock analytics data
-        const analytics = {
-            memberGrowth: [45, 52, 61, 78, 95, overview.totalMembers],
-            eventAttendance: [32, 28, 35, 42],
-            engagement: [40, 30, 20, 10]
-        };
 
         // Process profile data
         const profile = clubProfile[0][0];
@@ -130,9 +109,9 @@ router.get('/dashboard', protect, async (req, res) => {
             overview,
             members,
             events,
-            announcements,
-            analytics,
-            profile
+            announcements,            
+            profile,
+            clubName: clubData[0].name // Include the club name for the welcome message
         };
 
         res.json({
@@ -155,27 +134,26 @@ router.get('/', async (req, res) => {
     try {
         // This query joins clubs with their member counts and admin names.
         // It assumes 'c.admin_id' links to the 'users' table for the club's leader.
-        // It uses subqueries to get aggregated counts, which is efficient.
-        const [clubs] = await db.promise().query(`
+        const [clubs] = await pool.query(`
             SELECT 
-                c.id,
+                c.club_id,
                 c.name,
                 c.description,
                 c.category,
                 c.logo_url,
                 c.meeting_schedule,
-                (SELECT COUNT(*) FROM club_memberships WHERE club_id = c.id AND status = 'active') as member_count,
-                (SELECT COUNT(*) FROM events WHERE organizer_id = c.id AND organizer_type = 'club' AND start_datetime > NOW()) as upcoming_events_count,
-                u.firstName as adminFirstName,
-                u.lastName as adminLastName,
+                (SELECT COUNT(*) FROM club_memberships WHERE club_id = c.club_id AND status = 'active') as member_count,
+                (SELECT COUNT(*) FROM events WHERE organizer_id = c.club_id AND organizer_type = 'club' AND start_datetime > NOW()) as upcoming_events_count,
+                u.first_name as adminFirstName,
+                u.last_name as adminLastName,
                 c.meeting_schedule,
                 c.contact_email
             FROM 
-                clubs c
+                clubs_societies c
             LEFT JOIN 
-                users u ON c.president_user_id = u.id
+                users u ON c.president_user_id = u.user_id
             WHERE 
-                c.status = 'active'
+                c.is_active = 1
             ORDER BY
                 c.name ASC
         `);
@@ -192,12 +170,12 @@ router.get('/', async (req, res) => {
  * @desc    Get all club memberships for the logged-in user
  * @access  Private (Student)
  */
-router.get('/user/memberships', protect, async (req, res) => {
+router.get('/user/memberships', authenticateJWT, async (req, res) => {
     if (req.user.role !== 'student') {
         return res.status(403).json({ success: false, message: 'Forbidden: Access is restricted to students.' });
     }
     try {
-        const [memberships] = await db.promise().query(
+        const [memberships] = await pool.query(
             'SELECT membership_id, club_id, status, role FROM club_memberships WHERE user_id = ?',
             [req.user.id]
         );
@@ -213,7 +191,7 @@ router.get('/user/memberships', protect, async (req, res) => {
  * @desc    Submit a request to join a club
  * @access  Private (Student)
  */
-router.post('/join-request', protect, async (req, res) => {
+router.post('/join-request', authenticateJWT, async (req, res) => {
     if (req.user.role !== 'student') {
         return res.status(403).json({ success: false, message: 'Forbidden: Only students can send join requests.' });
     }
@@ -226,7 +204,7 @@ router.post('/join-request', protect, async (req, res) => {
 
     try {
         // Check if a membership already exists (pending, active, or rejected)
-        const [existingMembership] = await db.promise().query(
+        const [existingMembership] = await pool.query(
             'SELECT status FROM club_memberships WHERE user_id = ? AND club_id = ?',
             [userId, clubId]
         );
@@ -243,7 +221,7 @@ router.post('/join-request', protect, async (req, res) => {
         }
 
         // Insert new pending membership
-        const [result] = await db.promise().query(
+        const [result] = await pool.query(
             'INSERT INTO club_memberships (user_id, club_id, status, role) VALUES (?, ?, ?, ?)',
             [userId, clubId, 'pending', 'member'] // Default role 'member'
         );
@@ -259,7 +237,7 @@ router.post('/join-request', protect, async (req, res) => {
  * @desc    Approve a pending club membership request
  * @access  Private (Club Admin)
  */
-router.post('/memberships/approve', protect, async (req, res) => {
+router.post('/memberships/approve', authenticateJWT, async (req, res) => {
     if (req.user.role !== 'club_admin') {
         return res.status(403).json({ success: false, message: 'Forbidden: Access is restricted to Club Admins.' });
     }
@@ -270,7 +248,7 @@ router.post('/memberships/approve', protect, async (req, res) => {
         return res.status(400).json({ success: false, message: 'Membership ID is required.' });
     }
 
-    const connection = await db.promise().getConnection();
+    const connection = await pool.getConnection();
     try {
         await connection.beginTransaction();
 
@@ -295,9 +273,6 @@ router.post('/memberships/approve', protect, async (req, res) => {
         // Update membership status to active
         await connection.query('UPDATE club_memberships SET status = "active" WHERE membership_id = ?', [membershipId]);
 
-        // Increment member_count in clubs_societies
-        await connection.query('UPDATE clubs_societies SET member_count = member_count + 1 WHERE club_id = ?', [clubId]);
-
         await connection.commit();
         res.json({ success: true, message: 'Membership approved successfully!' });
     } catch (error) {
@@ -314,7 +289,7 @@ router.post('/memberships/approve', protect, async (req, res) => {
  * @desc    Reject a pending club membership request
  * @access  Private (Club Admin)
  */
-router.post('/memberships/reject', protect, async (req, res) => {
+router.post('/memberships/reject', authenticateJWT, async (req, res) => {
     if (req.user.role !== 'club_admin') {
         return res.status(403).json({ success: false, message: 'Forbidden: Access is restricted to Club Admins.' });
     }
@@ -325,7 +300,7 @@ router.post('/memberships/reject', protect, async (req, res) => {
         return res.status(400).json({ success: false, message: 'Membership ID is required.' });
     }
 
-    const connection = await db.promise().getConnection();
+    const connection = await pool.getConnection();
     try {
         await connection.beginTransaction();
 
