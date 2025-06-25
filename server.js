@@ -1157,6 +1157,28 @@ app.post('/api/announcements', authenticateJWT, async (req, res) => {
     } // This closes the try-catch block
 }); // This correctly closes the app.post('/api/announcements', ...) route handler
 
+// --- API Route to get all clubs for the clubs directory ---
+app.get('/api/club', async (req, res) => {
+    try {
+        const [clubs] = await pool.query(`
+            SELECT 
+                club_id,
+                name,
+                description,
+                category,
+                logo_url,
+                member_count,
+                meeting_schedule
+            FROM clubs_societies
+            WHERE is_active = 1
+        `);
+        res.json({ success: true, clubs });
+    } catch (error) {
+        console.error('Error fetching clubs:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch clubs.' });
+    }
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
