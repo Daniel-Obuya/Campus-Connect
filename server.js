@@ -119,10 +119,6 @@ app.get('/projects', (req, res) => {
   res.sendFile(path.join(__dirname, 'projects_directory.html'));
 });
 
-app.get('/departments-directory', (req, res) => {
-    res.sendFile(path.join(__dirname, 'departments_directory.html'));
-});
-
 // --- Route for Events Directory ---
 app.get('/events-directory', (req, res) => {
     res.sendFile(path.join(__dirname, 'events_directory.html'));
