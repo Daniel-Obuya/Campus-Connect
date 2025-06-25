@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Campus Connect - Admin Sign Up</title>
+    <link rel="stylesheet" href="common-header.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
@@ -25,9 +26,9 @@
             position: relative; animation: slideUp 0.6s ease-out;
         }
         @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-        .logo-section { text-align: center; margin-bottom: 25px; }
-        .app-name { font-size: 28px; font-weight: 700; color: #333; margin-bottom: 8px; text-shadow: 0 1px 3px rgba(0,0,0,0.1); } /* Darker text */
-        .tagline { font-size: 14px; color: #666; opacity: 0.9; } /* Darker text */
+        /* .logo-section and .app-name styles are now in common-header.css */
+        .logo-section-standalone { margin-bottom: 25px; } /* Adjust margin for standalone */
+        .tagline { font-size: 14px; color: #666; opacity: 0.9; } /* Keep tagline here if specific to this page */
         .title { font-size: 24px; font-weight: 600; color: #333; text-align: center; margin-bottom: 25px; } /* Darker text */
         .role-selection { margin-bottom: 25px; }
         .role-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
@@ -125,7 +126,7 @@
     </div>
 
     <div class="container">
-        <div class="logo-section">
+        <div class="logo-section logo-section-standalone">
             <h1 class="app-name">Campus Connect</h1>
             <p class="tagline">Administrator Registration</p>
         </div>
@@ -190,6 +191,10 @@
                 </div>
                 <div class="form-group">
                     <input type="text" class="form-input" name="advisorName" placeholder="Faculty Advisor Name">
+                </div>
+                <div class="form-group">
+                    <label for="clubLogo" style="font-size: 14px; color: #333; margin-bottom: 6px; display: block;">Club Logo/Image (optional)</label>
+                    <input type="file" class="form-input" id="clubLogo" name="clubLogo" accept="image/*">
                 </div>
             </div>
 
@@ -425,12 +430,34 @@
             };
 
             if (selectedRole === 'club') {
-                userData.clubDetails = {
-                    name: document.querySelector('#clubFields select[name="clubName"]').value,
-                    description: document.querySelector('#clubFields textarea[name="clubDescription"]').value.trim(),
-                    category: document.querySelector('#clubFields select[name="clubCategory"]').value,
-                    advisorName: document.querySelector('#clubFields input[name="advisorName"]').value.trim()
-                };
+                // Handle club logo image
+                let logoUrl = '';
+                const logoInput = document.getElementById('clubLogo');
+                if (logoInput && logoInput.files && logoInput.files[0]) {
+                    const file = logoInput.files[0];
+                    // We'll read the file as a base64 string
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        userData.clubDetails = {
+                            name: document.querySelector('#clubFields select[name="clubName"]').value,
+                            description: document.querySelector('#clubFields textarea[name="clubDescription"]').value.trim(),
+                            category: document.querySelector('#clubFields select[name="clubCategory"]').value,
+                            advisorName: document.querySelector('#clubFields input[name="advisorName"]').value.trim(),
+                            logoUrl: e.target.result // base64 string
+                        };
+                        submitAdminData(userData);
+                    };
+                    reader.readAsDataURL(file);
+                    return; // Wait for FileReader before submitting
+                } else {
+                    userData.clubDetails = {
+                        name: document.querySelector('#clubFields select[name="clubName"]').value,
+                        description: document.querySelector('#clubFields textarea[name="clubDescription"]').value.trim(),
+                        category: document.querySelector('#clubFields select[name="clubCategory"]').value,
+                        advisorName: document.querySelector('#clubFields input[name="advisorName"]').value.trim(),
+                        logoUrl: ''
+                    };
+                }
             } else if (selectedRole === 'department') {
                 userData.departmentDetails = {
                     name: document.querySelector('#departmentFields select[name="departmentName"]').value,
@@ -442,36 +469,44 @@
                 };
             }
 
-            console.log('Submitting admin data:', userData);
+            // Move fetch logic to a function so it can be called after FileReader
+            function submitAdminData(userData) {
+                console.log('Submitting admin data:', userData);
+                fetch('/api/signup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(userData)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => { throw new Error(err.message || `Server error: ${response.status}`); })
+                                         .catch(() => { throw new Error(`Server error: ${response.status} ${response.statusText}`); });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        alert(`Admin account for ${userData.role.replace('_', ' ')} created successfully. Please log in.`);
+                        setTimeout(() => { window.location.href = '/login-admin'; }, 1500);
+                    } else {
+                        throw new Error(data.message || 'Registration failed');
+                    }
+                })
+                .catch(error => {
+                    console.error('Admin registration error:', error);
+                    alert(`Registration failed: ${error.message}`);
+                })
+                .finally(() => {
+                    signupBtn.textContent = 'Create Admin Account';
+                    checkFormValidity(); // Re-enable button if form is valid
+                });
+            }
 
-            fetch('/api/signup', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(userData)
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(err => { throw new Error(err.message || `Server error: ${response.status}`); })
-                                     .catch(() => { throw new Error(`Server error: ${response.status} ${response.statusText}`); });
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    alert(`Admin account for ${userData.role.replace('_', ' ')} created successfully. Please log in.`);
-                    setTimeout(() => { window.location.href = '/login-admin'; }, 1500);
-                } else {
-                    throw new Error(data.message || 'Registration failed');
-                }
-            })
-            .catch(error => {
-                console.error('Admin registration error:', error);
-                alert(`Registration failed: ${error.message}`);
-            })
-            .finally(() => {
-                signupBtn.textContent = 'Create Admin Account';
-                checkFormValidity(); // Re-enable button if form is valid
-            });
+            // If image is being uploaded, submission will happen in FileReader.onload
+            if (selectedRole === 'club') {
+                if (document.getElementById('clubLogo').files.length > 0) return;
+            }
+            submitAdminData(userData);
         });
         checkFormValidity(); // Initial check
     </script>

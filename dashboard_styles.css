@@ -109,42 +109,33 @@ body {
     }
 }
 
-/* Header Styles */
+nav {
+    display: flex;
+    align-items: center;
+    gap: 16px; /* Reduced gap between navigation items */
+}
+
+/* Dashboard Header Styling */
 header {
-    background: var(--accent-bg);
-    backdrop-filter: blur(20px);
-    border: 1px solid var(--accent-border);
-    border-radius: var(--radius);
-    padding: 24px 32px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    /* Apply glassmorphism styles similar to dashboard-widget */
+    background: var(--accent-bg);
+    backdrop-filter: blur(20px);
+    border-radius: var(--radius);
+    padding: 15px 20px; /* Reduced padding for a smaller width */
     box-shadow: var(--shadow);
-    margin-bottom: 32px;
+    border: 1px solid var(--accent-border);
+    margin-bottom: 30px;
     position: relative;
-    z-index: 10;
-    transition: var(--transition);
+    z-index: 5;
+    transition: var(--transition); /* Smooth transitions for hover effects */
 }
 
 header:hover {
     box-shadow: var(--shadow-hover);
-    transform: translateY(-2px);
-}
-
-header h1 {
-    margin: 0;
-    font-weight: 700;
-    font-size: 1.75rem;
-    background: linear-gradient(135deg, var(--theme-primary-dark), var(--theme-primary));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
-
-nav {
-    display: flex;
-    align-items: center;
-    gap: 24px;
+    transform: translateY(-2px); /* Subtle lift effect on hover */
 }
 
 .nav-link {
@@ -154,7 +145,7 @@ nav {
     text-decoration: none;
     color: var(--text-dark);
     font-weight: 600;
-    padding: 8px 16px;
+    padding: 6px 12px; /* Reduced padding for individual links */
     border-radius: var(--radius-small);
     transition: var(--transition);
     position: relative;
@@ -697,11 +688,17 @@ footer {
         padding: 16px;
     }
     
+    /* Responsive adjustments for the dashboard header */
     header {
-        flex-direction: column;
-        text-align: center;
-        gap: 16px;
-        padding: 20px;
+        flex-direction: column; /* Stack items vertically on small screens */
+        gap: 16px; /* Space between stacked items */
+        padding: 15px; /* Adjust padding for smaller screens */
+    }
+
+    nav {
+        flex-direction: column; /* Stack nav links vertically */
+        gap: 10px; /* Adjust gap for stacked links */
+        width: 100%; /* Take full width */
     }
     
     nav {
@@ -715,6 +712,11 @@ footer {
     
     .dashboard-widget {
         padding: 20px;
+    }
+
+    .nav-link {
+        justify-content: center; /* Center text in stacked links */
+        padding: 10px 14px; /* Adjust padding for better touch targets */
     }
     
     .notification-panel {

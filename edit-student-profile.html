@@ -1,9 +1,10 @@
-<!DOCTYPE html>
+!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Profile - Campus Connect</title>
+    <link rel="stylesheet" href="common-header.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -18,27 +19,6 @@
                         radial-gradient(circle at 80% 80%, rgba(255,255,255,0.05) 0%, transparent 50%);
             pointer-events: none; z-index: -1;
         }
-        .header {
-            width: 100%;
-            max-width: 800px;
-            padding: 20px;
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 16px;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .header .app-name { font-size: 24px; font-weight: 700; color: #333; }
-        .header .nav-link {
-            padding: 10px 18px; background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
-            border: none; border-radius: 10px; font-size: 14px; font-weight: 600; color: #333;
-            cursor: pointer; text-decoration: none; transition: all 0.3s ease;
-        }
-        .header .nav-link:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(255,193,7,0.3); }
-
         .edit-profile-container {
             background: rgba(255,255,255,0.15); backdrop-filter: blur(20px);
             border: 1px solid rgba(255,255,255,0.2); border-radius: 24px; padding: 30px 40px;
@@ -101,10 +81,10 @@
 
     </style>
 </head>
-<body>
+<body> 
     <div class="header">
         <span class="app-name">Campus Connect</span>
-        <a href="student-profile.html" class="nav-link">Back to Profile</a>
+        <a href="student-profile.html" class="btn-header btn-header-secondary">Back to Profile</a>
     </div>
 
     <div class="edit-profile-container">
@@ -129,10 +109,6 @@
                 <textarea id="bio" name="bio" rows="4"></textarea>
             </div>
             <div class="form-group">
-                <label for="department">Department</label>
-                <input type="text" id="department" name="department">
-            </div>
-            <div class="form-group">
                 <label for="major">Major</label>
                 <input type="text" id="major" name="major">
             </div>
@@ -147,9 +123,11 @@
              <div class="form-group">
                 <label for="github">GitHub</label>
                 <input type="text" id="github" name="github">
-            </div>zz
-            <!-- Add more fields as needed: e.g., LinkedIn, GitHub, Skills -->
-
+            </div>
+            <div class="form-group">
+                <label for="portfolio">Portfolio/Website</label>
+                <input type="url" id="portfolio" name="portfolio" placeholder="https://">
+            </div>
             <div class="form-actions">
                 <button type="button" class="btn btn-cancel" onclick="window.location.href='student-profile.html'">Cancel</button>
                 <button type="submit" class="btn btn-save">Save Changes</button>
@@ -175,9 +153,11 @@
             form.lastName.value = currentUser.lastName || '';
             form.bio.value = currentUser.bio || '';
             if (currentUser.studentDetails) {
-                form.department.value = currentUser.studentDetails.department || '';
                 form.major.value = currentUser.studentDetails.major || '';
                 form.graduationYear.value = currentUser.studentDetails.graduationYear || '';
+                form.linkedin.value = currentUser.studentDetails.linkedin || '';
+                form.github.value = currentUser.studentDetails.github || '';
+                form.portfolio.value = currentUser.studentDetails.portfolio || '';
             }
             if (currentUser.profilePictureUrl) {
                 profilePicturePreview.style.backgroundImage = `url('${currentUser.profilePictureUrl}')`;
@@ -197,6 +177,7 @@
             });
 
             form.addEventListener('submit', async function(event) {
+                console.log('Form submission initiated.');
                 event.preventDefault();
 
                 // Update currentUser object from form fields
@@ -209,9 +190,15 @@
                 if (!currentUser.studentDetails) {
                     currentUser.studentDetails = {}; // Initialize if not present
                 }
-                currentUser.studentDetails.department = form.department.value;
                 currentUser.studentDetails.major = form.major.value;
                 currentUser.studentDetails.graduationYear = form.graduationYear.value;
+                currentUser.studentDetails.linkedin = form.linkedin.value;
+                currentUser.studentDetails.github = form.github.value;
+                currentUser.studentDetails.portfolio = form.portfolio.value;
+
+                const saveButton = document.querySelector('.btn-save');
+                saveButton.textContent = 'Saving...'; // Change button text to indicate loading
+                saveButton.disabled = true; // Disable button to prevent multiple clicks
 
                 // Prepare data for the API
                 const profileData = {
@@ -225,10 +212,12 @@
                 const authToken = localStorage.getItem('authToken');
                 if (!authToken) {
                     alert('You are not logged in. Please log in again.');
+                    console.error('Authentication token missing.');
                     window.location.href = '/login-student';
                     return;
                 }
 
+                console.log('Sending profile data:', profileData);
                 try {
                     const response = await fetch('/api/user/profile', {
                         method: 'PUT',
@@ -239,19 +228,26 @@
                         body: JSON.stringify(profileData)
                     });
 
+                    console.log('Received response from server.');
                     const result = await response.json();
+                    console.log('Parsed JSON response:', result);
 
                     if (response.ok && result.success) {
                         // IMPORTANT: Save the updated user object back to localStorage
                         localStorage.setItem('currentUser', JSON.stringify(currentUser));
                         alert('Profile updated successfully!');
+                        console.log('Profile updated successfully. Redirecting...');
                         window.location.href = 'student-profile.html'; // Redirect back to profile
                     } else {
                         alert(`Failed to update profile: ${result.message || 'An unknown server error occurred.'}`);
+                        console.error('Server reported failure:', result.message || 'Unknown error');
                     }
                 } catch (error) {
                     console.error('Error updating profile:', error);
                     alert('An error occurred while updating your profile. Please try again.');
+                } finally {
+                    saveButton.textContent = 'Save Changes'; // Restore button text
+                    saveButton.disabled = false; // Re-enable button
                 }
             });
         });

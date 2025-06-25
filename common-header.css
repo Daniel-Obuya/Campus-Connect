@@ -1,0 +1,177 @@
+/* c:\Users\DANIEL\Desktop\Campus-Connect\common-header.css */
+
+/* This file defines the consistent header/navigation bar styling across Campus Connect pages. */
+
+/* Base styles for the main header container */
+.header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 30px;
+    z-index: 1000; /* Ensure it stays on top of other content */
+
+    /* Glassmorphism and theme consistency */
+    background: rgba(255, 255, 255, 0.15); /* Semi-transparent white background */
+    backdrop-filter: blur(12px); /* Apply blur effect */
+    -webkit-backdrop-filter: blur(12px); /* For Safari support */
+    border-radius: 16px; /* Rounded corners */
+    border: 1px solid rgba(255, 255, 255, 0.25); /* Subtle border */
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08); /* Soft shadow */
+    color: #3a3a3a; /* Default text color for header content */
+    margin-bottom: 32px; /* Space below the fixed header (body padding-top should account for this) */
+    transition: all 0.3s ease; /* Smooth transitions for hover effects */
+}
+
+/* Header hover effect for subtle interaction */
+.header:hover {
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1); /* Slightly larger shadow on hover */
+    transform: translateY(-2px); /* Slight lift effect */
+}
+
+/* Left section of the header: Contains logo and brand name */
+.header-left {
+    display: flex;
+    align-items: center;
+}
+
+/* Logo styling */
+.logo {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #ffc107, #ff9800); /* Theme gradient */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: bold;
+    color: white; /* White text for contrast on logo background */
+    box-shadow: 0 4px 15px rgba(255,193,7,0.3); /* Theme-colored shadow */
+    border: 3px solid rgba(255,255,255,0.3); /* White border */
+}
+
+/* Brand name text styling */
+.brand-name {
+    margin-left: 15px;
+    font-size: 20px;
+    font-weight: bold;
+    background: linear-gradient(135deg, #333, #666); /* Dark text gradient */
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Page title styling within the header */
+.page-title {
+    font-size: 1.6em; /* Prominent size */
+    font-weight: 600;
+    text-align: center;
+    flex-grow: 1; /* Allows title to take available space */
+    margin: 0 20px; /* Horizontal margin for spacing */
+    background: linear-gradient(135deg, #cd853f, #8b4513); /* Earthy tone gradient */
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Right section of the header: Contains action buttons */
+.header-actions {
+    display: flex;
+    gap: 12px; /* Space between buttons */
+}
+
+/* Base style for buttons within the header */
+.btn-header {
+    display: inline-block;
+    padding: 10px 18px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none; /* Remove underline for links */
+    transition: all 0.3s ease;
+    text-align: center;
+
+    /* Default theme button appearance */
+    background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+    color: #333;
+    box-shadow: 0 4px 12px rgba(255,193,7,0.25);
+}
+
+/* Hover effect for all header buttons */
+.btn-header:hover {
+    background: linear-gradient(135deg, #ff9800 0%, #ffc107 100%); /* Invert gradient on hover */
+    transform: translateY(-2px); /* Slight lift */
+    box-shadow: 0 6px 18px rgba(255,193,7,0.35); /* Enhanced shadow */
+}
+
+/* Specific button variants for different actions */
+.btn-header-primary { /* For primary actions like "Student Login" */
+    background: linear-gradient(135deg, #4682b4, #2c5282); /* Steelblue to Dark Blue */
+    color: white;
+    box-shadow: 0 3px 10px rgba(70,130,180,0.3);
+}
+.btn-header-primary:hover {
+    background: linear-gradient(135deg, #2c5282, #4682b4); /* Invert gradient */
+    box-shadow: 0 5px 15px rgba(70,130,180,0.4);
+}
+
+.btn-header-secondary { /* For secondary actions like "Post New Project" */
+    background: rgba(255, 255, 255, 0.15); /* Lighter glassmorphism background */
+    color: #333;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(10px);
+    box-shadow: none; /* No shadow for a flatter look */
+}
+.btn-header-secondary:hover {
+    background: rgba(255, 255, 255, 0.25); /* Slightly more opaque on hover */
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1); /* Subtle shadow on hover */
+}
+
+.btn-header-danger { /* For destructive actions like "Logout" */
+    background: linear-gradient(135deg, #dc3545, #b02a37); /* Red to Darker Red */
+    color: white;
+    box-shadow: 0 3px 10px rgba(220,53,69,0.3);
+}
+.btn-header-danger:hover {
+    background: linear-gradient(135deg, #b02a37, #dc3545); /* Invert gradient */
+    box-shadow: 0 5px 15px rgba(220,53,69,0.4);
+}
+
+/* Responsive adjustments for the header */
+@media (max-width: 768px) {
+    .header {
+        flex-direction: column; /* Stack items vertically on small screens */
+        gap: 10px; /* Space between stacked items */
+        padding: 20px;
+    }
+    .page-title {
+        font-size: 20px; /* Smaller font size for title */
+        margin: 10px 0; /* Adjust margins */
+    }
+}
+
+/* Styles for pages that only have a logo section (e.g., login/signup) */
+/* These are typically within a main container, not a fixed header */
+.logo-section-standalone { /* New class for standalone logo sections */
+    text-align: center;
+    margin-bottom: 25px; /* Adjust as needed for page layout */
+}
+.logo-section-standalone .app-name {
+    font-size: 28px; /* Larger font for standalone app name */
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 8px;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+.logo-section-standalone .tagline { /* If a tagline is present */
+    font-size: 14px;
+    color: #666;
+    opacity: 0.9;
+}

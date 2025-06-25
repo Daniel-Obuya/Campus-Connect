@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Campus Connect - Student Sign Up</title>
+    <link rel="stylesheet" href="common-header.css">
     <style>
         * {
             margin: 0;
@@ -63,15 +64,9 @@
             }
         }
 
-        .logo-section {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .app-name {
-            font-size: 28px;
-            font-weight: 700;
-            color: #333;
+        /* .logo-section and .app-name styles are now in common-header.css */
+        .logo-section-standalone { margin-bottom: 30px; } /* Adjust margin for standalone */
+        .app-name { /* Override if needed, but common-header.css should handle it */
             margin-bottom: 8px;
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
@@ -315,7 +310,7 @@
     </div>
 
     <div class="container">
-        <div class="logo-section">
+        <div class="logo-section logo-section-standalone">
             <h1 class="app-name">Campus Connect</h1>
             <p class="tagline">Student Registration</p>
         </div>

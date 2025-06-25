@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Campus Connect - Club Admin Dashboard</title>
+    <link rel="stylesheet" href="common-header.css">
     <meta name="description" content="Club Admin Dashboard for Campus Connect" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -20,65 +21,6 @@
             min-height: 100vh;
             padding-top: 100px;
         }
-
-        /* Header Styles */
-        .header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            background-color: #fff8dc;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 30px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-            z-index: 1000;
-            backdrop-filter: blur(10px);
-        }
-
-        .header-left {
-            display: flex;
-            align-items: center;
-        }
-
-        .logo {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #ffc107, #ff9800);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            font-weight: bold;
-            color: white;
-            box-shadow: 0 4px 15px rgba(255,193,7,0.3);
-            border: 3px solid rgba(255,255,255,0.3);
-        }
-
-        .brand-name {
-            margin-left: 15px;
-            font-size: 20px;
-            font-weight: bold;
-            background: linear-gradient(135deg, #333, #666);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .page-title {
-            font-size: 28px;
-            font-weight: 600;
-            text-align: center;
-            flex: 1;
-            margin: 0 20px;
-            background: linear-gradient(135deg, #cd853f, #8b4513);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
         .header-actions {
             display: flex;
             gap: 12px;
@@ -87,18 +29,6 @@
         .btn {
             padding: 10px 18px;
             color: white;
-            text-decoration: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            border: none;
-            cursor: pointer;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #4682b4, #2c5282);
-            box-shadow: 0 3px 10px rgba(70,130,180,0.3);
         }
 
         .btn-danger {
@@ -536,17 +466,17 @@
 </head>
 <body>
     <!-- Header -->
-    <div class="header">
+    <header class="header">
         <div class="header-left">
-            <div class="logo">CC</div>
+             <img src="images/logo 1.png" alt="Campus Connect Logo" class="logo" style="height: 60px; width: 60px;">
             <div class="brand-name">Campus Connect</div>
         </div> 
         <div class="page-title" id="dashboardTitle">Club Admin Dashboard</div>
         <div class="header-actions">
-            <button class="btn btn-primary" onclick="openNotifications()">🔔 Notifications</button>
-            <button class="btn btn-danger">🚪 Logout</button>
+            <button class="btn-header btn-header-primary" onclick="openNotifications()">🔔 Notifications</button>
+            <button class="btn-header btn-header-danger">🚪 Logout</button>
         </div>
-    </div>
+    </header>
 
     <!-- Main Content -->
     <div class="main-content">
@@ -1281,84 +1211,45 @@
                 return;
             }
 
-            // Personalize welcome message and title immediately
-            const clubName = currentUser.clubDetails ? currentUser.clubDetails.name : 'Your Club';
-            document.getElementById('welcomeMessage').textContent = `Welcome back, ${currentUser.firstName || 'Admin'} of ${clubName}!`;
-            document.getElementById('dashboardTitle').textContent = `${clubName} Admin Dashboard`;
-
-            // --- Mock Data for Demonstration ---
-            // In a real application, you would make an API call here:
-            // try {
-            //     const response = await fetch('/api/club/dashboard', {
-            //         headers: {
-            //             'Authorization': `Bearer ${authToken}`
-            //         }
-            //     });
-            //     if (!response.ok) {
-            //         throw new Error(`HTTP error! status: ${response.status}`);
-            //     }
-            //     currentClubData = await response.json();
-            // } catch (error) {
-            //     console.error('Error fetching dashboard data:', error);
-            //     alert('Failed to load dashboard data. Please try again later.');
-            //     // Optionally, redirect or show a more persistent error message
-            //     return;
-            // }
-
-            // Mock Data (replace with actual API response)
-            currentClubData = {
-                overview: {
-                    totalMembers: 135,
-                    activeMembers: 120,
-                    pendingRequests: 7,
-                    upcomingEvents: 4,
-                    nextEvent: { title: 'Annual General Meeting', date: 'Tomorrow, 7:00 PM' },
-                    newInteractionsToday: 30,
-                    eventRSVPs: 22,
-                    announcementViews: 110,
-                    engagementRate: '82%',
-                    engagementTrend: '↗️ +15%'
-                },
-                members: {
-                    pending: [
-                        { id: 'req1', name: 'Sarah Lee', role: 'Journalism • Freshman' },
-                        { id: 'req2', name: 'Mike Chen', role: 'Electrical Eng. • Junior' }
-                    ],
-                    current: [
-                        { id: 'mem1', name: 'Alice Mitchell', role: 'President' },
-                        { id: 'mem2', name: 'Bob Johnson', role: 'Vice President' },
-                        { id: 'mem3', name: 'Carol White', role: 'Secretary' },
-                        { id: 'mem4', name: 'David Green', role: 'Treasurer' },
-                        { id: 'mem5', name: 'Eve Black', role: 'Member' }
-                    ]
-                },
-                events: [
-                    { id: 'evt1', title: '🚀 Hackathon 2024', date: 'Dec 23, 2024', description: 'Join us for our annual 48-hour hackathon! Build amazing projects, network with peers, and compete for prizes.', rsvps: 55, teams: 15, daysLeft: 2 },
-                    { id: 'evt2', title: '💻 Weekly Coding Workshop', date: 'Dec 26, 2024', description: 'Learn React.js fundamentals in this hands-on workshop. Perfect for beginners!', rsvps: 35, maxCapacity: 40, daysLeft: 5 }
-                ],
-                announcements: [
-                    { id: 'ann1', title: '🎉 Hackathon Registration Open!', time: '2 hours ago', content: 'Registration for our annual hackathon is now open! Early bird pricing available until December 15th. Don\'t miss out on this amazing opportunity to showcase your skills and win awesome prizes!', views: 180, comments: 15, likes: 30 },
-                    { id: 'ann2', title: '📚 New Study Group Schedule', time: '1 day ago', content: 'We\'ve updated our weekly study group schedule. Sessions will now be held on Tuesdays and Thursdays from 7-9 PM in the computer lab. Topics will include data structures, algorithms, and interview preparation.', views: 100, comments: 10, likes: 20 }
-                ],
-                analytics: {
-                    memberGrowth: [45, 52, 61, 78, 95, 135],
-                    eventAttendance: [32, 28, 35, 42],
-                    engagement: [40, 30, 20, 10] // Events, Announcements, Discussions, Resources
-                },
-                profile: {
-                    name: clubName,
-                    description: 'A community of passionate programmers dedicated to learning, sharing knowledge, and building amazing projects together. We welcome students of all skill levels!',
-                    contactEmail: currentUser.email,
-                    meetingSchedule: 'Wednesdays 6:00 PM - 8:00 PM',
-                    meetingLocation: 'Computer Science Building, Room 203',
-                    category: 'Technology',
-                    logoUrl: 'https://via.placeholder.com/150/FFC107/000000?text=ClubLogo'
+            // Get club name and admin name
+            try {
+                const response = await fetch('/api/club/dashboard', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                if (!response.ok) {
+                    // Handle specific HTTP errors, e.g., 404 if no club is linked
+                    if (response.status === 404) {
+                        const errorData = await response.json();
+                        alert(errorData.message || 'No club associated with this admin account.');
+                        // Optionally, redirect or show a specific message for unlinked accounts
+                        return;
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
-            };
-            // --- End Mock Data ---
+                
+                currentClubData = await response.json();
 
-            populateDashboard(currentClubData);
+                // Use fetched club name and admin name
+                // Prefer club name from API, fallback to localStorage if needed
+                let clubName = (currentClubData.profile && currentClubData.profile.name) ? currentClubData.profile.name : (currentUser.clubDetails && currentUser.clubDetails.name) ? currentUser.clubDetails.name : 'Your Club';
+                let adminName = currentUser.firstName ? currentUser.firstName : 'Admin';
+
+                // Set dashboard title and welcome message
+                document.getElementById('dashboardTitle').textContent = `${clubName} Admin Dashboard`;
+                document.getElementById('welcomeMessage').textContent = `Welcome back, ${adminName}!`;
+
+                populateDashboard(currentClubData);
+            } catch (error) {
+                console.error('Error fetching dashboard data:', error);
+                alert('Failed to load dashboard data. Please try again later.');
+                // Optionally, redirect or show a more persistent error message
+                return;
+            }
         }
+
+        // --- End Mock Data ---
 
         function populateDashboard(data) {
             // Overview Tab

@@ -15,6 +15,7 @@ body {
     min-height: 100vh;
     color: #3a3a3a;
     overflow-x: hidden;
+    padding-top: 120px; /* Added to prevent content from being hidden by the fixed header */
 }
 
 /* Container */
@@ -60,16 +61,26 @@ body {
 
 /* Header */
 .header {
+    position: fixed;
+    top: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
     width: 100%;
     max-width: 72rem;
-    margin: 0 auto 2rem;
     padding: 1rem 1.5rem;
+    z-index: 1000;
     background: rgba(255, 255, 255, 0.15);
     backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.25);
     border-radius: 1rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    animation: fadeInUp 0.6s ease-out;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+}
+
+.header:hover {
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    transform: translateX(-50%) translateY(-2px);
 }
 
 .header-content {
