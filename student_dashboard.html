@@ -23,7 +23,6 @@
 
     <header>
     <div class="header-left">
-        <img src="images/default-avatar.png" alt="Profile Picture" class="profile-avatar-header">
         <h1 id="welcome-message">Welcome, [Student Name]!</h1>
     </div>
         <nav>
@@ -180,11 +179,6 @@
             // Check if a valid student user is logged in
             if (currentUser && currentUser.role === 'student' && currentUser.firstName) {
                 welcomeMessage.textContent = `Welcome, ${currentUser.firstName}! 👋`;
-        // Display profile picture
-        const avatar = document.querySelector('.profile-avatar-header');
-        if (avatar && currentUser.profilePictureUrl) {
-            avatar.src = currentUser.profilePictureUrl;
-        }
             } else {
                 // If not logged in or not a student, redirect to the login page
                 console.warn('No valid student user found. Redirecting to login.');
