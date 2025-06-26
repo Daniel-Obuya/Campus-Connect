@@ -9,7 +9,7 @@
      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> 
     <style>
         /* Ensure body padding for fixed header */
-        body {
+        body { /* padding-top is now handled by department_admin.css */
             padding-top: 100px; /* Adjust as needed based on header height defined in common-header.css */
         }
 
@@ -219,13 +219,24 @@
     <main>
         <section class="dashboard-section">
             <h2>Explore Our Academic Departments</h2>
-            <p>Find information about departments, faculty, courses, research, and more.</p>
+            <p class="section-description">Find information about departments, faculty, courses, research, and more.</p>
 
             <!-- IDEA: Search and Filter Bar -->
             <div class="search-filter-bar">
-                <input type="text" id="departmentSearch" placeholder="Search departments (e.g., by name, keyword)...">
-                <button class="action-button" onclick="filterDepartments()">Search</button>
-                <a href="#followedDepartmentsSection" class="action-button action-button-secondary">View Followed</a>
+                <div class="search-input-wrapper">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" id="departmentSearch" placeholder="Search departments (e.g., by name, keyword)...">
+                </div>
+                <select id="departmentSort" class="form-select sort-select" onchange="filterDepartments()">
+                    <option value="name_asc">Sort by Name (A-Z)</option>
+                    <option value="name_desc">Sort by Name (Z-A)</option>
+                    <option value="programs_desc">Programs (High to Low)</option>
+                    <option value="programs_asc">Programs (Low to High)</option>
+                </select>
+                <button class="action-button" onclick="filterDepartments()">Apply Filters</button>
+                <a href="#followedDepartmentsSection" class="action-button action-button-secondary">
+                    <i class="fas fa-star"></i> View Followed
+                </a>
             </div>
 
             <!-- Department List -->
@@ -233,48 +244,80 @@
                 <!-- Example Department List Item (Repeat this structure) -->
                 <li class="department-list-item" data-department-id="cse">
                     <div class="department-icon">💻</div> <!-- Placeholder Icon, e.g., <i class="fas fa-laptop-code"></i> -->
-                    <div class="department-info">
-                        <h3>Computer Science & Engineering</h3>
-                        <p>Cutting-edge research and education in computing, AI, and software development.</p>
-                    </div>
-                    <div class="department-item-actions">
-                        <button class="action-button department-follow-toggle" onclick="toggleFollow('cse', this)">Follow</button>
-                        <a href="department_details.html?id=cse" class="action-button action-button-info">Discover More</a>
+                    <div class="department-content">
+                        <div class="department-header-info">
+                            <h3>Computer Science & Engineering</h3>
+                            <p>Cutting-edge research and education in computing, AI, and software development.</p>
+                        </div>
+                        <div class="department-quick-stats">
+                            <div class="stat-item"><i class="fas fa-book-open"></i> <strong>15+</strong> Programs</div>
+                            <div class="stat-item"><i class="fas fa-user-tie"></i> <strong>50+</strong> Faculty</div>
+                            <div class="stat-item"><i class="fas fa-flask"></i> <strong>Active</strong> Research</div>
+                        </div>
+                        <div class="department-item-actions">
+                            <button class="action-button department-follow-toggle" onclick="toggleFollow('cse', this)">Follow</button>
+                            <a href="department_details.html?id=cse" class="action-button action-button-info">View Details</a>
+                            <a href="events_directory.html?department=cse" class="action-button action-button-secondary">View Events</a>
+                        </div>
                     </div>
                 </li>
 
                 <li class="department-list-item" data-department-id="business">
                     <div class="department-icon">📈</div> <!-- Placeholder Icon, e.g., <i class="fas fa-briefcase"></i> -->
-                    <div class="department-info">
-                        <h3>Business Administration</h3>
-                        <p>Programs in management, finance, marketing, and entrepreneurship for future leaders.</p>
-                    </div>
-                    <div class="department-item-actions">
-                        <button class="action-button department-follow-toggle" onclick="toggleFollow('business', this)">Follow</button>
-                        <a href="department_details.html?id=business" class="action-button action-button-info">Discover More</a>
+                    <div class="department-content">
+                        <div class="department-header-info">
+                            <h3>Business Administration</h3>
+                            <p>Programs in management, finance, marketing, and entrepreneurship for future leaders.</p>
+                        </div>
+                        <div class="department-quick-stats">
+                            <div class="stat-item"><i class="fas fa-book-open"></i> <strong>10+</strong> Programs</div>
+                            <div class="stat-item"><i class="fas fa-user-tie"></i> <strong>40+</strong> Faculty</div>
+                            <div class="stat-item"><i class="fas fa-flask"></i> <strong>Industry</strong> Partnerships</div>
+                        </div>
+                        <div class="department-item-actions">
+                            <button class="action-button department-follow-toggle" onclick="toggleFollow('business', this)">Follow</button>
+                            <a href="department_details.html?id=business" class="action-button action-button-info">View Details</a>
+                            <a href="events_directory.html?department=business" class="action-button action-button-secondary">View Events</a>
+                        </div>
                     </div>
                 </li>
 
                 <li class="department-list-item" data-department-id="arts">
                     <div class="department-icon">🎨</div> <!-- Placeholder Icon, e.g., <i class="fas fa-palette"></i> -->
-                    <div class="department-info">
-                        <h3>Fine Arts & Design</h3>
-                        <p>Fostering creativity through visual arts, design, and art history programs.</p>
-                    </div>
-                    <div class="department-item-actions">
-                        <button class="action-button department-follow-toggle" onclick="toggleFollow('arts', this)">Follow</button>
-                        <a href="department_details.html?id=arts" class="action-button action-button-info">Discover More</a>
+                    <div class="department-content">
+                        <div class="department-header-info">
+                            <h3>Fine Arts & Design</h3>
+                            <p>Fostering creativity through visual arts, design, and art history programs.</p>
+                        </div>
+                        <div class="department-quick-stats">
+                            <div class="stat-item"><i class="fas fa-book-open"></i> <strong>8+</strong> Programs</div>
+                            <div class="stat-item"><i class="fas fa-user-tie"></i> <strong>25+</strong> Faculty</div>
+                            <div class="stat-item"><i class="fas fa-palette"></i> <strong>Exhibitions</strong> Annually</div>
+                        </div>
+                        <div class="department-item-actions">
+                            <button class="action-button department-follow-toggle" onclick="toggleFollow('arts', this)">Follow</button>
+                            <a href="department_details.html?id=arts" class="action-button action-button-info">View Details</a>
+                            <a href="events_directory.html?department=arts" class="action-button action-button-secondary">View Events</a>
+                        </div>
                     </div>
                 </li>
                  <li class="department-list-item" data-department-id="humanities">
                     <div class="department-icon">📚</div> <!-- Placeholder Icon e.g. <i class="fas fa-book-open"></i> -->
-                    <div class="department-info">
-                        <h3>Humanities & Social Sciences</h3>
-                        <p>Exploring history, literature, philosophy, and social dynamics.</p>
-                    </div>
-                    <div class="department-item-actions">
-                        <button class="action-button department-follow-toggle" onclick="toggleFollow('humanities', this)">Follow</button>
-                        <a href="department_details.html?id=humanities" class="action-button action-button-info">Discover More</a>
+                    <div class="department-content">
+                        <div class="department-header-info">
+                            <h3>Humanities & Social Sciences</h3>
+                            <p>Exploring history, literature, philosophy, and social dynamics.</p>
+                        </div>
+                        <div class="department-quick-stats">
+                            <div class="stat-item"><i class="fas fa-book-open"></i> <strong>12+</strong> Programs</div>
+                            <div class="stat-item"><i class="fas fa-user-tie"></i> <strong>35+</strong> Faculty</div>
+                            <div class="stat-item"><i class="fas fa-globe"></i> <strong>Global</strong> Studies</div>
+                        </div>
+                        <div class="department-item-actions">
+                            <button class="action-button department-follow-toggle" onclick="toggleFollow('humanities', this)">Follow</button>
+                            <a href="department_details.html?id=humanities" class="action-button action-button-info">View Details</a>
+                            <a href="events_directory.html?department=humanities" class="action-button action-button-secondary">View Events</a>
+                        </div>
                     </div>
                 </li>
                 <!-- More department list items will be dynamically loaded or added here by JavaScript -->
