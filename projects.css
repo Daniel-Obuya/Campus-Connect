@@ -22,6 +22,33 @@ body {
     border: none;
     cursor: pointer;
 }
+
+/* Styles for the new quick access buttons below the header (copied from student_dashboard.html) */
+.dashboard-quick-links {
+    display: flex;
+    justify-content: center; /* Center the buttons */
+    flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
+    gap: 15px;
+    margin-top: 20px;
+    margin-bottom: 30px;
+    padding: 15px 20px; /* Increased vertical padding */
+    background: rgba(255, 255, 255, 0.15); /* Glassmorphism background */
+    backdrop-filter: blur(12px); /* Apply blur effect */
+    -webkit-backdrop-filter: blur(12px); /* Safari compatibility */
+    border-radius: 16px; /* Rounded corners */
+    border: 1px solid rgba(255, 255, 255, 0.25); /* Subtle border */
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08); /* Soft shadow */
+    width: calc(100% - 40px); /* Adjust width to account for body padding */
+    max-width: 1200px; /* Match main content max-width */
+    margin-left: auto; /* Center the bar */
+    margin-right: auto; /* Center the bar */
+}
+.dashboard-quick-links .btn-header { /* Use btn-header for consistency with projects_directory.html */
+    padding: 12px 25px; font-size: 15px; display: flex; align-items: center;
+}
+.dashboard-quick-links .button-icon {
+    margin-right: 8px; font-size: 1.2em;
+}
 .btn-primary {
     background: linear-gradient(135deg, #4682b4, #2c5282);
     box-shadow: 0 3px 10px rgba(70,130,180,0.3);

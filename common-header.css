@@ -26,6 +26,11 @@
     transition: all 0.3s ease; /* Smooth transitions for hover effects */
 }
 
+/* Global body padding for fixed headers */
+body {
+    padding-top: 95px; /* Adjust as needed based on header height */
+}
+
 /* Header hover effect for subtle interaction */
 .header:hover {
     box-shadow: 0 10px 25px rgba(0,0,0,0.1); /* Slightly larger shadow on hover */
@@ -174,4 +179,119 @@
     font-size: 14px;
     color: #666;
     opacity: 0.9;
+}
+
+/* New common header style for directory pages (glassy effect) */
+.dashboard-header {
+    background: rgba(255, 255, 255, 0.15); /* Semi-transparent white for glassy effect */
+    backdrop-filter: blur(15px); /* Apply blur effect */
+    -webkit-backdrop-filter: blur(15px); /* Safari compatibility */
+    padding: 15px 40px; /* Reduced vertical padding for a more compact header */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    box-sizing: border-box;
+    color: #333; /* Default text color for this header */
+}
+
+.dashboard-header .logo-section {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.dashboard-header .logo {
+    height: 60px;
+    width: 60px;
+}
+
+.dashboard-header .app-name {
+    font-size: 24px;
+    font-weight: bold;
+    margin: 0;
+    color: #333;
+}
+
+.dashboard-header h1 { /* This targets the main page title in the header */
+    font-size: 24px; /* Reduced font size for a more compact look */
+    margin: 0;
+    flex-grow: 1;
+    text-align: center;
+}
+
+.dashboard-header .header-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.dashboard-header .action-button {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 25px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dashboard-header .header-button {
+    background: rgba(255, 255, 255, 0.2);
+    color: #333;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.dashboard-header .header-button:hover {
+    background: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.dashboard-header .action-button-danger {
+    background: linear-gradient(135deg, #dc3545, #b02a37);
+    color: white;
+    box-shadow: 0 3px 10px rgba(220,53,69,0.3);
+}
+
+.dashboard-header .action-button-danger:hover {
+    background: linear-gradient(135deg, #b02a37, #dc3545);
+    transform: translateY(-1px);
+    box-shadow: 0 5px 15px rgba(220,53,69,0.4);
+}
+
+/* Responsive adjustments for dashboard-header */
+@media (max-width: 768px) {
+    .dashboard-header {
+        flex-direction: column;
+        padding: 15px 20px;
+        text-align: center;
+        gap: 10px;
+    }
+    .dashboard-header h1 {
+        font-size: 24px;
+        margin-top: 10px;
+        margin-bottom: 10px;
+    }
+    .dashboard-header .header-actions {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    .dashboard-header .logo-section {
+        width: 100%;
+        justify-content: center;
+    }
+}
+/* Body padding for fixed headers */
+body {
+    padding-top: 95px; /* Further adjusted for a more compact header and less empty space */
+}
 }

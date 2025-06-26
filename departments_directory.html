@@ -8,6 +8,11 @@
     <!-- IDEA: Consider adding an icon library like Font Awesome -->
      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> 
     <style>
+        /* Ensure body padding for fixed header */
+        body {
+            padding-top: 100px; /* Adjust as needed based on header height defined in common-header.css */
+        }
+
         .department-card { 
             background: var(--color-bg-glass-primary); /* Reusing glassmorphism */
             backdrop-filter: blur(var(--backdrop-blur-strong));
@@ -158,6 +163,8 @@
             flex-basis: calc(50% - (var(--spacing-sm) / 2)); /* Distribute space for 2 buttons with a small gap */
             text-align: center; /* Center text in buttons */
         }
+        
+   
 
         /* Styles for "Followed Departments" section */
         #followedDepartmentsSection h3 {
@@ -197,14 +204,14 @@
     </style>
 </head>
 <body>
-    <header class="dashboard-header">
-        <div class="logo-section">
-             <img src="images/logo 1.png" alt="Campus Connect Logo" class="logo" style="height: 60px; width: 60px;">
-            <h1 class="app-name">Campus Connect</h1>
+    <header class="header">
+        <div class="header-left">
+             <img src="images/logo 1.png" alt="Campus Connect Logo" class="logo">
+            <div class="brand-name">Campus Connect</div>
         </div>
-        <h1>Departments Directory</h1>
+        <div class="page-title">Departments </div>
         <div class="header-actions">
-            <a href="index.html" class="action-button header-button">Back to Home</a> <!-- Assuming index.html is your home page -->
+            <a href="student_dashboard.html" class="action-button header-button">Back to Home</a> <!-- Assuming index.html is your home page -->
             <a href="welcome.html" class="action-button header-button action-button-danger">Logout</a>
         </div>
     </header>

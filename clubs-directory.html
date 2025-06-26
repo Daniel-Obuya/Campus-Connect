@@ -5,20 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Campus Connect - Clubs Directory</title>
     <link rel="stylesheet" href="common-header.css">
+    <link rel="stylesheet" href="department_admin.css"> <!-- Link department_admin.css for common header styles -->
     <style>
         /* Using styles consistent with projects-directory.html and club-admin-dashboard.html */
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #f5deb3 0%, #deb887 50%, #cd853f 100%);
-            color: #333;
-            min-height: 100vh;
-            padding-top: 100px;
-        }
-        /* Main Content */
+        body { padding-top: 100px; /* Adjust for fixed header, now defined in department_admin.css */ }
+
+        /* Main Content (retained existing styles, adjusted padding-top for fixed header) */
         .main-content { padding: 40px 20px; max-width: 1400px; margin: 0 auto; }
 
-        /* Hero Section */
+        /* Hero Section (retained existing styles) */
         .hero-section {
             text-align: center; margin-bottom: 40px; background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(15px); padding: 40px; border-radius: 20px;
@@ -32,7 +28,7 @@
         }
         .hero-description { font-size: 18px; color: #555; max-width: 800px; margin: 0 auto; line-height: 1.6; }
 
-        /* Search & Filter */
+        /* Search & Filter (retained existing styles) */
         .filter-section {
             display: flex; justify-content: center; align-items: center; gap: 20px;
             margin-bottom: 40px; padding: 20px; background: rgba(255, 255, 255, 0.1);
@@ -47,7 +43,7 @@
             background: rgba(255,255,255,0.5); font-size: 14px;
         }
 
-        /* Clubs Grid */
+        /* Clubs Grid (retained existing styles) */
         .clubs-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -115,10 +111,10 @@
         }
         .club-btn-secondary:hover { background: rgba(255, 255, 255, 0.25); }
 
-        /* Loading and Error States */
+        /* Loading and Error States (retained existing styles) */
         .info-state { text-align: center; font-size: 18px; color: #555; padding: 50px; }
 
-        /* Modal Styles */
+        /* Modal Styles (retained existing styles) */
         #modalOverlay {
             display: none;
             position: fixed;
@@ -240,10 +236,12 @@
             .modal-title { font-size: 1.2rem; }
         }
 
-        /* Responsive Design */
+        /* Responsive Design (retained existing styles, adjusted header-specific rules) */
         @media (max-width: 768px) {
-            .header { flex-direction: column; gap: 10px; padding: 20px; }
-            .page-title { font-size: 20px; margin: 10px 0; }
+            .dashboard-header { flex-direction: column; gap: 10px; padding: 15px 20px; text-align: center; }
+            .dashboard-header h1 { font-size: 24px; margin-top: 10px; margin-bottom: 10px; }
+            .dashboard-header .header-actions { flex-wrap: wrap; justify-content: center; }
+            .dashboard-header .logo-section { width: 100%; justify-content: center; }
             .hero-title { font-size: 28px; }
             .filter-section { flex-direction: column; }
             .search-input { width: 100%; }
@@ -251,14 +249,15 @@
     </style>
 </head>
 <body> 
-    <header class="header"> 
-        <div class="header-left">
+    <header class="dashboard-header"> 
+        <div class="logo-section">
              <img src="images/logo 1.png" alt="Campus Connect Logo" class="logo" style="height: 60px; width: 60px;">
-            <div class="brand-name">Campus Connect</div>
+            <h1 class="app-name">Campus Connect</h1>
         </div>
-        <h1 class="page-title">Clubs & Societies Directory</h1>
+        <h1>Clubs & Societies </h1>
         <div class="header-actions">
-            <a href="/login-student.html" class="btn-header btn-header-primary">Student Login</a>
+            <a href="student_dashboard.html" class="action-button header-button">Back to Home</a>
+            <a href="welcome.html" class="action-button header-button action-button-danger">Logout</a>
         </div>
     </header>
 

@@ -6,22 +6,21 @@
     <title>Campus Connect - Projects Dashboard</title>
     <meta name="description" content="Discover and showcase student projects across the university" />
     <link rel="stylesheet" href="projects.css">
-    <link rel="stylesheet" href="common-header.css">
-
+    <link rel="stylesheet" href="common-header.css"> <!-- common-header.css will now contain the dashboard-header styles -->
 </head>
 <body>
     <!-- Header -->
-    <div class="header">
-        <div class="header-left">
-            <img src="images/logo 1.png" alt="Campus Connect Logo" class="logo" style="height: 60px; width: 60px;">
+    <header class="header">
+        <div class="logo-section">
+            <img src="images/logo 1.png" alt="Campus Connect Logo" class="logo">
             <div class="brand-name">Campus Connect</div>
         </div>
         <div class="page-title">Projects Dashboard</div>
         <div class="header-actions">
-            <button class="btn btn-primary" onclick="openCreateProjectModal()">+ Create Project</button>
-            <button class="btn btn-danger">🚪 Logout</button>
+            <a href="#" class="btn-header" onclick="openCreateProjectModal()">+ Create Project</a>
+            <a href="welcome.html" class="btn-header btn-header-danger">🚪 Logout</a>
         </div>
-    </div>
+    </header>
 
     <!-- Main Content -->
     <div class="main-content">
