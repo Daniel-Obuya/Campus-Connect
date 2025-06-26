@@ -5,6 +5,9 @@ const categories = ["All", "Social"];
 let selectedCategory = "All";
 let selectedClub = null;
 
+// Track user's club membership statuses
+let userClubStatuses = {};
+
 // DOM elements
 const categoryFilter = document.getElementById('categoryFilter');
 const clubsGrid = document.getElementById('clubsGrid');
@@ -12,6 +15,28 @@ const modalOverlay = document.getElementById('modalOverlay');
 const modalContent = document.getElementById('modalContent');
 const modalBody = document.getElementById('modalBody');
 const modalClose = document.getElementById('modalClose');
+
+// Fetch user's club memberships (active/pending) after DOM loads
+async function fetchUserClubStatuses() {
+    const token = localStorage.getItem('authToken');
+    if (!token) return;
+    try {
+        const res = await fetch('/api/club/memberships', {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (!res.ok) throw new Error('Failed to fetch memberships');
+        const data = await res.json();
+        // data.memberships: [{ club_id, status }]
+        userClubStatuses = {};
+        if (data.memberships) {
+            data.memberships.forEach(m => {
+                userClubStatuses[m.club_id] = m.status;
+            });
+        }
+    } catch (err) {
+        console.error('Could not fetch user club memberships:', err);
+    }
+}
 
 // Render club cards
 function renderClubs() {
@@ -25,8 +50,17 @@ function renderClubs() {
     }
 
     clubsGrid.innerHTML = filteredClubs.map(club => {
-        // Use logo_url or fallback to default image
         const logoUrl = club.logo_url && club.logo_url.trim() !== '' ? club.logo_url : 'images/default-club.jpeg';
+        // Determine join button state
+        let joinBtnHtml = '';
+        const status = userClubStatuses[club.id];
+        if (status === 'active') {
+            joinBtnHtml = `<button class="club-btn club-btn-secondary" disabled style="background:#b2ffb2;color:#2e7d32;">Member</button>`;
+        } else if (status === 'pending') {
+            joinBtnHtml = `<button class="club-btn club-btn-secondary" disabled style="background:#fff3cd;color:#b8860b;">Request Pending</button>`;
+        } else {
+            joinBtnHtml = `<button class="club-btn club-btn-secondary" data-quickjoin-id="${club.id}">Quick Join</button>`;
+        }
         return `
         <div class="club-card" data-club-id="${club.id}">
             <div class="club-header">
@@ -51,7 +85,7 @@ function renderClubs() {
             </div>
             <div class="club-footer">
                 <button class="club-btn club-btn-primary" data-learnmore-id="${club.id}">Learn More</button>
-                <button class="club-btn club-btn-secondary" data-quickjoin-id="${club.id}">Quick Join</button>
+                ${joinBtnHtml}
             </div>
         </div>
         `;
@@ -115,6 +149,16 @@ function openModal(clubId) {
     selectedClub = clubs.find(club => club.id === clubId);
     if (!selectedClub) return;
     const logoUrl = selectedClub.logo_url && selectedClub.logo_url.trim() !== '' ? selectedClub.logo_url : 'images/default-club.jpeg';
+    // Determine join button state
+    let joinBtnHtml = '';
+    const status = userClubStatuses[selectedClub.id];
+    if (status === 'active') {
+        joinBtnHtml = `<button class="modal-join-btn" disabled style="background:#b2ffb2;color:#2e7d32;">Member</button>`;
+    } else if (status === 'pending') {
+        joinBtnHtml = `<button class="modal-join-btn" disabled style="background:#fff3cd;color:#b8860b;">Request Pending</button>`;
+    } else {
+        joinBtnHtml = `<button class="modal-join-btn" id="modalJoinBtn" onclick="window.joinClub()">🎉 Join ${selectedClub.name}</button>`;
+    }
     modalBody.innerHTML = `
         <div class="modal-logo">
             <img class="club-logo" src="${logoUrl}" alt="${selectedClub.name} logo" onerror="this.onerror=null;this.src='images/default-club.jpeg';">
@@ -132,9 +176,7 @@ function openModal(clubId) {
                 <div class="modal-stat-label">Meetings</div>
             </div>
         </div>
-        <button class="modal-join-btn" id="modalJoinBtn" onclick="window.joinClub()">
-            🎉 Join ${selectedClub.name}
-        </button>
+        ${joinBtnHtml}
     `;
     modalOverlay.style.display = 'flex';
     document.body.style.overflow = 'hidden';
@@ -212,6 +254,7 @@ async function fetchAndRenderClubs() {
             memberCount: club.member_count || 0,
             meetingDay: club.meeting_schedule || ''
         }));
+        await fetchUserClubStatuses();
         renderClubs();
         updateStats();
     } catch (err) {
@@ -225,3 +268,19 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchAndRenderClubs();
     setupEventListeners();
 });
+
+// Backend endpoint for Express/Node.js (add to server.js):
+//
+// app.get('/api/club/memberships', authenticate, async (req, res) => {
+//     const userId = req.user.user_id;
+//     try {
+//         const [rows] = await db.query(
+//             'SELECT club_id, status FROM club_memberships WHERE user_id = ? AND status IN (?, ?)',
+//             [userId, 'active', 'pending']
+//         );
+//         res.json({ memberships: rows });
+//     } catch (err) {
+//         console.error('Error fetching user club memberships:', err);
+//         res.status(500).json({ memberships: [] });
+//     }
+// });
