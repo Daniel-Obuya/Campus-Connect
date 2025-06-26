@@ -15,11 +15,10 @@
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-            background: linear-gradient(135deg, var(--wheat) 0%, var(--burlywood) 50%, var(--peru) 100%);
-            min-height: 100vh;
-            position: relative;
-            overflow-x: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #f5deb3 0%, #deb887 50%, #cd853f 100%);
+            min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+            padding: 20px; position: relative; overflow-x: hidden;
         }
         body::before {
             content: '';
@@ -30,6 +29,13 @@
                 radial-gradient(circle at 80% 80%, rgba(255,255,255,0.05) 0%, transparent 50%);
             pointer-events: none;
             z-index: 0;
+        }
+        /* body padding handled by common-header.css */
+        .profile-container {
+            background: rgba(255,255,255,0.15); backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.2); border-radius: 24px; padding: 40px;
+            width: 100%; max-width: 800px; box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            /* text-align: center; */ /* Adjusted for better layout */
         }
         @keyframes fadeInUp {
             from { opacity: 0; transform: translateY(40px); }
@@ -279,30 +285,26 @@
     </style>
 </head>
 <body>
-    <div id="app">
-        <div id="loading" class="loading">
-            <div class="loading-content">
-                <div class="loading-text">Loading...</div>
+    <header class="header"> <!-- Changed div to header -->
+        <div class="header-left">
+            <img src="images/logo 1.png" alt="Campus Connect Logo" class="logo">
+            <div class="brand-name">Campus Connect</div>
+        </div>
+        <!-- No page title here, as it's a profile page, not a directory -->
+        <div>
+            <a href="student_dashboard.html" class="btn-header btn-header-secondary">Back to Dashboard</a>
+            <a href="/welcome" class="btn-header btn-header-danger" id="logoutButton">Logout</a>
+        </div>
+    </header>
+
+    <div class="profile-container">
+        <div class="profile-header">
+            <div class="profile-header-info">
+                <h1 id="studentName">[Student Name]</h1>
+                <p id="welcomeMessage">Student at Campus Connect</p>
             </div>
         </div>
         <div id="main-content" style="display: none;">
-            <header class="header">
-                <div class="header-content">
-                    <div class="logo">
-                        <span>🎓</span>
-                        Campus Connect
-                    </div>
-                    <nav>
-                        <ul class="nav-links">
-                            <li><a href="student_dashboard.html">Dashboard</a></li>
-                            <li><a href="#events">Events</a></li>
-                            <li><a href="#clubs">Clubs</a></li>
-                            <li><a href="#projects">Projects</a></li>
-                            <li><a href="/welcome" id="logoutButton">Logout</a></li>
-                        </ul>
-                    </nav>
-                </div>
-            </header>
             <div class="container">
                 <div class="profile-card animate-fade-in-up">
                     <div class="profile-header animate-pulse-soft">

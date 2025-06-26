@@ -47,28 +47,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 <ul class="feed-list">
                     <li class="feed-item">
                         <span class="feed-icon">📢</span>
-                        <div class="feed-content">
+                        <div class="feed-content"><i class="fas fa-bullhorn"></i>
                             <strong>Workshop on AI this Friday</strong>
                             <span class="feed-meta">CS Department</span>
                         </div>
                     </li>
                     <li class="feed-item">
                         <span class="feed-icon">📸</span>
-                        <div class="feed-content">
+                        <div class="feed-content"><i class="fas fa-camera"></i>
                             <strong>Photography Club: New Exhibition Uploaded</strong>
                             <span class="feed-meta">2 hours ago</span>
                         </div>
                     </li>
                     <li class="feed-item">
                         <span class="feed-icon">🎯</span>
-                        <div class="feed-content">
+                        <div class="feed-content"><i class="fas fa-crosshairs"></i>
                             <strong>Career Fair Registration Open</strong>
                             <span class="feed-meta">Career Services</span>
                         </div>
                     </li>
                     <li class="feed-item">
                         <span class="feed-icon">🏆</span>
-                        <div class="feed-content">
+                        <div class="feed-content"><i class="fas fa-trophy"></i>
                             <strong>Hackathon Winners Announced</strong>
                             <span class="feed-meta">Tech Club</span>
                         </div>
@@ -97,29 +97,29 @@ document.addEventListener('DOMContentLoaded', () => {
             calendarPlaceholder.innerHTML = `
                 <ul class="calendar-list">
                     <li class="calendar-item">
-                        <span class="event-icon">🧠</span>
-                        <div class="event-details">
+                        <span class="event-icon"><i class="fas fa-brain"></i></span>
+                        <div class="event-details"> 
                             <strong>AI Study Group</strong>
                             <span class="event-date">Oct 26</span>
                         </div>
                     </li>
                     <li class="calendar-item">
-                        <span class="event-icon">💻</span>
-                        <div class="event-details">
+                        <span class="event-icon"><i class="fas fa-laptop-code"></i></span>
+                        <div class="event-details"> 
                             <strong>Hackathon Prep</strong>
                             <span class="event-date">Nov 5</span>
                         </div>
                     </li>
                     <li class="calendar-item">
-                        <span class="event-icon">💼</span>
-                        <div class="event-details">
+                        <span class="event-icon"><i class="fas fa-briefcase"></i></span>
+                        <div class="event-details"> 
                             <strong>Career Workshop</strong>
                             <span class="event-date">Nov 12</span>
                         </div>
                     </li>
                     <li class="calendar-item">
-                        <span class="event-icon">🎤</span>
-                        <div class="event-details">
+                        <span class="event-icon"><i class="fas fa-microphone-alt"></i></span>
+                        <div class="event-details"> 
                             <strong>Tech Talk</strong>
                             <span class="event-date">Nov 18</span>
                         </div>
@@ -142,19 +142,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <ul class="announcement-list">
                     <li class="announcement-item">
-                        <span class="announcement-icon">📚</span>
+                        <span class="announcement-icon"><i class="fas fa-book-open"></i></span>
                         <span>Library hours extended till 10 PM</span>
                     </li>
                     <li class="announcement-item">
-                        <span class="announcement-icon">🥗</span>
+                        <span class="announcement-icon"><i class="fas fa-salad"></i></span>
                         <span>New cafeteria menu available!</span>
                     </li>
                     <li class="announcement-item">
-                        <span class="announcement-icon">🚗</span>
+                        <span class="announcement-icon"><i class="fas fa-car"></i></span>
                         <span>Parking permits now available online</span>
                     </li>
                     <li class="announcement-item">
-                        <span class="announcement-icon">📱</span>
+                        <span class="announcement-icon"><i class="fas fa-mobile-alt"></i></span>
                         <span>New campus app features released</span>
                     </li>
                 </ul>
@@ -186,21 +186,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 const notificationList = document.getElementById('notification-list');
                 notificationList.innerHTML = `
                     <li class="notification-item">
-                        <span class="notification-icon">🎓</span>
+                        <span class="notification-icon"><i class="fas fa-graduation-cap"></i></span>
                         <div class="notification-content">
                             <strong>New event posted by CS Department</strong>
                             <span class="notification-time">5 minutes ago</span>
                         </div>
                     </li>
                     <li class="notification-item">
-                        <span class="notification-icon">🎭</span>
+                        <span class="notification-icon"><i class="fas fa-theater-masks"></i></span>
                         <div class="notification-content">
                             <strong>Your club has accepted your request</strong>
                             <span class="notification-time">1 hour ago</span>
                         </div>
                     </li>
                     <li class="notification-item">
-                        <span class="notification-icon">👤</span>
+                        <span class="notification-icon"><i class="fas fa-user-circle"></i></span>
                         <div class="notification-content">
                             <strong>Profile 80% completed - Update Now</strong>
                             <span class="notification-time">2 hours ago</span>

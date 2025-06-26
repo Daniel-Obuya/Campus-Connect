@@ -93,58 +93,6 @@ body {
     padding: var(--spacing-lg);
     min-height: 100vh;
 }
-
-/* General Header Styling for both pages */
-header.dashboard-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: var(--color-bg-glass-primary);
-    backdrop-filter: blur(var(--backdrop-blur-strong));
-    -webkit-backdrop-filter: blur(var(--backdrop-blur-strong));
-    padding: var(--spacing-md) var(--spacing-lg);
-    margin-bottom: var(--spacing-lg);
-    border-radius: var(--border-radius-lg);
-    border: var(--border-width) solid var(--color-border-glass);
-    box-shadow: var(--box-shadow-soft);
-    color: var(--color-text-base);
-}
-
-/* Styling for the logo and app name group in department_admin.html */
-/* Also used in create_event.html for its logo section */
-.logo-section {
-    display: flex;
-    flex-direction: column; /* Stack logo and app name vertically */
-    align-items: center;   /* Center items horizontally within this section */
-    margin-right: var(--spacing-md);
-}
-
-/* Styling for the app name text "Campus Connect" */
-.app-name {
-    font-size: 1.1em; /* Slightly smaller to fit nicely below logo */
-    font-weight: var(--font-weight-bold);
-    color: var(--color-text-base);
-    text-shadow: 0 1px 2px rgba(0,0,0,0.05);
-    margin-top: var(--spacing-xs); /* Space between logo and text */
-    margin-bottom: 0;
-}
-
-/* Targets the "Department Dashboard" H1 in department_admin.html */
-header.dashboard-header > h1:not(.app-name) {
-    font-size: 1.6em; /* Prominent page title */
-    font-weight: var(--font-weight-semibold);
-    text-align: center; /* Center the title */
-    flex-grow: 1;       /* Allow it to take available space */
-    margin-left: var(--spacing-md); /* Space from logo section */
-    margin-right: var(--spacing-md); /* Space before logout button */
-}
-
-/* Wrapper for multiple action buttons in the header */
-.header-actions {
-    display: flex;
-    gap: var(--spacing-sm); /* Space between buttons */
-}
-
 .dashboard-nav {
     background: var(--color-bg-glass-primary);
     backdrop-filter: blur(var(--backdrop-blur-strong));

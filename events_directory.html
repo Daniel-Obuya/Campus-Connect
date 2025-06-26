@@ -4,12 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Events Directory - Campus Connect</title>
-    <link rel="stylesheet" href="department_admin.css"> <!-- Reusing your existing stylesheet -->
+    <link rel="stylesheet" href="department_admin.css"> <!-- department_admin.css imports common-header.css -->
     <!-- Consider Font Awesome for icons if not already included globally -->
     <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> -->
     <style>
-        /* Specific styles for the Events Directory page */
-        .search-filter-bar {
+        body {
+            padding-top: 95px; /* Adjust as needed based on common-header.css */
+        }
+        /* Specific styles for the Events Directory page (remaining styles) */
+        .search-filter-bar { /* This was already here, keep it */
             margin-bottom: var(--spacing-lg);
             padding: var(--spacing-md);
             background: var(--color-bg-glass-primary);
@@ -155,15 +158,15 @@
     </style>
 </head>
 <body>
-    <header class="dashboard-header">
-        <div class="logo-section">
-            <img src="images/logo 1.png" alt="Campus Connect Logo" class="logo" style="height: 100px;">
-            <h1 class="app-name">Campus Connect</h1>
+    <header class="header">
+        <div class="header-left">
+            <img src="images/logo 1.png" alt="Campus Connect Logo" class="logo">
+            <div class="brand-name">Campus Connect</div>
         </div>
-        <h1>Events Directory</h1>
+        <div class="page-title">Events Directory</div>
         <div class="header-actions">
-            <a href="welcome.html" class="action-button header-button">Back to Home</a>
-            <a href="#" id="logoutButton" class="action-button header-button action-button-danger">Logout</a>
+            <a href="student_dashboard.html" class="btn-header">Back to Home</a>
+            <a href="#" id="logoutButton" class="btn-header btn-header-danger">Logout</a>
         </div>
     </header>
 

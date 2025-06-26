@@ -4,10 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interactive Calendar - Campus Connect</title>
-    <link rel="stylesheet" href="department_admin.css"> <!-- Reusing existing stylesheet -->
+    <link rel="stylesheet" href="department_admin.css"> <!-- department_admin.css imports common-header.css -->
     <!-- Consider a dedicated calendar CSS library or more specific styles later -->
     <style>
         .calendar-container {
+            margin-top: 10%; /* Adjust as needed */
+            display: flex;
             display: flex;
             gap: var(--spacing-lg);
             /* flex-wrap: wrap; */ /* Allow sidebar to wrap on small screens if needed */
@@ -160,14 +162,14 @@
     </style>
 </head>
 <body>
-    <header class="dashboard-header">
-        <div class="logo-section">
-            <img src="images/logo 1.png" alt="Campus Connect Logo" class="logo" style="height: 100px;">
-            <h1 class="app-name">Campus Connect</h1>
+    <header class="header">
+        <div class="header-left">
+            <img src="images/logo 1.png" alt="Campus Connect Logo" class="logo">
+            <div class="brand-name">Campus Connect</div>
         </div>
-        <h1>Interactive Calendar</h1>
+        <div class="page-title">Interactive Calendar</div>
         <div class="header-actions">
-            <a href="welcome.html" class="action-button header-button">Back to Home</a>
+            <a href="student_dashboard.html" class="action-button header-button">Back to Home</a>
             <a href="#" id="logoutButton" class="action-button header-button action-button-danger">Logout</a>
         </div>
     </header>
