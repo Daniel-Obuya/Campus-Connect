@@ -695,10 +695,7 @@ app.post('/api/login', async (req, res) => {
             email: user.email,
             role: user.role,
             firstName: user.first_name,
-    lastName: user.last_name,
-    profilePictureUrl: user.profile_picture_url,
-    bio: user.bio,
-    studentDetails: user.role === 'student' ? { studentId: user.student_id, major: user.major, graduationYear: user.graduation_year, department: user.department } : null
+            lastName: user.last_name
         }, secret, { expiresIn: '2h' });
 
         console.log(`User ${user.email} (role: ${user.role}) logged in, sending token.`);
@@ -711,7 +708,7 @@ app.post('/api/login', async (req, res) => {
                 firstName: user.first_name,
                 lastName: user.last_name,
                 email: user.email,
-                role: user.role,
+                role: user.role
             }
         });
     }
@@ -733,7 +730,7 @@ app.put('/api/user/profile', authenticateJWT, async (req, res) => {
     }
 
     const userId = req.user.id;
-    const { firstName, lastName, bio, profilePictureUrl, studentDetails } = req.body;
+    const { firstName, lastName, studentDetails } = req.body; // Removed bio and profilePictureUrl
 
     // Basic validation
     if (!firstName || !lastName) {
@@ -744,14 +741,12 @@ app.put('/api/user/profile', authenticateJWT, async (req, res) => {
         const connection = await pool.getConnection();
         try {
             // Prepare the update query
-            // This assumes your 'users' table has columns like 'bio', 'profile_picture_url', 'department', etc.
+            // This assumes your 'users' table has columns like 'department', etc.
             // Adjust column names if they are different in your schema.
             const sql = `
                 UPDATE users SET
                     first_name = ?,
                     last_name = ?,
-                    bio = ?,
-                    profile_picture_url = ?,
                     department = ?,
                     major = ?,
                     graduation_year = ?
@@ -761,8 +756,6 @@ app.put('/api/user/profile', authenticateJWT, async (req, res) => {
             const values = [
                 firstName,
                 lastName,
-                bio || null,
-                profilePictureUrl || null,
                 studentDetails.department || null,
                 studentDetails.major || null,
                 studentDetails.graduationYear || null,
