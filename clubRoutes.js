@@ -1,14 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const { pool } = require('./server'); // Use the exported pool from server.js
-const { authenticateJWT } = require('./middleware/authMiddleware'); // Use the new auth middleware
+const { pool } = require('./config/database'); // Use the exported pool from the new database config file
+const { authenticateJWT } = require('./middleware/authMiddleware'); // Use the auth middleware
 
 /**
  * @route   GET /api/club/dashboard
  * @desc    Get all personalized data for the club admin dashboard
  * @access  Private (Club Admin)
  */
-router.get('/dashboard', protect, async (req, res) => {
+router.get('/dashboard', authenticateJWT, async (req, res) => {
     // Ensure the user has the correct role
     if (req.user.role !== 'club_admin') {
         return res.status(403).json({ success: false, message: 'Forbidden: Access is restricted to Club Admins.' });

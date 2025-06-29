@@ -163,7 +163,7 @@ async function joinClub() {
             if (joinBtn) { joinBtn.disabled = false; joinBtn.textContent = `🎉 Join ${selectedClub.name}`; }
             return;
         }
-        const res = await fetch('/api/club/join', {
+        const res = await fetch('/api/club/join-request', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post New Research Opportunity - Campus Connect</title>
+    <link rel="stylesheet" href="common-header.css">
+    <link rel="stylesheet" href="department_admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-left">
+            <img src="images/logo 1.png" alt="Campus Connect Logo" class="logo">
+            <div class="brand-name">Campus Connect</div>
+        </div>
+        <div class="page-title">Post Research Opportunity</div>
+        <div class="header-actions">
+            <a href="department_admin.html" class="btn-header">Back to Dashboard</a>
+        </div>
+    </header>
+
+    <main>
+        <div id="formMessage" class="alert" style="display: none;"></div>
+
+        <section id="create-opportunity-form-section" class="dashboard-section">
+            <form id="createOpportunityForm">
+                <div class="form-group">
+                    <label for="opportunityTitle">Opportunity Title</label>
+                    <input type="text" id="opportunityTitle" name="title" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="opportunityDescription">Description</label>
+                    <textarea id="opportunityDescription" name="description" rows="5" required></textarea>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="facultyLead">Faculty Lead</label>
+                        <input type="text" id="facultyLead" name="faculty_lead" required placeholder="e.g., Dr. Jane Doe">
+                    </div>
+                    <div class="form-group">
+                        <label for="contactEmail">Contact Email</label>
+                        <input type="email" id="contactEmail" name="contact_email" required placeholder="e.g., research@university.edu">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="requiredSkills">Required Skills (comma-separated)</label>
+                    <input type="text" id="requiredSkills" name="required_skills" placeholder="e.g., Python, Data Analysis, Lab Work">
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="applicationDeadline">Application Deadline</label>
+                        <input type="datetime-local" id="applicationDeadline" name="application_deadline" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="stipendAmount">Stipend Amount (USD, if applicable)</label>
+                        <input type="number" id="stipendAmount" name="stipend_amount" min="0" step="0.01" disabled>
+                    </div>
+                </div>
+                
+                <div class="checkbox-group form-group">
+                    <input type="checkbox" id="isPaid" name="is_paid">
+                    <label for="isPaid">This is a paid opportunity</label>
+                </div>
+
+                <button type="submit" class="action-button"><i class="fas fa-paper-plane"></i> Post Opportunity</button>
+            </form>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Campus Connect - Department Admin</p>
+    </footer>
+
+    <script>
+        const form = document.getElementById('createOpportunityForm');
+        const messageDiv = document.getElementById('formMessage');
+        const isPaidCheckbox = document.getElementById('isPaid');
+        const stipendAmountInput = document.getElementById('stipendAmount');
+
+        isPaidCheckbox.addEventListener('change', () => {
+            stipendAmountInput.disabled = !isPaidCheckbox.checked;
+            if (!isPaidCheckbox.checked) {
+                stipendAmountInput.value = '';
+            }
+        });
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const submitButton = form.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Posting...';
+
+            const formData = new FormData(form);
+            const opportunityData = Object.fromEntries(formData.entries());
+
+            // Correctly handle boolean and numeric types before sending
+            opportunityData.is_paid = isPaidCheckbox.checked;
+            if (opportunityData.is_paid) {
+                // If paid, ensure stipend is a number or null if empty
+                opportunityData.stipend_amount = opportunityData.stipend_amount ? parseFloat(opportunityData.stipend_amount) : null;
+            } else {
+                // If not paid, remove the key entirely
+                delete opportunityData.stipend_amount;
+            }
+
+            opportunityData.required_skills = opportunityData.required_skills ? opportunityData.required_skills.split(',').map(skill => skill.trim()).filter(skill => skill) : [];
+
+            const storedUser = localStorage.getItem('currentUser');
+            const authToken = localStorage.getItem('authToken');
+
+            if (!storedUser || !authToken) {
+                showMessage('You must be logged in to post an opportunity.', 'error');
+                submitButton.disabled = false;
+                submitButton.innerHTML = '<i class="fas fa-paper-plane"></i> Post Opportunity';
+                return;
+            }
+            
+            // Ensure department_id is sent as a number
+            opportunityData.department_id = Number(JSON.parse(storedUser).department_id);
+
+            try {
+                const response = await fetch('/api/opportunities', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+                    body: JSON.stringify(opportunityData)
+                });
+
+                // Check if the server responded with an error status code
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Server responded with ${response.status}: ${errorText || 'An unknown error occurred.'}`);
+                }
+
+                const result = await response.json();
+                alert(result.message || (result.success ? 'Success!' : 'An error occurred.'));
+                if (result.success) window.location.href = 'department_admin.html';
+            } catch (error) {
+                console.error('Submission failed:', error);
+                alert(`Submission failed: ${error.message}`);
+            } finally {
+                submitButton.disabled = false;
+                submitButton.innerHTML = '<i class="fas fa-paper-plane"></i> Post Opportunity';
+            }
+        });
+    </script>
+</body>
+</html>

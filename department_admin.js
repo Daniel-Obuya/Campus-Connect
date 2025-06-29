@@ -116,6 +116,104 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // --- Course Updates Modal and Form Handling ---
+    const courseUpdateModal = document.getElementById('courseUpdateModal');
+    const openModalBtn = document.getElementById('openCourseUpdateModalBtn');
+    const closeModalBtn = document.getElementById('closeCourseUpdateModalBtn');
+    const courseUpdateForm = document.getElementById('courseUpdateForm');
+
+    if (openModalBtn) {
+        openModalBtn.addEventListener('click', () => {
+            courseUpdateModal.style.display = 'flex';
+        });
+    }
+
+    if (closeModalBtn) {
+        closeModalBtn.addEventListener('click', () => {
+            courseUpdateModal.style.display = 'none';
+        });
+    }
+
+    // Close modal if clicking outside the content
+    window.addEventListener('click', (event) => {
+        if (event.target === courseUpdateModal) {
+            courseUpdateModal.style.display = 'none';
+        }
+    });
+
+    if (courseUpdateForm) {
+        courseUpdateForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const authToken = localStorage.getItem('authToken');
+            if (!authToken) {
+                alert('Your session has expired. Please log in again.');
+                return;
+            }
+
+            const formData = new FormData(courseUpdateForm);
+            const data = {
+                courseCode: formData.get('courseCode'),
+                courseTitle: formData.get('courseTitle'),
+                updateType: formData.get('updateType'),
+                content: formData.get('updateContent'),
+                // attachmentUrl: formData.get('attachmentUrl') // Uncomment if using
+            };
+
+            try {
+                const response = await fetch('/api/course-updates', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('Course update posted successfully!');
+                    courseUpdateForm.reset();
+                    courseUpdateModal.style.display = 'none';
+                    fetchAndDisplayCourseUpdates(); // Refresh the list
+                } else {
+                    alert(`Error: ${result.message}`);
+                }
+            } catch (error) {
+                console.error('Failed to submit course update:', error);
+                alert('An error occurred while posting the update. Please try again.');
+            }
+        });
+    }
+
+    // --- Fetch and Display Course Updates ---
+    async function fetchAndDisplayCourseUpdates() {
+        const updatesListElement = document.getElementById('courseUpdatesList');
+        if (!updatesListElement) return;
+
+        const authToken = localStorage.getItem('authToken');
+        if (!authToken) return;
+
+        try {
+            const response = await fetch('/api/course-updates/department', {
+                headers: { 'Authorization': `Bearer ${authToken}` }
+            });
+            const result = await response.json();
+
+            if (result.success && result.updates) {
+                updatesListElement.innerHTML = result.updates.length === 0
+                    ? '<li>No recent course updates.</li>'
+                    : result.updates.map(update => `
+                        <li><i class="fas fa-book item-icon"></i> <strong>${escapeHTML(update.course_code)}:</strong> ${escapeHTML(update.content)} <small>(${escapeHTML(update.created_at_formatted)})</small></li>
+                    `).join('');
+            } else {
+                updatesListElement.innerHTML = `<li>Error: ${escapeHTML(result.message)}</li>`;
+            }
+        } catch (error) {
+            updatesListElement.innerHTML = '<li>Could not fetch updates.</li>';
+        }
+    }
+
     // Smooth scrolling for navigation links
     document.querySelectorAll('.dashboard-nav a').forEach(anchor => {
         anchor.addEventListener('click', function (e) {
@@ -133,5 +231,5 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initial call to fetch events when the page loads
     fetchAndDisplayDepartmentAnnouncements(); // Fetch and display announcements
     fetchAndDisplayDepartmentEvents();
-    // TODO: Add calls for Research Opportunities and Course Updates when backend is ready
+    fetchAndDisplayCourseUpdates();
 });

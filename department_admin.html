@@ -5,17 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Department Admin Dashboard - Campus Connect</title>
     <link rel="stylesheet" href="common-header.css"> <!-- common-header.css is linked directly -->
+    <!-- For icons, add a link to an icon library like Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="department_admin.css">
 </head>
 <body>
     <header class="header">
-        <div class="logo-section">
+        <div class="header-left">
              <img src="images/logo 1.png" alt="Campus Connect Logo" class="logo">
             <div class="brand-name">Campus Connect</div>
         </div>
         <div class="page-title">Department Dashboard</div>
         <div class="header-actions">
-            <!-- <a href="index.html" class="action-button header-button">Back to Home</a> You might want a "Home" or similar link here too -->
+            <a href="index.html" class="btn-header">Back to Home</a>
             <a href="welcome.html" class="btn-header btn-header-danger">Logout</a>
         </div>
     </header>
@@ -33,50 +35,81 @@
 
     <main>
         <!-- Dashboard Grid -->
+        <div class="dashboard-grid">
+            <!-- Stats Cards -->
+            <div class="dashboard-box stats-card">
+                <h2><i class="fas fa-users"></i> Students Following</h2>
+                <p class="stat-number">124</p>
+            </div>
+            <div class="dashboard-box stats-card">
+                <h2><i class="fas fa-calendar-check"></i> Upcoming Events</h2>
+                <p class="stat-number">4</p>
+            </div>
+            <div class="dashboard-box stats-card">
+                <h2><i class="fas fa-newspaper"></i> News Articles</h2>
+                <p class="stat-number">8</p>
+            </div>
+        </div>
+
         <section class="dashboard-grid">
             <!-- Academic Announcements -->
             <div class="dashboard-box">
                 <h2>Announcements</h2>
-                <ul id="departmentAnnouncementsList">
-                </ul>
-                <a href="create_announcement.html" class="action-button">Create New Announcement</a>
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <i class="fas fa-bullhorn fa-3x"></i>
+                    </div>
+                    <h3>No Announcements Yet!</h3>
+                    <p>It's quiet in here. Share an update with your department.</p>
+                </div>
+                <a href="create_announcement.html" class="action-button pulse-glow"><i class="fas fa-plus-circle"></i> Create New Announcement</a>
             </div>
 
             <!-- Research Opportunities -->
             <div class="dashboard-box">
                 <h2>Research Opportunities</h2>
                 <ul>
-                    <li>🧪 AI for Agriculture Project</li>
-                    <li>🧪 Join Renewable Energy Study</li>
+                    <li><i class="fas fa-flask item-icon"></i> AI for Agriculture Project</li>
+                    <li><i class="fas fa-flask item-icon"></i> Join Renewable Energy Study</li>
                 </ul>
-                <button class="action-button">Post New Opportunity</button> <!-- Added action-button class -->
+                <a href="create_opportunity.html" class="action-button pulse-glow">
+                    <i class="fas fa-plus-circle"></i> Post New Opportunity
+                </a>
             </div>
 
             <!-- Course Updates -->
             <div class="dashboard-box">
                 <h2>Course Updates</h2>
-                <ul>
-                    <li>📘 CS101 moved to Room 12</li>
-                    <li>📘 New assignment for CS202</li>
+                <ul id="courseUpdatesList">
+                    <!-- Course updates will be dynamically inserted here -->
                 </ul>
-                <button class="action-button">Post Course Update</button> <!-- Added action-button class -->
+                <button id="openCourseUpdateModalBtn" class="action-button pulse-glow"><i class="fas fa-plus-circle"></i> Post Course Update</button>
             </div>
 
             <!-- Events -->
             <div class="dashboard-box">
                 <h2>Events</h2>
-                <ul id="departmentEventsList"> <!-- Added ID here -->
-                    <!-- Event items will be populated by JavaScript -->
+                <ul id="departmentEventsList">
+                    <li>
+                        <span>Annual Tech Symposium - Oct 28, 2024</span>
+                        <div class="item-actions">
+                            <a href="#" class="action-button action-button-info"><i class="fas fa-eye"></i> View</a>
+                            <a href="#" class="action-button action-button-secondary"><i class="fas fa-pencil-alt"></i> Edit</a>
+                            <a href="#" class="action-button action-button-danger"><i class="fas fa-trash"></i> Delete</a>
+                        </div>
+                    </li>
+                    <li>
+                        <span>Guest Lecture: AI in Arts - Nov 05, 2024</span>
+                        <div class="item-actions">
+                            <a href="#" class="action-button action-button-info"><i class="fas fa-eye"></i> View</a>
+                            <a href="#" class="action-button action-button-secondary"><i class="fas fa-pencil-alt"></i> Edit</a>
+                            <a href="#" class="action-button action-button-danger"><i class="fas fa-trash"></i> Delete</a>
+                        </div>
+                    </li>
                 </ul>
-                <a href="events_management.html" class="action-button">Manage Events</a>
+                <a href="create_event.html" class="action-button pulse-glow"><i class="fas fa-plus-circle"></i> Create New Event</a>
             </div>
         </section>
-<section class="dashboard-section stats-section">
-    <div class="stats-card">
-        <h2>👥 Students Following</h2>
-        <p class="stat-number">124</p> <!-- Replace 124 with a dynamic value later -->
-    </div>
-</section>
 
         <!-- Additional Sections Remain Unchanged -->
         <!-- Student Engagement Metrics -->
@@ -109,6 +142,47 @@
         <div class="floating-icon icon4"></div>
         <div class="floating-icon icon5"></div>
         <div class="floating-icon icon6"></div>
+    </div>
+
+    <!-- Modal for Creating Course Update -->
+    <div id="courseUpdateModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <span class="modal-close" id="closeCourseUpdateModalBtn">&times;</span>
+            <h2>Post a New Course Update</h2>
+            <form id="courseUpdateForm">
+                <div class="form-group">
+                    <label for="courseCode">Course Code (e.g., CS101)</label>
+                    <input type="text" id="courseCode" name="courseCode" required>
+                </div>
+                <div class="form-group">
+                    <label for="courseTitle">Course Title</label>
+                    <input type="text" id="courseTitle" name="courseTitle" required>
+                </div>
+                <div class="form-group">
+                    <label for="updateType">Type of Update</label>
+                    <select id="updateType" name="updateType" required>
+                        <option value="General Info">General Info</option>
+                        <option value="Location Change">Location Change</option>
+                        <option value="Assignment">New Assignment</option>
+                        <option value="Exam Info">Exam Information</option>
+                        <option value="Cancellation">Class Cancellation</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="updateContent">Update Details</label>
+                    <textarea id="updateContent" name="updateContent" rows="4" required></textarea>
+                </div>
+                <!--
+                <div class="form-group">
+                    <label for="attachmentUrl">Attachment URL (Optional)</label>
+                    <input type="url" id="attachmentUrl" name="attachmentUrl">
+                </div>
+                -->
+                <div class="form-actions">
+                    <button type="submit" class="action-button">Post Update</button>
+                </div>
+            </form>
+        </div>
     </div>
 
 </body>

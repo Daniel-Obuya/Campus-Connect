@@ -9,12 +9,14 @@
 </head>
 <body>
     <header class="header">
-        <div class="logo-section">
+        <div class="header-left">
             <img src="images/logo 1.png" alt="Campus Connect Logo" class="logo">
             <div class="brand-name">Campus Connect</div>
         </div>
         <div class="page-title">Create New Announcement</div>
-        <a href="/department-dashboard" class="btn-header">Back to Dashboard</a>
+        <div class="header-actions">
+            <a href="department_admin.html" class="btn-header">Back to Dashboard</a>
+        </div>
     </header>
 
     <main>
@@ -177,9 +179,9 @@
                 } else if (key === 'target_audience' || key === 'tags' || key === 'attachment_urls') {
                     // Convert comma-separated strings to JSON arrays
                     if (value.trim()) {
-                        announcementData[key] = JSON.stringify(value.split(',').map(item => item.trim()).filter(item => item));
+                        announcementData[key] = value.split(',').map(item => item.trim()).filter(item => item);
                     } else {
-                        announcementData[key] = JSON.stringify([]); // Empty array if field is empty
+                        announcementData[key] = []; // Empty array if field is empty
                     }
                 } else if (key === 'scheduled_publish_at' || key === 'expires_at') {
                     announcementData[key] = value.trim() ? value.trim() : null; // Send null if empty
