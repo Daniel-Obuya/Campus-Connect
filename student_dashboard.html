@@ -63,6 +63,11 @@
     </header>
 
     <main class="dashboard-grid">
+        <div id="welcome-message" class="dashboard-welcome">
+            <span class="wave-emoji">👋</span>
+            <span class="welcome-text">Welcome, Student!</span>
+        </div>
+        
         <section id="profile-completion-widget" class="dashboard-widget profile-widget">
             <div class="widget-header">
                 <h2>
@@ -77,8 +82,7 @@
             </div>
             <p class="widget-action">
                 <a href="edit-student-profile.html" class="action-link">
-                    Complete your profile
-                    <span class="arrow">→</span>
+                    Complete your profile <span class="arrow">→</span>
                 </a>
             </p>
         </section>
@@ -107,21 +111,7 @@
                 <div class="widget-content">
                     <p class="widget-description">Here are a few of your upcoming events. View the full calendar or browse the directory for more.</p>
                     <ul class="upcoming-events-list" id="upcoming-events-preview">
-                        <!-- Events will be dynamically loaded here by JavaScript -->
                         <li class="placeholder-item">Loading events...</li>
-                        <!-- Example static items (will be replaced by JS) -->
-                        <!-- <li>
-                            <span class="event-date">SEP 15</span>
-                            <span class="event-title">Campus Coding Workshop</span>
-                        </li>
-                        <li>
-                            <span class="event-date">SEP 20</span>
-                            <span class="event-title">University Art Fair</span>
-                        </li>
-                        <li>
-                            <span class="event-date">SEP 23</span>
-                            <span class="event-title">Guest Lecture: AI in Business</span>
-                        </li> -->
                     </ul>
                     <div class="widget-actions-container">
                         <a href="interactive_calendar.html" class="action-button">View Full Calendar</a>
