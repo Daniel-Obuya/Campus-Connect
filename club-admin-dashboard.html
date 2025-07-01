@@ -474,7 +474,7 @@
         <div class="page-title" id="dashboardTitle">Club Admin Dashboard</div>
         <div class="header-actions">
             <button class="btn-header btn-header-primary" onclick="openNotifications()">🔔 Notifications</button>
-            <button class="btn-header btn-header-danger">🚪 Logout</button>
+            <button class="btn-header btn-header-danger" id="logoutButton">🚪 Logout</button>
         </div>
     </header>
 
@@ -493,6 +493,9 @@
         <!-- Dashboard Tab -->
         <div id="dashboard" class="tab-content active">
             <h2 class="card-title" style="text-align: center; font-size: 32px; margin-bottom: 30px;" id="welcomeMessage">Welcome back, Club Admin!</h2>
+            <div style="text-align:center; margin-bottom: 18px;">
+                <span id="adminAndClubInfo" style="font-size:1.15rem; color:#7c4a03; font-weight:600;"></span>
+            </div>
             
             <div class="dashboard-grid">
                 <div class="dashboard-card">
@@ -1211,83 +1214,93 @@
                 return;
             }
 
-            // Personalize welcome message and title immediately
-            const clubName = currentUser.clubDetails ? currentUser.clubDetails.name : 'Your Club';
-            document.getElementById('welcomeMessage').textContent = `Welcome back, ${currentUser.firstName || 'Admin'} of ${clubName}!`;
-            document.getElementById('dashboardTitle').textContent = `${clubName} Admin Dashboard`;
-
-            // --- Mock Data for Demonstration ---
-            // In a real application, you would make an API call here:
-            // try {
-            //     const response = await fetch('/api/club/dashboard', {
-            //         headers: {
-            //             'Authorization': `Bearer ${authToken}`
-            //         }
-            //     });
-            //     if (!response.ok) {
-            //         throw new Error(`HTTP error! status: ${response.status}`);
-            //     }
-            //     currentClubData = await response.json();
-            // } catch (error) {
-            //     console.error('Error fetching dashboard data:', error);
-            //     alert('Failed to load dashboard data. Please try again later.');
-            //     // Optionally, redirect or show a more persistent error message
-            //     return;
-            // }
-
-            // Mock Data (replace with actual API response)
-            currentClubData = {
-                overview: {
-                    totalMembers: 135,
-                    activeMembers: 120,
-                    pendingRequests: 7,
-                    upcomingEvents: 4,
-                    nextEvent: { title: 'Annual General Meeting', date: 'Tomorrow, 7:00 PM' },
-                    newInteractionsToday: 30,
-                    eventRSVPs: 22,
-                    announcementViews: 110,
-                    engagementRate: '82%',
-                    engagementTrend: '↗️ +15%'
-                },
-                members: {
-                    pending: [
-                        { id: 'req1', name: 'Sarah Lee', role: 'Journalism • Freshman' },
-                        { id: 'req2', name: 'Mike Chen', role: 'Electrical Eng. • Junior' }
-                    ],
-                    current: [
-                        { id: 'mem1', name: 'Alice Mitchell', role: 'President' },
-                        { id: 'mem2', name: 'Bob Johnson', role: 'Vice President' },
-                        { id: 'mem3', name: 'Carol White', role: 'Secretary' },
-                        { id: 'mem4', name: 'David Green', role: 'Treasurer' },
-                        { id: 'mem5', name: 'Eve Black', role: 'Member' }
-                    ]
-                },
-                events: [
-                    { id: 'evt1', title: '🚀 Hackathon 2024', date: 'Dec 23, 2024', description: 'Join us for our annual 48-hour hackathon! Build amazing projects, network with peers, and compete for prizes.', rsvps: 55, teams: 15, daysLeft: 2 },
-                    { id: 'evt2', title: '💻 Weekly Coding Workshop', date: 'Dec 26, 2024', description: 'Learn React.js fundamentals in this hands-on workshop. Perfect for beginners!', rsvps: 35, maxCapacity: 40, daysLeft: 5 }
-                ],
-                announcements: [
-                    { id: 'ann1', title: '🎉 Hackathon Registration Open!', time: '2 hours ago', content: 'Registration for our annual hackathon is now open! Early bird pricing available until December 15th. Don\'t miss out on this amazing opportunity to showcase your skills and win awesome prizes!', views: 180, comments: 15, likes: 30 },
-                    { id: 'ann2', title: '📚 New Study Group Schedule', time: '1 day ago', content: 'We\'ve updated our weekly study group schedule. Sessions will now be held on Tuesdays and Thursdays from 7-9 PM in the computer lab. Topics will include data structures, algorithms, and interview preparation.', views: 100, comments: 10, likes: 20 }
-                ],
-                analytics: {
-                    memberGrowth: [45, 52, 61, 78, 95, 135],
-                    eventAttendance: [32, 28, 35, 42],
-                    engagement: [40, 30, 20, 10] // Events, Announcements, Discussions, Resources
-                },
-                profile: {
-                    name: clubName,
-                    description: 'A community of passionate programmers dedicated to learning, sharing knowledge, and building amazing projects together. We welcome students of all skill levels!',
-                    contactEmail: currentUser.email,
-                    meetingSchedule: 'Wednesdays 6:00 PM - 8:00 PM',
-                    meetingLocation: 'Computer Science Building, Room 203',
-                    category: 'Technology',
-                    logoUrl: 'https://via.placeholder.com/150/FFC107/000000?text=ClubLogo'
+            // Fetch from backend (replace with your actual endpoint)
+            let clubName = currentUser.clubDetails ? currentUser.clubDetails.name : 'Your Club';
+            let adminName = `${currentUser.firstName || 'Admin'} ${currentUser.lastName || ''}`.trim();
+            try {
+                const response = await fetch('/api/club/dashboard', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                if (response.ok) {
+                    currentClubData = await response.json();
+                    // If backend returns admin and club name, use them
+                    if (currentClubData.adminName) adminName = currentClubData.adminName;
+                    if (currentClubData.clubName) clubName = currentClubData.clubName;
+                } else {
+                    // fallback to local user data
+                    currentClubData = null;
                 }
-            };
-            // --- End Mock Data ---
+            } catch (e) {
+                currentClubData = null;
+            }
 
+            // Personalize welcome and info
+            document.getElementById('welcomeMessage').textContent = `Welcome back, ${adminName} of ${clubName}!`;
+            document.getElementById('dashboardTitle').textContent = `${clubName} Admin Dashboard`;
+            document.getElementById('adminAndClubInfo').textContent = `Admin: ${adminName} | Club: ${clubName}`;
+
+            // If no backend data, use mock data for demo
+            if (!currentClubData) {
+                currentClubData = {
+                    overview: {
+                        totalMembers: 135,
+                        activeMembers: 120,
+                        pendingRequests: 7,
+                        upcomingEvents: 4,
+                        nextEvent: { title: 'Annual General Meeting', date: 'Tomorrow, 7:00 PM' },
+                        newInteractionsToday: 30,
+                        eventRSVPs: 22,
+                        announcementViews: 110,
+                        engagementRate: '82%',
+                        engagementTrend: '↗️ +15%'
+                    },
+                    members: {
+                        pending: [
+                            { id: 'req1', name: 'Sarah Lee', role: 'Journalism • Freshman' },
+                            { id: 'req2', name: 'Mike Chen', role: 'Electrical Eng. • Junior' }
+                        ],
+                        current: [
+                            { id: 'mem1', name: 'Alice Mitchell', role: 'President' },
+                            { id: 'mem2', name: 'Bob Johnson', role: 'Vice President' },
+                            { id: 'mem3', name: 'Carol White', role: 'Secretary' },
+                            { id: 'mem4', name: 'David Green', role: 'Treasurer' },
+                            { id: 'mem5', name: 'Eve Black', role: 'Member' }
+                        ]
+                    },
+                    events: [
+                        { id: 'evt1', title: '🚀 Hackathon 2024', date: 'Dec 23, 2024', description: 'Join us for our annual 48-hour hackathon! Build amazing projects, network with peers, and compete for prizes.', rsvps: 55, teams: 15, daysLeft: 2 },
+                        { id: 'evt2', title: '💻 Weekly Coding Workshop', date: 'Dec 26, 2024', description: 'Learn React.js fundamentals in this hands-on workshop. Perfect for beginners!', rsvps: 35, maxCapacity: 40, daysLeft: 5 }
+                    ],
+                    announcements: [
+                        { id: 'ann1', title: '🎉 Hackathon Registration Open!', time: '2 hours ago', content: 'Registration for our annual hackathon is now open! Early bird pricing available until December 15th. Don\'t miss out on this amazing opportunity to showcase your skills and win awesome prizes!', views: 180, comments: 15, likes: 30 },
+                        { id: 'ann2', title: '📚 New Study Group Schedule', time: '1 day ago', content: 'We\'ve updated our weekly study group schedule. Sessions will now be held on Tuesdays and Thursdays from 7-9 PM in the computer lab. Topics will include data structures, algorithms, and interview preparation.', views: 100, comments: 10, likes: 20 }
+                    ],
+                    analytics: {
+                        memberGrowth: [45, 52, 61, 78, 95, 135],
+                        eventAttendance: [32, 28, 35, 42],
+                        engagement: [40, 30, 20, 10]
+                    },
+                    profile: {
+                        name: clubName,
+                        description: 'A community of passionate programmers dedicated to learning, sharing knowledge, and building amazing projects together. We welcome students of all skill levels!',
+                        contactEmail: currentUser.email,
+                        meetingSchedule: 'Wednesdays 6:00 PM - 8:00 PM',
+                        meetingLocation: 'Computer Science Building, Room 203',
+                        category: 'Technology',
+                        logoUrl: 'https://via.placeholder.com/150/FFC107/000000?text=ClubLogo'
+                    }
+                };
+            }
             populateDashboard(currentClubData);
+        // Logout button logic
+        document.getElementById('logoutButton').addEventListener('click', function(e) {
+            e.preventDefault();
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('currentUser');
+            window.location.href = '/welcome';
+        });
         }
 
         function populateDashboard(data) {

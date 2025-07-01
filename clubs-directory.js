@@ -1,69 +1,7 @@
-// Club data
-const clubs = [
-    {
-        id: 1,
-        name: "The Coding Crew",
-        category: "Technology",
-        description: "A place for aspiring developers to learn, share, and build cool projects together.",
-        fullDescription: "Join our vibrant community of developers, designers, and tech enthusiasts! We organize coding workshops, hackathons, and collaborative projects. Whether you're a beginner or an experienced programmer, you'll find your place here.",
-        logo: "💻",
-        memberCount: 156,
-        meetingDay: "Wednesdays"
-    },
-    {
-        id: 2,
-        name: "Adventure Seekers",
-        category: "Outdoor",
-        description: "Join us for outdoor activities, trips, and making new friends in nature.",
-        fullDescription: "Experience the great outdoors with fellow adventure enthusiasts! We organize hiking trips, camping expeditions, rock climbing sessions, and nature photography walks. Connect with nature and make lifelong friendships.",
-        logo: "🏔️",
-        memberCount: 89,
-        meetingDay: "Saturdays"
-    },
-    {
-        id: 3,
-        name: "Green Earth Society",
-        category: "Environment",
-        description: "Passionate about sustainability and protecting our planet's future.",
-        fullDescription: "Make a difference in environmental conservation! We focus on campus sustainability projects, organize clean-up drives, promote eco-friendly practices, and raise awareness about climate change through educational events.",
-        logo: "🌱",
-        memberCount: 203,
-        meetingDay: "Fridays"
-    },
-    {
-        id: 4,
-        name: "Drama Club",
-        category: "Arts",
-        description: "Explore your acting and stage skills through performances and improv nights.",
-        fullDescription: "Step into the spotlight and unleash your creativity! Our drama club produces original plays, hosts improv nights, conducts acting workshops, and provides a platform for theatrical expression and artistic growth.",
-        logo: "🎭",
-        memberCount: 78,
-        meetingDay: "Thursdays"
-    },
-    {
-        id: 5,
-        name: "Photography Society",
-        category: "Arts",
-        description: "Capture moments and express creativity through the lens of photography.",
-        fullDescription: "Develop your photography skills with fellow enthusiasts! We organize photo walks, portrait sessions, landscape photography trips, and workshops on editing techniques. Share your vision and learn from others.",
-        logo: "📸",
-        memberCount: 124,
-        meetingDay: "Sundays"
-    },
-    {
-        id: 6,
-        name: "Debate Forum",
-        category: "Academic",
-        description: "Sharpen your public speaking and critical thinking skills through debates.",
-        fullDescription: "Enhance your oratory skills and engage in intellectual discussions! We host weekly debates, public speaking workshops, and inter-college competitions. Build confidence and learn to articulate your thoughts effectively.",
-        logo: "🗣️",
-        memberCount: 67,
-        meetingDay: "Tuesdays"
-    }
-];
 
 const categories = ["All", "Technology", "Outdoor", "Environment", "Arts", "Academic"];
 let selectedCategory = "All";
+let clubs = [];
 let selectedClub = null;
 
 // DOM elements
@@ -74,12 +12,27 @@ const modalContent = document.getElementById('modalContent');
 const modalBody = document.getElementById('modalBody');
 const modalClose = document.getElementById('modalClose');
 
+// Fetch clubs from backend
+async function fetchClubs() {
+    clubsGrid.innerHTML = '<div class="loading">Loading clubs...</div>';
+    try {
+        const response = await fetch('/api/clubs');
+        if (!response.ok) throw new Error('Failed to fetch clubs');
+        const data = await response.json();
+        if (!data.success && !Array.isArray(data.clubs)) throw new Error(data.message || 'No clubs found');
+        clubs = data.clubs || data; // Support both { clubs: [...] } and [...]
+        renderCategoryFilter();
+        renderClubs();
+        updateStats();
+    } catch (err) {
+        clubsGrid.innerHTML = `<div class="error">Error loading clubs: ${err.message}</div>`;
+    }
+}
+
 // Initialize the application
 function init() {
-    renderCategoryFilter();
-    renderClubs();
     setupEventListeners();
-    updateStats();
+    fetchClubs();
 }
 
 // Render category filter buttons
@@ -94,23 +47,28 @@ function renderCategoryFilter() {
 
 // Render club cards
 function renderClubs() {
+    if (!clubs || clubs.length === 0) {
+        clubsGrid.innerHTML = '<div class="no-clubs">No clubs found.</div>';
+        return;
+    }
     const filteredClubs = selectedCategory === "All" 
         ? clubs 
         : clubs.filter(club => club.category === selectedCategory);
-
     clubsGrid.innerHTML = filteredClubs.map(club => `
         <div class="club-card" data-club-id="${club.id}">
-            <div class="club-category-badge">${club.category}</div>
-            <div class="club-logo">${club.logo}</div>
+            <div class="club-category-badge">${club.category || ''}</div>
+            <div class="club-logo">
+                <img src="${club.logo_url || 'images/logo 1.png'}" alt="${club.name} Logo" style="width:48px;height:48px;object-fit:cover;border-radius:50%;background:#f4f4f4;">
+            </div>
             <h3 class="club-name">${club.name}</h3>
-            <p class="club-description">${club.description}</p>
+            <p class="club-description">${club.description || ''}</p>
             <div class="club-stats">
                 <div class="club-stat">
-                    <div class="club-stat-number">${club.memberCount}</div>
+                    <div class="club-stat-number">${club.member_count || 0}</div>
                     <div class="club-stat-label">Members</div>
                 </div>
                 <div class="club-stat">
-                    <div class="club-meeting-day">${club.meetingDay}</div>
+                    <div class="club-meeting-day">${club.meeting_schedule || 'TBA'}</div>
                     <div class="club-stat-label">Meetings</div>
                 </div>
             </div>
@@ -128,7 +86,12 @@ function renderClubs() {
 
 // Update statistics
 function updateStats() {
-    const totalMembers = clubs.reduce((sum, club) => sum + club.memberCount, 0);
+    if (!clubs || clubs.length === 0) {
+        document.getElementById('totalClubs').textContent = '0';
+        document.getElementById('totalMembers').textContent = '0';
+        return;
+    }
+    const totalMembers = clubs.reduce((sum, club) => sum + (club.member_count || 0), 0);
     document.getElementById('totalClubs').textContent = clubs.length + '+';
     document.getElementById('totalMembers').textContent = totalMembers + '+';
 }
@@ -171,17 +134,19 @@ function openModal(clubId) {
     if (!selectedClub) return;
 
     modalBody.innerHTML = `
-        <div class="modal-logo">${selectedClub.logo}</div>
+        <div class="modal-logo">
+            <img src="${selectedClub.logo_url || 'images/logo 1.png'}" alt="${selectedClub.name} Logo" style="width:64px;height:64px;object-fit:cover;border-radius:50%;background:#f4f4f4;">
+        </div>
         <h3 class="modal-title">${selectedClub.name}</h3>
-        <div class="modal-category">${selectedClub.category}</div>
-        <p class="modal-description">${selectedClub.fullDescription}</p>
+        <div class="modal-category">${selectedClub.category || ''}</div>
+        <p class="modal-description">${selectedClub.description || ''}</p>
         <div class="modal-stats">
             <div class="modal-stat">
-                <div class="modal-stat-number">${selectedClub.memberCount}</div>
+                <div class="modal-stat-number">${selectedClub.member_count || 0}</div>
                 <div class="modal-stat-label">Members</div>
             </div>
             <div class="modal-stat">
-                <div class="modal-stat-day">${selectedClub.meetingDay}</div>
+                <div class="modal-stat-day">${selectedClub.meeting_schedule || 'TBA'}</div>
                 <div class="modal-stat-label">Meetings</div>
             </div>
         </div>
@@ -210,4 +175,5 @@ function joinClub() {
 }
 
 // Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', init);
 document.addEventListener('DOMContentLoaded', init);

@@ -90,11 +90,7 @@
     <div class="edit-profile-container">
         <h1>Edit Your Profile</h1>
         <form id="editProfileForm">
-            <div class="profile-picture-section">
-                <div class="profile-picture-preview" id="profilePicturePreview"></div>
-                <label for="profilePictureInput" class="upload-btn">Change Picture</label>
-                <input type="file" id="profilePictureInput" accept="image/*">
-            </div>
+
 
             <div class="form-group">
                 <label for="firstName">First Name</label>
@@ -139,8 +135,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             const currentUser = JSON.parse(localStorage.getItem('currentUser'));
             const form = document.getElementById('editProfileForm');
-            const profilePicturePreview = document.getElementById('profilePicturePreview');
-            const profilePictureInput = document.getElementById('profilePictureInput');
+
 
             if (!currentUser || currentUser.role !== 'student') {
                 alert('User not found or not authorized. Redirecting to login.');
@@ -159,22 +154,9 @@
                 form.github.value = currentUser.studentDetails.github || '';
                 form.portfolio.value = currentUser.studentDetails.portfolio || '';
             }
-            if (currentUser.profilePictureUrl) {
-                profilePicturePreview.style.backgroundImage = `url('${currentUser.profilePictureUrl}')`;
-            }
 
-            profilePictureInput.addEventListener('change', function(event) {
-                const file = event.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        profilePicturePreview.style.backgroundImage = `url('${e.target.result}')`;
-                        // Store as base64 for simplicity in localStorage, or handle upload to server
-                        currentUser.profilePictureUrl = e.target.result; 
-                    }
-                    reader.readAsDataURL(file);
-                }
-            });
+
+
 
             form.addEventListener('submit', async function(event) {
                 console.log('Form submission initiated.');
@@ -184,8 +166,7 @@
                 currentUser.firstName = form.firstName.value;
                 currentUser.lastName = form.lastName.value;
                 currentUser.bio = form.bio.value;
-                // The profilePictureUrl is already updated on the currentUser object
-                // by its 'change' event listener if a new image was selected.
+
 
                 if (!currentUser.studentDetails) {
                     currentUser.studentDetails = {}; // Initialize if not present
@@ -202,11 +183,15 @@
 
                 // Prepare data for the API
                 const profileData = {
-                    firstName: currentUser.firstName,
-                    lastName: currentUser.lastName,
+                    first_name: currentUser.firstName,
+                    last_name: currentUser.lastName,
                     bio: currentUser.bio,
-                    profilePictureUrl: currentUser.profilePictureUrl,
-                    studentDetails: currentUser.studentDetails
+                    // Map student details to expected backend fields
+                    major: currentUser.studentDetails.major,
+                    graduation_year: currentUser.studentDetails.graduationYear,
+                    linkedin_url: currentUser.studentDetails.linkedin,
+                    github_url: currentUser.studentDetails.github,
+                    personal_website: currentUser.studentDetails.portfolio
                 };
 
                 const authToken = localStorage.getItem('authToken');
@@ -218,8 +203,9 @@
                 }
 
                 console.log('Sending profile data:', profileData);
+
                 try {
-                    const response = await fetch('/api/user/profile', {
+                    const response = await fetch('/api/student/profile', {
                         method: 'PUT',
                         headers: {
                             'Content-Type': 'application/json',
@@ -232,9 +218,9 @@
                     const result = await response.json();
                     console.log('Parsed JSON response:', result);
 
-                    if (response.ok && result.success) {
-                        // IMPORTANT: Save the updated user object back to localStorage
-                        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    if (response.ok && result.success && result.user) {
+                        // Save the updated user object from backend to localStorage
+                        localStorage.setItem('currentUser', JSON.stringify(result.user));
                         alert('Profile updated successfully!');
                         console.log('Profile updated successfully. Redirecting...');
                         window.location.href = 'student-profile.html'; // Redirect back to profile

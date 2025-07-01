@@ -182,7 +182,7 @@
             async function fetchAndRenderClubs() {
                 try {
                     // Fetch data from the new API endpoint
-                    const response = await fetch('/api/club');
+                    const response = await fetch('/api/clubs');
                     if (!response.ok) {
                         throw new Error(`HTTP error! Status: ${response.status}`);
                     }
@@ -304,11 +304,7 @@
                         </div>
                     `;
                     clubsGrid.appendChild(clubCard);
-
-                } catch (error) {
-                    console.error('Error rendering clubs:', error);
-                    clubsGrid.innerHTML = `<div class="info-state">Error displaying clubs.</div>`;
-                }
+                });
 
                 // Add event listeners for join buttons after rendering
                 document.querySelectorAll('.join-club-btn').forEach(button => {
