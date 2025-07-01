@@ -4,13 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Dashboard - Campus Connect</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="dashboard_styles.css">
+   
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="floating-icons-container">
@@ -22,67 +21,44 @@
         <div class="floating-icon icon6"></div>
     </div>
 
-    <header class="main-header">
-        <div class="header-left">
-            <img src="images/logo 1.png" alt="Campus Connect Logo" class="logo">
-            <div class="brand-name">Campus Connect</div>
-        </div>
-        <nav class="main-nav">
-            <a href="events_directory.html" class="nav-link">
-                <i class="fas fa-calendar-alt nav-icon"></i> Events
+    <header>
+    <div class="header-left">
+        <img src="images/default-avatar.png" alt="Profile Picture" class="profile-avatar-header">
+        <h1 id="welcome-message">Welcome, [Student Name]!</h1>
+    </div>
+        <nav>
+            <a href="student-profile.html" class="nav-link">
+                <span class="nav-icon">👤</span>
+                Profile
             </a>
-            <a href="interactive_calendar.html" class="nav-link">
-                <i class="fas fa-calendar-days nav-icon"></i> Calendar
-            </a>
-            <a href="projects_directory.html" class="nav-link">
-                <i class="fas fa-project-diagram nav-icon"></i> Projects
-            </a>
-            <a href="departments_directory.html" class="nav-link">
-                <i class="fas fa-building nav-icon"></i> Departments
-            </a>
-            <a href="clubs-directory.html" class="nav-link">
-                <i class="fas fa-users nav-icon"></i> Clubs
+            <div id="notification-icon" class="notification-wrapper">
+                <span class="bell-icon">🔔</span>
+                <span id="notification-count">0</span>
+            </div>
+            <a href="#" id="logoutButton" class="nav-link">
+                <span class="nav-icon">🚪</span>
+                Logout
             </a>
         </nav>
-        <div class="header-right">
-            <div id="notification-icon" class="notification-wrapper">
-                <span class="bell-icon"><i class="fas fa-bell"></i></span>
-                <span id="notification-count" class="notification-count">0</span>
-            </div>
-            <div class="profile-dropdown-container">
-                <button class="profile-dropdown-toggle" id="profileDropdownToggle">
-                    <img src="images/default-avatar.png" alt="Profile Picture" class="profile-avatar-header-small" id="headerProfilePic">
-                    <i class="fas fa-caret-down"></i>
-                </button>
-                <div class="profile-dropdown-menu" id="profileDropdownMenu">
-                    <a href="student-profile.html" class="dropdown-item"><i class="fas fa-user-circle"></i> My Profile</a>
-                    <a href="#" id="logoutButton" class="dropdown-item"><i class="fas fa-sign-out-alt"></i> Logout</a>
-                </div>
-            </div>
-        </div>
     </header>
 
     <main class="dashboard-grid">
-        <div id="welcome-message" class="dashboard-welcome">
-            <span class="wave-emoji">👋</span>
-            <span class="welcome-text">Welcome, Student!</span>
-        </div>
-        
         <section id="profile-completion-widget" class="dashboard-widget profile-widget">
             <div class="widget-header">
                 <h2>
                     <span class="widget-icon">📊</span>
-                    Profile Completion
+                    Profile Status
                 </h2>
             </div>
-            <div class="progress-bar-container" title="Complete your profile to unlock full features!">
+            <div class="progress-bar-container">
                 <div id="profile-progress" style="width: 0%">
                     <span class="progress-text">0%</span>
                 </div>
             </div>
             <p class="widget-action">
                 <a href="edit-student-profile.html" class="action-link">
-                    Complete your profile <span class="arrow">→</span>
+                    Complete your profile
+                    <span class="arrow">→</span>
                 </a>
             </p>
         </section>
@@ -90,11 +66,11 @@
         <section id="personalized-feed" class="dashboard-widget feed-widget">
             <div class="widget-header">
                 <h2>
-                    <span class="widget-icon"><i class="fas fa-rss"></i></span>
-                    Latest Announcements
+                    <span class="widget-icon">📰</span>
+                    Your Feed
                 </h2>
             </div>
-            <div class="widget-content loading-state">
+            <div class="loading-state">
                 <div class="loading-spinner"></div>
                 <p>Loading feed...</p>
             </div>
@@ -104,18 +80,14 @@
             <section id="events-calendar-widget" class="dashboard-widget calendar-widget">
                 <div class="widget-header">
                     <h2>
-                        <span class="widget-icon"><i class="fas fa-calendar-alt"></i></span>
+                        <span class="widget-icon">📅</span>
                         Upcoming Events
                     </h2>
                 </div>
-                <div class="widget-content">
-                    <p class="widget-description">Here are a few of your upcoming events. View the full calendar or browse the directory for more.</p>
-                    <ul class="upcoming-events-list" id="upcoming-events-preview">
-                        <li class="placeholder-item">Loading events...</li>
-                    </ul>
-                    <div class="widget-actions-container">
-                        <a href="interactive_calendar.html" class="action-button">View Full Calendar</a>
-                        <a href="events_directory.html" class="action-button">Browse All Events</a>
+                <div id="calendar-placeholder">
+                    <div class="loading-state">
+                        <div class="loading-spinner"></div>
+                        <p>Loading calendar...</p>
                     </div>
                 </div>
             </section>
@@ -123,11 +95,11 @@
             <section id="recent-announcements" class="dashboard-widget announcements-widget">
                 <div class="widget-header">
                     <h2>
-                        <span class="widget-icon"><i class="fas fa-bullhorn"></i></span>
-                        Recent Announcements
+                        <span class="widget-icon">📢</span>
+                        Announcements
                     </h2>
                 </div>
-                <div class="widget-content loading-state">
+                <div class="loading-state">
                     <div class="loading-spinner"></div>
                     <p>Loading announcements...</p>
                 </div>
@@ -137,21 +109,23 @@
         <section id="project-showcase-quick-access" class="dashboard-widget projects-widget">
             <div class="widget-header">
                 <h2>
-                    <span class="widget-icon"><i class="fas fa-rocket"></i></span>
+                    <span class="widget-icon">🚀</span>
                     Project Showcase
                 </h2>
             </div>
             <p class="widget-description">Discover amazing student projects and showcase your own work.</p>
-            <a href="projects_directory.html" class="action-button">
-                <span>View All Projects</span>
-                <span class="button-arrow">→</span>
-            </a>
+            <p class="widget-action">
+                <a href="projects_directory.html" class="action-link">
+                    View All Projects
+                    <span class="arrow">→</span>
+                </a>
+            </p>
         </section>
 
         <section id="discover-clubs-widget" class="dashboard-widget clubs-widget">
             <div class="widget-header">
                 <h2>
-                    <span class="widget-icon"><i class="fas fa-users"></i></span>
+                    <span class="widget-icon">🎭</span>
                     Discover Clubs
                 </h2>
             </div>
@@ -165,7 +139,7 @@
         <section id="explore-departments-widget" class="dashboard-widget departments-widget">
             <div class="widget-header">
                 <h2>
-                    <span class="widget-icon"><i class="fas fa-building"></i></span>
+                    <span class="widget-icon">🏛️</span>
                     Departments
                 </h2>
             </div>
@@ -190,81 +164,50 @@
     </footer>
 
     <script src="dashboard_script.js"></script>
-    <!-- Main Dashboard Script -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const welcomeMessageElement = document.getElementById('welcome-message');
-            const headerProfilePic = document.getElementById('headerProfilePic');
-            const profileDropdownToggle = document.getElementById('profileDropdownToggle');
-            const profileDropdownMenu = document.getElementById('profileDropdownMenu');
-            const logoutButton = document.getElementById('logoutButton');
-
+            const welcomeMessage = document.getElementById('welcome-message');
             let currentUser = null;
 
             try {
                 // Attempt to get user data from localStorage
                 currentUser = JSON.parse(localStorage.getItem('currentUser'));
             } catch (e) {
-                console.error('Error parsing user data from localStorage:', e);
+                console.error('Could not parse user data from localStorage:', e);
                 // If data is corrupted, treat as not logged in
             }
 
             // Check if a valid student user is logged in
             if (currentUser && currentUser.role === 'student' && currentUser.firstName) {
-                if (welcomeMessageElement) { // Check if element exists before using it
-                    welcomeMessageElement.textContent = `Welcome, ${currentUser.firstName}! 👋`;
-                }
-                // Display profile picture in the header dropdown toggle
-                if (headerProfilePic && currentUser.profilePictureUrl) {
-                    headerProfilePic.src = currentUser.profilePictureUrl;
-                } else if (headerProfilePic) {
-                    headerProfilePic.src = 'images/default-avatar.png'; // Fallback to default if no URL
-                }
+                welcomeMessage.textContent = `Welcome, ${currentUser.firstName}! 👋`;
+        // Display profile picture
+        const avatar = document.querySelector('.profile-avatar-header');
+        if (avatar && currentUser.profilePictureUrl) {
+            avatar.src = currentUser.profilePictureUrl;
+        }
             } else {
                 // If not logged in or not a student, redirect to the login page
                 console.warn('No valid student user found. Redirecting to login.');
                 window.location.href = '/login-student.html';
                 return; // Stop script execution
             }
-            
-            // Add entrance animation for welcome message
-            if (welcomeMessageElement) { // Check if element exists before using it
-                welcomeMessageElement.style.opacity = '0';
-                welcomeMessageElement.style.transform = 'translateY(-20px)';
-                setTimeout(() => {
-                    welcomeMessageElement.style.transition = 'all 0.6s ease';
-                    welcomeMessageElement.style.opacity = '1';
-                    welcomeMessageElement.style.transform = 'translateY(0)';
-                }, 100);
-            }
 
-            // Dropdown toggle functionality
-            profileDropdownToggle.addEventListener('click', function() {
-                profileDropdownMenu.classList.toggle('show');
-            });
+            // Add entrance animation
+            welcomeMessage.style.opacity = '0';
+            welcomeMessage.style.transform = 'translateY(-20px)';
+            setTimeout(() => { // Using a timeout to apply transition after initial render
+                welcomeMessage.style.transition = 'all 0.6s ease';
+                welcomeMessage.style.opacity = '1';
+                welcomeMessage.style.transform = 'translateY(0)';
+            }, 100);
 
-            // Close the dropdown if the user clicks outside of it
-            window.addEventListener('click', function(event) {
-                if (!profileDropdownToggle.contains(event.target) && !profileDropdownMenu.contains(event.target)) {
-                    profileDropdownMenu.classList.remove('show');
-                }
-            });
-
-            // Logout functionality (now attached to the dropdown item)
-            logoutButton.addEventListener('click', function(e) {
+            // Logout functionality
+            document.getElementById('logoutButton').addEventListener('click', function(e) {
                 e.preventDefault();
                 localStorage.removeItem('authToken');
                 localStorage.removeItem('currentUser');
                 window.location.href = '/welcome.html'; // Redirect to a neutral welcome page
             });
-
-            // Placeholder for fetching and populating data (from dashboard_script.js)
-            // These functions would typically be defined in dashboard_script.js
-            // and called here after user authentication.
-            // Example:
-            // fetchProfileCompletion(currentUser);
-            // fetchAnnouncements(currentUser);
-            // fetchUpcomingEvents(currentUser);
         });
     </script>
 </body>

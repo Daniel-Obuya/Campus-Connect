@@ -118,6 +118,10 @@ app.get('/projects', (req, res) => {
   res.sendFile(path.join(__dirname, 'projects_directory.html'));
 });
 
+app.get('/departments-directory', (req, res) => {
+    res.sendFile(path.join(__dirname, 'departments_directory.html'));
+});
+
 // --- Route for Events Directory ---
 app.get('/events-directory', (req, res) => {
     res.sendFile(path.join(__dirname, 'events_directory.html'));
@@ -694,7 +698,10 @@ app.post('/api/login', async (req, res) => {
             email: user.email,
             role: user.role,
             firstName: user.first_name,
-            lastName: user.last_name
+    lastName: user.last_name,
+    profilePictureUrl: user.profile_picture_url,
+    bio: user.bio,
+    studentDetails: user.role === 'student' ? { studentId: user.student_id, major: user.major, graduationYear: user.graduation_year, department: user.department } : null
         }, secret, { expiresIn: '2h' });
 
         console.log(`User ${user.email} (role: ${user.role}) logged in, sending token.`);
@@ -707,7 +714,7 @@ app.post('/api/login', async (req, res) => {
                 firstName: user.first_name,
                 lastName: user.last_name,
                 email: user.email,
-                role: user.role
+                role: user.role,
             }
         });
     }
@@ -721,111 +728,100 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-// --- API Route to fetch student profile (for frontend display) ---
-app.get('/api/user/profile', authenticateJWT, async (req, res) => {
+// --- API Route for Updating Student Profile ---
+// This route handles updates for all student-related profile fields.
+// It expects a flat payload from the frontend (e.g., edit-student-profile.html).
+app.put('/api/student/profile', authenticateJWT, async (req, res) => {
+    // Ensure the user is a student
     if (req.user.role !== 'student') {
-        return res.status(403).json({ success: false, message: 'Forbidden: Only students can access their profile.' });
+        return res.status(403).json({ success: false, message: 'Forbidden: Only students can update their profile.' });
     }
-    const userId = req.user.id;
-    try {
-        const [userRows] = await pool.query('SELECT * FROM users WHERE user_id = ?', [userId]);
-        if (userRows.length === 0) {
-            return res.status(404).json({ success: false, message: 'Student not found.' });
-        }
-        const user = userRows[0];
-        // Join with user_profiles for social links
-        const [profileRows] = await pool.query('SELECT linkedin_url, github_url, personal_website FROM user_profiles WHERE user_id = ?', [userId]);
-        const profile = profileRows[0] || {};
-        // Compose response in the format expected by the frontend
-        res.json({
-            id: user.user_id,
-            firstName: user.first_name,
-            lastName: user.last_name,
-            email: user.email,
-            role: user.role,
-            studentDetails: {
-                studentId: user.student_id,
-                department: user.department_id, // You may want to join for department name
-                major: user.major,
-                graduationYear: user.graduation_year,
-                linkedin: profile.linkedin_url || null,
-                github: profile.github_url || null,
-                portfolio: profile.personal_website || null
-            }
-            // Add more fields as needed (e.g., registeredEvents, joinedClubs, activeProjects)
-        });
-    } catch (error) {
-        console.error('Error fetching student profile:', error);
-        res.status(500).json({ success: false, message: 'Failed to fetch student profile.' });
-    }
-});
 
-// --- API Route to Update Student Profile (Admin) ---
-app.put('/api/user/profile/admin', authenticateJWT, async (req, res) => {
-    if (req.user.role !== 'department_admin') {
-        return res.status(403).json({ success: false, message: 'Forbidden: Only department admins can update student profiles.' });
+const userId = req.user.id; // From your authentication middleware
+    const {
+     first_name, last_name, bio, phone_number, // Basic user details
+        major, graduation_year, // Fields to move to 'users' table
+        academic_achievements, // Fields for 'user_profiles' table
+        skills, interests, extracurricular_activities,
+        linkedin_url, github_url, personal_website,
+        portfolio_visibility
+    } = req.body; 
+
+    if (!first_name || !last_name) { // Ensure essential fields are present
+        return res.status(400).json({ success: false, message: 'First name and last name are required.' });
     }
-    const { userId, firstName, lastName, email, studentDetails } = req.body;
-    if (!userId || !firstName || !lastName || !email || !studentDetails) {
-        return res.status(400).json({ success: false, message: 'User ID, first name, last name, email, and student details are required.' });
-    }
-    const { studentId, major, graduationYear, linkedin, github, portfolio } = studentDetails;
-    try {
+
+     try {
         const connection = await pool.getConnection();
         await connection.beginTransaction();
-        // Update users table for core info
-        const userSql = `
-            UPDATE users SET
-                first_name = ?,
-                last_name = ?,
-                email = ?,
-                student_id = ?,
-                major = ?,
-                graduation_year = ?
-            WHERE user_id = ?
-        `;
-        const userValues = [
-            firstName,
-            lastName,
-            email,
-            studentId || null,
-            major || null,
-            graduationYear || null,
-            userId
-        ];
-        const [userResult] = await connection.query(userSql, userValues);
-        if (userResult.affectedRows === 0) {
-            await connection.rollback();
-            return res.status(404).json({ success: false, message: 'Student not found.' });
-        }
 
-        // Upsert into user_profiles for personal info
-        // Check if profile exists
-        const [profileRows] = await connection.query('SELECT profile_id FROM user_profiles WHERE user_id = ?', [userId]);
-        if (profileRows.length > 0) {
-            // Update existing
-            await connection.query(
-                'UPDATE user_profiles SET linkedin_url = ?, github_url = ?, personal_website = ? WHERE user_id = ?',
-                [linkedin || null, github || null, portfolio || null, userId]
-            );
-        } else {
-            // Insert new
-            await connection.query(
-                'INSERT INTO user_profiles (user_id, linkedin_url, github_url, personal_website) VALUES (?, ?, ?, ?)',
-                [userId, linkedin || null, github || null, portfolio || null]
-            );
+        try {
+          // 1. Update users table for basic info, major, and graduation_year
+            await connection.query(`
+                UPDATE users SET
+                    first_name = ?,
+                    last_name = ?,
+                    bio = ?,
+                     phone_number = ?,
+                    major = ?,
+                    graduation_year = ?
+                WHERE user_id = ?
+
+`, [
+                first_name,
+                last_name,
+                bio || null,
+                phone_number || null,
+                major || null, // Add major
+                graduation_year || null, // Add graduation_year
+                userId
+            ]);
+
+     // 2. Update or Insert into 'user_profiles' table for student-specific information
+            const userProfileSql = `
+                INSERT INTO user_profiles (
+                    user_id, skills, interests, portfolio_visibility, linkedin_url, github_url, personal_website, academic_achievements, extracurricular_activities
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                     ON DUPLICATE KEY UPDATE
+                 skills = VALUES(skills),
+                    interests = VALUES(interests),
+                    portfolio_visibility = VALUES(portfolio_visibility),
+                    linkedin_url = VALUES(linkedin_url),
+                    github_url = VALUES(github_url),
+                    personal_website = VALUES(personal_website),
+                    academic_achievements = VALUES(academic_achievements),
+                    skills = VALUES(skills), interests = VALUES(interests), extracurricular_activities = VALUES(extracurricular_activities),
+                  extracurricular_activities = VALUES(extracurricular_activities)
+            `;
+            const userProfileValues = [
+                userId,
+                (skills && Array.isArray(skills)) ? skills.join(',') : null,
+                (interests && Array.isArray(interests)) ? interests.join(',') : null,
+                portfolio_visibility || 'public',
+                linkedin_url || null,
+                github_url || null,
+                personal_website || null,
+                academic_achievements || null,
+                extracurricular_activities || null
+            ];
+            
+            await connection.query(userProfileSql, userProfileValues);
+
+            await connection.commit();
+            res.json({ success: true, message: 'Profile updated successfully!' });    
+        } catch (error) {
+            await connection.rollback();
+            connection.release();
+            console.error('Error updating student profile:', error);
+            return res.status(500).json({ success: false, message: 'Internal server error during profile update.' });
+        } finally {
+            connection.release();
         }
-        await connection.commit();
-        res.json({ success: true, message: 'Profile updated successfully.' });
     } catch (error) {
-        await connection.rollback();
         console.error('Error updating student profile:', error);
-        res.status(500).json({ success: false, message: 'Failed to update profile.' });
-    } finally {
-        connection.release();
+        return res.status(500).json({ success: false, message: 'Internal server error during profile update.' });
     }
 });
-
 // API Endpoint to Create a New Event
 app.post('/api/events', authenticateJWT, async (req, res) => { // Protected route
     // Log the raw request body as received by the server
@@ -1203,279 +1199,6 @@ app.post('/api/announcements', authenticateJWT, async (req, res) => {
     } // This closes the try-catch block
 }); // This correctly closes the app.post('/api/announcements', ...) route handler
 
-// --- API Route to get all clubs for the clubs directory ---
-app.get('/api/club', async (req, res) => {
-    try {
-        const [clubs] = await pool.query(`
-            SELECT 
-                club_id,
-                name,
-                description,
-                category,
-                logo_url,
-                member_count,
-                meeting_schedule
-            FROM clubs_societies
-            WHERE is_active = 1
-        `);
-        res.json({ success: true, clubs });
-    } catch (error) {
-        console.error('Error fetching clubs:', error);
-        res.status(500).json({ success: false, message: 'Failed to fetch clubs.' });
-    }
-});
- // Get pending join requests for clubs managed by the current club admin
-app.get('/api/club/requests', authenticateJWT, async (req, res) => {
-    if (req.user.role !== 'club_admin') {
-        return res.status(403).json({ success: false, message: 'Only club admins can view join requests.' });
-    }
-    try {
-        // Find clubs managed by this admin
-        const [clubs] = await pool.query(
-            'SELECT club_id FROM clubs_societies WHERE president_user_id = ?',
-            [req.user.id]
-        );
-        const clubIds = clubs.map(c => c.club_id);
-        if (clubIds.length === 0) {
-            return res.json({ success: true, requests: [] });
-        }
-        // Get pending requests for these clubs
-        const [requests] = await pool.query(
-            `SELECT cm.membership_id, cm.user_id, cm.club_id, u.first_name, u.last_name, u.email
-             FROM club_memberships cm
-             JOIN users u ON cm.user_id = u.user_id
-             WHERE cm.club_id IN (?) AND cm.status = 'pending'`,
-            [clubIds]
-        );
-        res.json({ success: true, requests });
-    } catch (err) {
-        console.error('Error fetching club join requests:', err);
-        res.status(500).json({ success: false, message: 'Failed to fetch join requests.' });
-    }
-});
-// Approve or reject a join request (club admin only)
-app.post('/api/club/requests/handle', authenticateJWT, async (req, res) => {
-    if (req.user.role !== 'club_admin') {
-        return res.status(403).json({ success: false, message: 'Only club admins can approve/reject requests.' });
-    }
-    const { membershipId, action } = req.body; // action: 'approve' or 'reject'
-    if (!membershipId || !['approve', 'reject'].includes(action)) {
-        return res.status(400).json({ success: false, message: 'Invalid request.' });
-    }
-    try {
-        // Get the club_id for this membership
-        const [rows] = await pool.query(
-            'SELECT club_id FROM club_memberships WHERE membership_id = ?',
-            [membershipId]
-        );
-        if (rows.length === 0) {
-            return res.status(404).json({ success: false, message: 'Membership not found.' });
-        }
-        const clubId = rows[0].club_id;
-        // Check if this admin manages the club
-        const [clubs] = await pool.query(
-            'SELECT club_id FROM clubs_societies WHERE club_id = ? AND president_user_id = ?',
-            [clubId, req.user.id]
-        );
-        if (clubs.length === 0) {
-            return res.status(403).json({ success: false, message: 'Not authorized for this club.' });
-        }
-        if (action === 'approve') {
-            // Approve: set status to active, set joined_date, increment member_count
-            await pool.query(
-                'UPDATE club_memberships SET status = ?, joined_date = CURDATE() WHERE membership_id = ?',
-                ['active', membershipId]
-            );
-            await pool.query(
-                'UPDATE clubs_societies SET member_count = member_count + 1 WHERE club_id = ?',
-                [clubId]
-            );
-        } else if (action === 'reject') {
-            // Reject: set status to rejected
-            await pool.query(
-                'UPDATE club_memberships SET status = ? WHERE membership_id = ?',
-                ['rejected', membershipId]
-            );
-        }
-        res.json({ success: true, message: `Request ${action}d.` });
-    } catch (err) {
-        console.error('Error handling join request:', err);
-        res.status(500).json({ success: false, message: 'Failed to handle join request.' });
-    }
-});
-// --- Club Admin Dashboard Data Endpoint ---
-app.get('/api/club/dashboard', authenticateJWT, async (req, res) => {
-    if (req.user.role !== 'club_admin') {
-        return res.status(403).json({ success: false, message: 'Only club admins can access this dashboard.' });
-    }
-    try {
-        // Get the club managed by this admin
-        const [clubs] = await pool.query(
-            'SELECT * FROM clubs_societies WHERE president_user_id = ?',
-            [req.user.id]
-        );
-        if (clubs.length === 0) {
-            return res.status(404).json({ success: false, message: 'No club associated with this admin account.' });
-        }
-        const club = clubs[0];
-        // Get pending join requests
-        const [pendingRequests] = await pool.query(
-            `SELECT cm.membership_id, u.first_name, u.last_name, u.major, u.graduation_year, u.email
-             FROM club_memberships cm
-             JOIN users u ON cm.user_id = u.user_id
-             WHERE cm.club_id = ? AND cm.status = 'pending'`,
-            [club.club_id]
-        );
-        // Get current members
-        const [currentMembers] = await pool.query(
-            `SELECT cm.membership_id, u.first_name, u.last_name, u.email, cm.role
-             FROM club_memberships cm
-             JOIN users u ON cm.user_id = u.user_id
-             WHERE cm.club_id = ? AND cm.status = 'active'`,
-            [club.club_id]
-        );
-        // Get events
-        const [events] = await pool.query(
-            `SELECT event_id, title, description, start_datetime, DATE_FORMAT(start_datetime, '%b %d, %Y') as date, location, max_attendees
-             FROM events WHERE organizer_type = 'club' AND organizer_id = ? ORDER BY start_datetime DESC LIMIT 5`,
-            [club.club_id]
-        );
-// Get announcements
-const [announcements] = await pool.query(
-    `SELECT announcement_id, title, content, created_at FROM announcements WHERE author_type = 'club' AND author_entity_id = ? ORDER BY created_at DESC LIMIT 5`,
-    [club.club_id]
-);
-// Overview metrics (only real counts)
-const overview = {
-    totalMembers: club.member_count || currentMembers.length,
-    activeMembers: currentMembers.length,
-    pendingRequests: pendingRequests.length,
-    upcomingEvents: events.length
-};
-// Members tab data
-const members = {
-    pending: pendingRequests.map(m => ({
-        id: m.membership_id,
-        name: `${m.first_name} ${m.last_name}`,
-        major: m.major || '',
-        graduationYear: m.graduation_year || '',
-        email: m.email
-    })),
-    current: currentMembers.map(m => ({
-        id: m.membership_id,
-        name: `${m.first_name} ${m.last_name}`,
-        role: m.role || 'Member',
-        email: m.email
-    }))
-};
-// Events tab data
-const eventsData = events.map(e => ({
-    id: e.event_id,
-    title: e.title,
-    date: e.date,
-    description: e.description,
-    start_datetime: e.start_datetime, // <-- add this field for frontend
-    location: e.location,
-    max_capacity: e.max_attendees
-}));
-// Announcements tab data
-// Get announcements (with extra fields for frontend)
-const [announcementsFull] = await pool.query(
-    `SELECT announcement_id, title, content, created_at, priority, is_pinned 
-     FROM announcements 
-     WHERE author_type = 'club' AND author_entity_id = ? 
-     ORDER BY created_at DESC LIMIT 5`,
-    [club.club_id]
-);
-// Announcements tab data
-const announcementsData = announcementsFull.map(a => ({
-    id: a.announcement_id,
-    title: a.title,
-    time: a.created_at ? new Date(a.created_at).toLocaleString() : '',
-    content: a.content,
-    priority: a.priority || 'normal',
-    is_pinned: !!a.is_pinned
-}));
-        // Club profile data
-        const profile = {
-            name: club.name,
-            description: club.description,
-            contactEmail: club.contact_email,
-            meetingSchedule: club.meeting_schedule,
-            meetingLocation: club.meeting_location,
-            category: club.category,
-            logoUrl: club.logo_url
-        };
-        // Admin name
-        const adminName = req.user.firstName || req.user.first_name || 'Admin';
-        res.json({
-            success: true,
-            overview,
-            pendingRequests: members.pending,
-            members: members.current,
-            events: eventsData,
-            announcements: announcementsData,
-            profile,
-            adminName
-        });
-
-        // ...existing code...
-        // The following block is redundant and causes a variable redeclaration error.
-        // It is safe to remove because announcements are already fetched above.
-    } catch (err) {
-        console.error('Error fetching club admin dashboard data:', err);
-        res.status(500).json({ success: false, message: 'Failed to fetch dashboard data.' });
-    }
-});
-// --- Club Memberships: Get all clubs the current user is a member of or has requested to join ---
-app.get('/api/club/memberships', authenticateJWT, async (req, res) => {
-    if (req.user.role !== 'student') {
-        return res.status(403).json({ success: false, message: 'Only students can view their club memberships.' });
-    }
-    try {
-        const [memberships] = await pool.query(
-            `SELECT cm.club_id, cs.name, cs.category, cs.logo_url, cm.status, cm.role
-             FROM club_memberships cm
-             JOIN clubs_societies cs ON cm.club_id = cs.club_id
-             WHERE cm.user_id = ?`,
-            [req.user.id]
-        );
-        res.json({ success: true, memberships });
-    } catch (err) {
-        console.error('Error fetching user club memberships:', err);
-        res.status(500).json({ success: false, message: 'Failed to fetch memberships.' });
-    }
-});
-
-// --- Club Join: Student requests to join a club ---
-app.post('/api/club/join', authenticateJWT, async (req, res) => {
-    if (req.user.role !== 'student') {
-        return res.status(403).json({ success: false, message: 'Only students can join clubs.' });
-    }
-    const { clubId } = req.body;
-    if (!clubId) {
-        return res.status(400).json({ success: false, message: 'Missing clubId.' });
-    }
-    try {
-        // Check if already a member or pending
-        const [existing] = await pool.query(
-            'SELECT * FROM club_memberships WHERE user_id = ? AND club_id = ?',
-            [req.user.id, clubId]
-        );
-        if (existing.length > 0) {
-            return res.status(409).json({ success: false, message: 'Already requested or a member.' });
-        }
-        // Insert join request (status: pending)
-        await pool.query(
-            'INSERT INTO club_memberships (user_id, club_id, status) VALUES (?, ?, ?)',
-            [req.user.id, clubId, 'pending']
-        );
-        res.json({ success: true, message: 'Join request submitted.' });
-    } catch (err) {
-        console.error('Error joining club:', err);
-        res.status(500).json({ success: false, message: 'Failed to join club.' });
-    }
-});
 // Start server
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
@@ -1489,65 +1212,4 @@ app.listen(PORT, () => {
   console.log(`Events Directory: http://localhost:${PORT}/events-directory`);
   console.log(`Interactive Calendar: http://localhost:${PORT}/interactive-calendar`);
   console.log(`API for External Events (test): http://localhost:${PORT}/api/external-events?page=1&location=Nairobi&q=tech`);
-});
-// --- API Endpoint: Club Admin Create Event ---
-app.post('/api/club/events', authenticateJWT, async (req, res) => {
-    if (req.user.role !== 'club_admin') {
-        return res.status(403).json({ success: false, message: 'Only club admins can create events.' });
-    }
-    const { title, description, start_datetime, location, max_capacity } = req.body;
-    if (!title || !start_datetime || !location) {
-        return res.status(400).json({ success: false, message: 'Missing required fields.' });
-    }
-    try {
-        // Get the club managed by this admin
-        const [clubs] = await pool.query(
-            'SELECT club_id FROM clubs_societies WHERE president_user_id = ?',
-            [req.user.id]
-        );
-        if (clubs.length === 0) {
-            return res.status(403).json({ success: false, message: 'No club associated with this admin.' });
-        }
-        const clubId = clubs[0].club_id;
-        await pool.query(
-            `INSERT INTO events (title, description, organizer_type, organizer_id, start_datetime, location, max_attendees)
-             VALUES (?, ?, 'club', ?, ?, ?, ?)`,
-            [title, description, clubId, start_datetime, location, max_capacity || null]
-        );
-        res.json({ success: true });
-    } catch (err) {
-        console.error('Error creating club event:', err);
-        res.status(500).json({ success: false, message: 'Database error.' });
-    }
-});
-
-// --- API Endpoint: Club Admin Create Announcement ---
-app.post('/api/club/announcements', authenticateJWT, async (req, res) => {
-    if (req.user.role !== 'club_admin') {
-        return res.status(403).json({ success: false, message: 'Only club admins can create announcements.' });
-    }
-    const { title, content, priority, is_pinned } = req.body;
-    if (!title || !content) {
-        return res.status(400).json({ success: false, message: 'Missing required fields.' });
-    }
-    try {
-        // Get the club managed by this admin
-        const [clubs] = await pool.query(
-            'SELECT club_id FROM clubs_societies WHERE president_user_id = ?',
-            [req.user.id]
-        );
-        if (clubs.length === 0) {
-            return res.status(403).json({ success: false, message: 'No club associated with this admin.' });
-        }
-        const clubId = clubs[0].club_id;
-        await pool.query(
-            `INSERT INTO announcements (title, content, author_id, author_type, author_entity_id, priority, is_pinned)
-             VALUES (?, ?, ?, 'club', ?, ?, ?)`,
-            [title, content, req.user.id, clubId, priority || 'normal', is_pinned ? 1 : 0]
-        );
-        res.json({ success: true });
-    } catch (err) {
-        console.error('Error creating club announcement:', err);
-        res.status(500).json({ success: false, message: 'Database error.' });
-    }
 });

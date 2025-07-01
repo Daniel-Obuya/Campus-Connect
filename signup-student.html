@@ -149,6 +149,32 @@
             box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
             margin-bottom: 20px;
         }
+        .profile-picture-section {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        .profile-picture-preview {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: #e0e0e0 url('https://via.placeholder.com/100/CCCCCC/FFFFFF?text=Avatar') no-repeat center center; /* Placeholder */
+            background-size: cover;
+            margin: 0 auto 15px auto;
+            border: 3px solid rgba(255,255,255,0.3);
+        }
+        .upload-btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            cursor: pointer;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+
         .signup-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(255, 193, 7, 0.4);
@@ -291,6 +317,13 @@
 
         <h2 class="title">Create Student Account</h2>
 
+        <div class="profile-picture-section">
+            <div class="profile-picture-preview" id="profilePicturePreview"></div>
+            <label for="profilePictureInput" class="upload-btn">Upload Picture</label>
+            <input type="file" id="profilePictureInput" accept="image/*" style="display: none;">
+        </div>
+
+
         <form id="signupForm">
             <div class="form-group">
                 <input type="text" id="firstName" class="form-input" placeholder="First Name" required>
@@ -378,6 +411,28 @@
     </div>
 
     <script>
+
+        // --- Profile Picture Preview ---
+        const profilePictureInput = document.getElementById('profilePictureInput');
+        const profilePicturePreview = document.getElementById('profilePicturePreview');
+        let profilePictureDataUrl = null; // To hold the Base64 string of the image
+
+        profilePictureInput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) { // Corrected closing brace for onload
+                    profilePicturePreview.style.backgroundImage = `url('${e.target.result}')`;
+                    profilePictureDataUrl = e.target.result; // Store the image data
+                }
+                reader.readAsDataURL(file);
+            } else {
+                // Optional: Reset if the file is not an image
+                profilePicturePreview.style.backgroundImage = `url('https://via.placeholder.com/100/CCCCCC/FFFFFF?text=Avatar')`; // Corrected URL
+                alert('Please select a valid image file.');
+            }
+        }); // This closing brace was missing or misplaced
+        // --- End Profile Picture Preview ---
         // Password toggle functionality
         function togglePassword(fieldId) {
             const field = document.getElementById(fieldId);
@@ -506,6 +561,7 @@
                 lastName: document.getElementById('lastName').value.trim(),
                 email: emailInput.value.trim(),
                 password: document.getElementById('password').value,
+                profilePicture: profilePictureDataUrl, // Send the image data
                 role: 'student',
                 studentDetails: {
                     studentId: document.querySelector('#studentFields input[name="studentId"]').value.trim(),

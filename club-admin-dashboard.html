@@ -468,7 +468,7 @@
     <!-- Header -->
     <header class="header">
         <div class="header-left">
-             <img src="images/logo 1.png" alt="Campus Connect Logo" class="logo"> <!-- Already using common-header.css logo style -->
+             <img src="images/logo 1.png" alt="Campus Connect Logo" class="logo" style="height: 60px; width: 60px;">
             <div class="brand-name">Campus Connect</div>
         </div> 
         <div class="page-title" id="dashboardTitle">Club Admin Dashboard</div>
@@ -480,11 +480,6 @@
 
     <!-- Main Content -->
     <div class="main-content">
-        <!-- Club/Admin Info Banner -->
-        <div id="clubAdminBanner" style="text-align:center; margin-bottom:24px;">
-            <h1 id="clubNameDisplay" style="font-size:2rem; margin-bottom:8px;"></h1>
-            <div id="adminNameDisplay" style="font-size:1.1rem; color:#555;"></div>
-        </div>
         <!-- Navigation Tabs -->
         <div class="nav-tabs">
             <button class="nav-tab active" onclick="showTab('dashboard')">📊 Dashboard</button>
@@ -498,28 +493,61 @@
         <!-- Dashboard Tab -->
         <div id="dashboard" class="tab-content active">
             <h2 class="card-title" style="text-align: center; font-size: 32px; margin-bottom: 30px;" id="welcomeMessage">Welcome back, Club Admin!</h2>
+            
             <div class="dashboard-grid">
                 <div class="dashboard-card">
                     <div class="card-title">📊 Club Overview</div>
-                    <div class="metric-number" id="overviewActiveMembers">N/A</div>
-                    <div class="metric-label">Active Members</div>
+                    <div class="metric-number">127</div>
+                    <div class="metric-label">Total Members</div>
                     <div style="margin-top: 15px;">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                            <span style="font-size: 14px;">Pending Requests:</span>
-                            <span style="font-weight: bold;" id="overviewPendingRequests">N/A</span>
+                            <span style="font-size: 14px;">Active Members:</span>
+                            <span style="font-weight: bold;">115</span>
                         </div>
                         <div style="display: flex; justify-content: space-between;">
-                            <span style="font-size: 14px;">Upcoming Events:</span>
-                            <span style="font-weight: bold;" id="overviewUpcomingEvents">N/A</span>
+                            <span style="font-size: 14px;">Pending Requests:</span>
+                            <span style="font-weight: bold; color: #ffc107;">5</span>
                         </div>
                     </div>
                 </div>
+
+                <div class="dashboard-card">
+                    <div class="card-title">📅 Upcoming Events</div>
+                    <div class="metric-number">3</div>
+                    <div class="metric-label">Events This Week</div>
+                    <div style="margin-top: 15px;">
+                        <div style="font-size: 14px; color: #555;">Next Event:</div>
+                        <div style="font-weight: bold;">Hackathon 2024</div>
+                        <div style="font-size: 12px; color: #666;">Tomorrow, 6:00 PM</div>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <div class="card-title">📢 Recent Activity</div>
+                    <div class="metric-number">24</div>
+                    <div class="metric-label">New Interactions Today</div>
+                    <div style="margin-top: 15px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="font-size: 14px;">Event RSVPs:</span>
+                            <span style="font-weight: bold;">18</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="font-size: 14px;">Announcement Views:</span>
+                            <span style="font-weight: bold;">89</span>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="dashboard-card">
                     <div class="card-title">🎯 Engagement Rate</div>
-                    <div class="metric-number" id="overviewEngagementRate">N/A</div>
+                    <div class="metric-number">78%</div>
                     <div class="metric-label">This Month</div>
+                    <div style="margin-top: 15px;">
+                        <div style="font-size: 14px; color: #555;">Trend: ↗️ +12% from last month</div>
+                    </div>
                 </div>
             </div>
+
             <!-- Quick Actions -->
             <div class="dashboard-card">
                 <div class="card-title">⚡ Quick Actions</div>
@@ -538,14 +566,30 @@
                 <h2 class="card-title" style="font-size: 28px;">Member Management</h2>
                 <button class="form-button" onclick="openModal('inviteMemberModal')">+ Invite Member</button>
             </div> 
+
             <!-- Pending Requests -->
             <div class="dashboard-card" style="margin-bottom: 30px;">
-                <div class="card-title">⏳ Pending Membership Requests (<span id="pendingMembersCount">N/A</span>)</div>
-                <ul id="pendingMembersList"></ul>
+                <div class="card-title">⏳ Pending Membership Requests (5)</div>
+                <div id="pendingRequests">
+                    <div class="member-card">
+                        <div class="member-info">
+                            <div class="member-avatar">JS</div>
+                            <div class="member-details">
+                                    <h4 id="pendingMemberName">John Smith</h4>
+                                    <div class="member-role" id="pendingMemberRole">Computer Science • Sophomore</div>
+                            </div>
+                        </div>
+                        <div class="member-actions">
+                            <button class="btn btn-primary btn-small" onclick="acceptMember('john-smith')">Accept</button>
+                            <button class="btn btn-danger btn-small" onclick="rejectMember('john-smith')">Reject</button>
+                        </div>
+                    </div>
+                </div>
             </div>
+
             <!-- Current Members -->
             <div class="dashboard-card">
-                <div class="card-title">👥 Current Members (<span id="currentMembersCount">N/A</span>)</div>
+                <div class="card-title">👥 Current Members (127)</div>
                 <div style="margin: 20px 0;">
                     <input type="text" class="form-input" placeholder="Search members..." style="margin-bottom: 15px;">
                     <select class="form-select" style="width: auto;">
@@ -557,7 +601,34 @@
                         <option>Member</option>
                     </select>
                 </div>
-                <ul id="currentMembersList"></ul>
+                <div id="membersList">
+                    <div class="member-card">
+                        <div class="member-info">
+                            <div class="member-avatar">AM</div>
+                            <div class="member-details" id="currentMemberName">
+                                <h4>Alice Mitchell</h4> 
+                                <div class="member-role">President</div>
+                            </div>
+                        </div>
+                        <div class="member-actions">
+                            <button class="btn btn-primary btn-small" onclick="editMemberRole('alice-mitchell')">Edit Role</button>
+                            <button class="btn btn-danger btn-small">Remove</button>
+                        </div>
+                    </div>
+                    <div class="member-card">
+                        <div class="member-info">
+                            <div class="member-avatar">BJ</div>
+                            <div class="member-details" id="currentMemberName">
+                                <h4>Bob Johnson</h4> 
+                                <div class="member-role">Vice President</div>
+                            </div>
+                        </div>
+                        <div class="member-actions">
+                            <button class="btn btn-primary btn-small" onclick="editMemberRole('bob-johnson')">Edit Role</button>
+                            <button class="btn btn-danger btn-small">Remove</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -567,7 +638,62 @@
                 <h2 class="card-title" style="font-size: 28px;">Event Management</h2>
                 <button class="form-button" onclick="openModal('createEventModal')">+ Create Event</button>
             </div>
-            <ul id="clubEventsList"></ul>
+
+            <div id="eventsList">
+                <div class="event-card">
+                    <div class="event-header">
+                        <div class="event-title" id="eventTitle">🚀 Hackathon 2024</div>
+                        <div class="event-date" id="eventDate">Dec 23, 2024</div>
+                    </div>
+                    <p style="color: #555; margin-bottom: 15px;">Join us for our annual 48-hour hackathon! Build amazing projects, network with peers, and compete for prizes.</p>
+                    <div class="event-stats">
+                        <div class="event-stat">
+                            <div class="event-stat-number">45</div>
+                            <div class="event-stat-label">RSVPs</div>
+                        </div>
+                        <div class="event-stat">
+                            <div class="event-stat-number">12</div>
+                            <div class="event-stat-label">Teams</div>
+                        </div>
+                        <div class="event-stat">
+                            <div class="event-stat-number">3</div>
+                            <div class="event-stat-label">Days Left</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px; display: flex; gap: 10px;">
+                        <button class="btn btn-primary btn-small">Edit Event</button>
+                        <button class="btn btn-danger btn-small">Cancel Event</button>
+                        <button class="btn btn-primary btn-small">View RSVPs</button>
+                    </div>
+                </div>
+
+                <div class="event-card">
+                    <div class="event-header">
+                        <div class="event-title" id="eventTitle">💻 Weekly Coding Workshop</div>
+                        <div class="event-date" id="eventDate">Dec 26, 2024</div>
+                    </div>
+                    <p style="color: #555; margin-bottom: 15px;">Learn React.js fundamentals in this hands-on workshop. Perfect for beginners!</p>
+                    <div class="event-stats">
+                        <div class="event-stat">
+                            <div class="event-stat-number">28</div>
+                            <div class="event-stat-label">RSVPs</div>
+                        </div>
+                        <div class="event-stat">
+                            <div class="event-stat-number">30</div>
+                            <div class="event-stat-label">Max Capacity</div>
+                        </div>
+                        <div class="event-stat">
+                            <div class="event-stat-number">6</div>
+                            <div class="event-stat-label">Days Left</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px; display: flex; gap: 10px;">
+                        <button class="btn btn-primary btn-small">Edit Event</button>
+                        <button class="btn btn-danger btn-small">Cancel Event</button>
+                        <button class="btn btn-primary btn-small">View RSVPs</button>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Announcements Tab -->
@@ -576,26 +702,141 @@
                 <h2 class="card-title" style="font-size: 28px;">Announcements</h2>
                 <button class="form-button" onclick="openModal('createAnnouncementModal')">+ New Announcement</button>
             </div>
-            <ul id="clubAnnouncementsList"></ul>
+
+            <div id="announcementsList">
+                <div class="announcement-card">
+                    <div class="announcement-header">
+                        <div class="announcement-title" id="announcementTitle">🎉 Hackathon Registration Open!</div>
+                        <div class="announcement-time" id="announcementTime">2 hours ago</div>
+                    </div>
+                    <div class="announcement-content">
+                        Registration for our annual hackathon is now open! Early bird pricing available until December 15th. Don't miss out on this amazing opportunity to showcase your skills and win awesome prizes!
+                    </div>
+                    <div class="announcement-stats">
+                        <span>👁️ 156 views</span>
+                        <span>💬 12 comments</span>
+                        <span>❤️ 23 likes</span>
+                    </div>
+                    <div style="margin-top: 15px; display: flex; gap: 10px;">
+                        <button class="btn btn-primary btn-small">Edit</button>
+                        <button class="btn btn-danger btn-small">Delete</button>
+                        <button class="btn btn-primary btn-small">Pin</button>
+                    </div>
+                </div>
+
+                <div class="announcement-card">
+                    <div class="announcement-header">
+                        <div class="announcement-title" id="announcementTitle">📚 New Study Group Schedule</div>
+                        <div class="announcement-time" id="announcementTime">1 day ago</div>
+                    </div>
+                    <div class="announcement-content">
+                        We've updated our weekly study group schedule. Sessions will now be held on Tuesdays and Thursdays from 7-9 PM in the computer lab. Topics will include data structures, algorithms, and interview preparation.
+                    </div>
+                    <div class="announcement-stats">
+                        <span>👁️ 89 views</span>
+                        <span>💬 8 comments</span>
+                        <span>❤️ 15 likes</span>
+                    </div>
+                    <div style="margin-top: 15px; display: flex; gap: 10px;">
+                        <button class="btn btn-primary btn-small">Edit</button>
+                        <button class="btn btn-danger btn-small">Delete</button>
+                        <button class="btn btn-primary btn-small">Pin</button>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <!-- Analytics Tab (optional, can be hidden if no real data) -->
+        <!-- Analytics Tab -->
         <div id="analytics" class="tab-content">
-            <div class="dashboard-card">
-                <div class="card-title">📈 Analytics</div>
-                <div id="analyticsContent">No analytics data available.</div>
+            <h2 class="card-title" style="text-align: center; font-size: 28px; margin-bottom: 30px;">📈 Club Analytics</h2>
+
+            <div class="chart-container">
+                <div class="chart-title">Member Growth Trends</div>
+                <canvas id="memberGrowthChart" width="400" height="200"></canvas>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-title">Event Attendance Over Time</div>
+                <canvas id="attendanceChart" width="400" height="200"></canvas>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px;">
+                <div class="chart-container">
+                    <div class="chart-title">Content Engagement</div>
+                    <canvas id="engagementChart" width="300" height="300"></canvas>
+                </div>
+
+                <div class="dashboard-card">
+                    <div class="card-title">📊 Key Metrics</div>
+                    <div style="space-y: 15px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                            <span>Average Event Attendance:</span>
+                            <span style="font-weight: bold; color: #cd853f;">32 people</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                            <span>Engagement Rate:</span>
+                            <span style="font-weight: bold; color: #cd853f;">78%</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                            <span>Member Retention:</span>
+                            <span style="font-weight: bold; color: #cd853f;">91%</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                            <span>Active Members:</span>
+                            <span style="font-weight: bold; color: #cd853f;">115/127</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Profile Tab -->
+        <!-- Club Profile Tab -->
         <div id="profile" class="tab-content">
+            <h2 class="card-title" style="text-align: center; font-size: 28px; margin-bottom: 30px;">⚙️ Club Profile Settings</h2>
+
             <div class="dashboard-card">
-                <div class="card-title">⚙️ Club Profile</div>
-                <div id="clubProfileContent">Profile data will appear here.</div>
+                <div class="card-title">Club Information</div>
+                <form id="clubProfileForm">
+                    <div class="form-group">
+                        <label for="clubName" class="form-label">Club Name</label>
+                        <input type="text" id="clubName" class="form-input" value="Programming Club" placeholder="Enter club name">
+                    </div>
+                    <div class="form-group">
+                        <label for="clubDescription" class="form-label">Description</label>
+                        <textarea id="clubDescription" class="form-textarea" placeholder="Enter club description">A community of passionate programmers dedicated to learning, sharing knowledge, and building amazing projects together. We welcome students of all skill levels!</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="clubContactEmail" class="form-label">Contact Email</label>
+                        <input type="email" id="clubContactEmail" class="form-input" value="programming.club@university.edu" placeholder="Enter contact email">
+                    </div>
+                    <div class="form-group">
+                        <label for="clubMeetingSchedule" class="form-label">Meeting Schedule</label>
+                        <input type="text" id="clubMeetingSchedule" class="form-input" value="Wednesdays 6:00 PM - 8:00 PM" placeholder="Enter meeting schedule">
+                    </div>
+                    <div class="form-group">
+                        <label for="clubMeetingLocation" class="form-label">Meeting Location</label>
+                        <input type="text" id="clubMeetingLocation" class="form-input" value="Computer Science Building, Room 203" placeholder="Enter meeting location">
+                    </div>
+                    <div class="form-group">
+                        <label for="clubCategory" class="form-label">Club Category</label>
+                        <select class="form-select">
+                            <option selected>Technology</option>
+                            <option>Academic</option>
+                            <option>Sports</option>
+                            <option>Arts</option>
+                            <option>Service</option>
+                            <option>Social</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="clubLogoUrl" class="form-label">Club Logo URL</label>
+                        <input type="url" id="clubLogoUrl" class="form-input" placeholder="Enter logo URL">
+                    </div>
+                    <button type="submit" class="form-button">Update Club Profile</button>
+                </form>
             </div>
         </div>
-
-            
+    </div>
 
     <!-- Notifications Modal -->
     <div id="notificationsModal" class="modal-overlay">
@@ -735,101 +976,10 @@
             // Add active class to clicked nav tab
             event.target.classList.add('active');
 
-            // Render events when Events tab is shown
-            if (tabName === 'events') {
-                // Always fetch latest dashboard data before rendering events
-                fetchDashboardData().then(() => {
-                    renderClubEvents();
-                });
-                return;
-            }
-            // Render announcements when Announcements tab is shown
-            if (tabName === 'announcements') {
-                fetchDashboardData().then(() => {
-                    renderClubAnnouncements();
-                });
-                return;
-            }
             // Initialize charts if analytics tab is shown
             if (tabName === 'analytics') {
                 setTimeout(initializeCharts, 100);
             }
-        }
-
-        // Render club events in the Events tab
-        function renderClubEvents() {
-            
-
-            const eventsList = document.getElementById('clubEventsList');
-            if (!eventsList) {
-                debugSection.innerHTML += '<div style="color:#b02a37;">[Error] #clubEventsList element not found in DOM.</div>';
-                return;
-            }
-            eventsList.innerHTML = '';
-            // Debug: Log the full club data and events array
-            console.log('[DEBUG] currentClubData:', currentClubData);
-            console.log('[DEBUG] currentClubData.events:', currentClubData ? currentClubData.events : undefined);
-            if (!currentClubData || !Array.isArray(currentClubData.events) || currentClubData.events.length === 0) {
-                const li = document.createElement('li');
-                li.textContent = 'No upcoming events.';
-                li.style.color = '#888';
-                eventsList.appendChild(li);
-                return;
-            }
-            currentClubData.events.forEach(event => {
-                const li = document.createElement('li');
-                li.className = 'event-card';
-                li.innerHTML = `
-                    <div class="event-header">
-                        <div class="event-title">${event.title || 'Untitled Event'}</div>
-                        <div class="event-date">${formatEventDate(event.start_datetime || event.date)}</div>
-                    </div>
-                    <div>${event.description || ''}</div>
-                    <div style="margin-top:10px; color:#555; font-size:13px;">
-                        <b>Location:</b> ${event.location || 'TBA'}<br>
-                        <b>Max Capacity:</b> ${event.max_capacity || 'N/A'}
-                    </div>
-                `;
-                eventsList.appendChild(li);
-            });
-        }
-
-        // Render club announcements in the Announcements tab
-        function renderClubAnnouncements() {
-            const announcementsList = document.getElementById('clubAnnouncementsList');
-            if (!announcementsList) return;
-            announcementsList.innerHTML = '';
-            if (!currentClubData || !Array.isArray(currentClubData.announcements) || currentClubData.announcements.length === 0) {
-                const li = document.createElement('li');
-                li.textContent = 'No announcements yet.';
-                li.style.color = '#888';
-                announcementsList.appendChild(li);
-                return;
-            }
-            currentClubData.announcements.forEach(announcement => {
-                const li = document.createElement('li');
-                li.className = 'announcement-card';
-                li.innerHTML = `
-                    <div class="announcement-header">
-                        <div class="announcement-title">${announcement.title || 'Untitled Announcement'}</div>
-                        <div class="announcement-time">${formatEventDate(announcement.created_at || announcement.date)}</div>
-                    </div>
-                    <div class="announcement-content">${announcement.content || ''}</div>
-                    <div class="announcement-stats">
-                        <span>Priority: ${announcement.priority ? announcement.priority.charAt(0).toUpperCase() + announcement.priority.slice(1) : 'Normal'}</span>
-                        ${announcement.is_pinned ? '<span style="color:#ff9800;">📌 Pinned</span>' : ''}
-                    </div>
-                `;
-                announcementsList.appendChild(li);
-            });
-        }
-
-        // Helper to format event date
-        function formatEventDate(dateStr) {
-            if (!dateStr) return 'TBA';
-            const d = new Date(dateStr);
-            if (isNaN(d)) return dateStr;
-            return d.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
         }
 
         // Modal Functions
@@ -846,8 +996,14 @@
         }
 
         // Member Management Functions
-        // Remove old acceptMember, rejectMember, and handleMembershipAction
-        // These are now handled by approveMember and rejectMember in club-admin-dashboard.js
+        async function acceptMember(membershipId) {
+            await handleMembershipAction(membershipId, 'approve', 'Accepted');
+        }
+
+        async function rejectMember(membershipId) {
+            await handleMembershipAction(membershipId, 'reject', 'Rejected');
+        }
+
         function editMemberRole(memberId) {
             const newRole = prompt("Enter new role:");
             if (newRole) {
@@ -856,33 +1012,41 @@
             }
         }
 
-        // Helper to remove a pending member from the DOM
-        function removePendingMemberFromDOM(memberId) {
-            const pendingMembersList = document.getElementById('pendingMembersList');
-            if (!pendingMembersList) return;
-            const items = pendingMembersList.querySelectorAll('li');
-            items.forEach(li => {
-                if (li.innerHTML.includes(`approveMember('${memberId}')`)) {
-                    li.remove();
+        async function handleMembershipAction(membershipId, actionType, successMessage) {
+            if (!confirm(`Are you sure you want to ${actionType} this membership?`)) {
+                return;
+            }
+
+            const authToken = localStorage.getItem('authToken');
+            if (!authToken) {
+                alert('You are not authorized. Please log in as a Club Admin.');
+                window.location.href = '/login-admin';
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/club/memberships/${actionType}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ membershipId })
+                });
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    alert(`${successMessage} membership successfully!`);
+                    // Re-fetch dashboard data to update the lists
+                    await fetchDashboardData();
+                } else {
+                    alert(`Failed to ${actionType} membership: ${data.message || 'Server error'}`);
                 }
-            });
-            // Update the count
-            const pendingMembersCount = document.getElementById('pendingMembersCount');
-            if (pendingMembersCount) {
-                const newCount = pendingMembersList.querySelectorAll('li').length;
-                // If no pending left, show fallback message
-                if (newCount === 0) {
-                    const li = document.createElement('li');
-                    li.textContent = 'No pending membership requests.';
-                    li.style.color = '#888';
-                    pendingMembersList.appendChild(li);
-                }
-                pendingMembersCount.textContent = newCount;
+            } catch (error) {
+                console.error(`Error ${actionType} membership:`, error);
+                alert('An unexpected error occurred. Please try again.');
             }
         }
-
-        // Expose for club-admin-dashboard.js to call after approve/reject
-        window.removePendingMemberFromDOM = removePendingMemberFromDOM;
 
         // Charts Initialization
         function initializeCharts(analyticsData) {
@@ -1001,99 +1165,31 @@
         }
 
         // Form Submissions
-        const createEventForm = document.getElementById('createEventForm');
-        if (createEventForm) {
-            createEventForm.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                const authToken = localStorage.getItem('authToken');
-                const title = this.querySelector('input[placeholder="Enter event title"]').value;
-                const description = this.querySelector('textarea').value;
-                const start_datetime = this.querySelector('input[type="datetime-local"]').value;
-                const location = this.querySelector('input[placeholder="Enter event location"]').value;
-                const max_capacity = this.querySelector('input[placeholder="Enter maximum attendees"]').value;
+        document.getElementById('createEventForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Event created successfully!');
+            closeModal('createEventModal');
+            this.reset();
+        });
 
-                const payload = {
-                    title,
-                    description,
-                    start_datetime,
-                    location,
-                    max_capacity: max_capacity ? parseInt(max_capacity) : null
-                };
+        document.getElementById('createAnnouncementForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Announcement posted successfully!');
+            closeModal('createAnnouncementModal');
+            this.reset();
+        });
 
-                const response = await fetch('/api/club/events', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${authToken}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(payload)
-                });
+        document.getElementById('inviteMemberForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Invitation sent successfully!');
+            closeModal('inviteMemberModal');
+            this.reset();
+        });
 
-                if (response.ok) {
-                    alert('Event created successfully!');
-                    closeModal('createEventModal');
-                    this.reset();
-                    // Refetch dashboard data and re-render events
-                    await fetchDashboardData();
-                    renderClubEvents();
-                } else {
-                    const error = await response.json();
-                    alert('Failed to create event: ' + (error.message || response.status));
-                }
-            });
-        }
-        const createAnnouncementForm = document.getElementById('createAnnouncementForm');
-        if (createAnnouncementForm) {
-            createAnnouncementForm.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                const authToken = localStorage.getItem('authToken');
-                const title = this.querySelector('input[placeholder="Enter announcement title"]').value;
-                const content = this.querySelector('textarea').value;
-                const priority = this.querySelector('select').value.toLowerCase();
-                const isPinned = this.querySelector('input[type="checkbox"]').checked;
-
-                const payload = {
-                    title,
-                    content,
-                    priority,
-                    is_pinned: isPinned
-                };
-
-                const response = await fetch('/api/club/announcements', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${authToken}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(payload)
-                });
-
-                if (response.ok) {
-                    alert('Announcement posted successfully!');
-                    closeModal('createAnnouncementModal');
-                    this.reset();
-                } else {
-                    const error = await response.json();
-                    alert('Failed to post announcement: ' + (error.message || response.status));
-                }
-            });
-        }
-        const inviteMemberForm = document.getElementById('inviteMemberForm');
-        if (inviteMemberForm) {
-            inviteMemberForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                alert('Invitation sent successfully!');
-                closeModal('inviteMemberModal');
-                this.reset();
-            });
-        }
-        const clubProfileForm = document.getElementById('clubProfileForm');
-        if (clubProfileForm) {
-            clubProfileForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                alert('Club profile updated successfully!');
-            });
-        }
+        document.getElementById('clubProfileForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Club profile updated successfully!');
+        });
 
         // Close modals when clicking outside
         window.addEventListener('click', function(e) {
@@ -1115,146 +1211,249 @@
                 return;
             }
 
-            try {
-                const response = await fetch('/api/club/dashboard', {
-                    headers: {
-                        'Authorization': `Bearer ${authToken}`
-                    }
-                });
-                if (!response.ok) {
-                    if (response.status === 404) {
-                        const errorData = await response.json();
-                        alert(errorData.message || 'No club associated with this admin account.');
-                        return;
-                    }
-                    throw new Error(`HTTP error! status: ${response.status}`);
+            // Personalize welcome message and title immediately
+            const clubName = currentUser.clubDetails ? currentUser.clubDetails.name : 'Your Club';
+            document.getElementById('welcomeMessage').textContent = `Welcome back, ${currentUser.firstName || 'Admin'} of ${clubName}!`;
+            document.getElementById('dashboardTitle').textContent = `${clubName} Admin Dashboard`;
+
+            // --- Mock Data for Demonstration ---
+            // In a real application, you would make an API call here:
+            // try {
+            //     const response = await fetch('/api/club/dashboard', {
+            //         headers: {
+            //             'Authorization': `Bearer ${authToken}`
+            //         }
+            //     });
+            //     if (!response.ok) {
+            //         throw new Error(`HTTP error! status: ${response.status}`);
+            //     }
+            //     currentClubData = await response.json();
+            // } catch (error) {
+            //     console.error('Error fetching dashboard data:', error);
+            //     alert('Failed to load dashboard data. Please try again later.');
+            //     // Optionally, redirect or show a more persistent error message
+            //     return;
+            // }
+
+            // Mock Data (replace with actual API response)
+            currentClubData = {
+                overview: {
+                    totalMembers: 135,
+                    activeMembers: 120,
+                    pendingRequests: 7,
+                    upcomingEvents: 4,
+                    nextEvent: { title: 'Annual General Meeting', date: 'Tomorrow, 7:00 PM' },
+                    newInteractionsToday: 30,
+                    eventRSVPs: 22,
+                    announcementViews: 110,
+                    engagementRate: '82%',
+                    engagementTrend: '↗️ +15%'
+                },
+                members: {
+                    pending: [
+                        { id: 'req1', name: 'Sarah Lee', role: 'Journalism • Freshman' },
+                        { id: 'req2', name: 'Mike Chen', role: 'Electrical Eng. • Junior' }
+                    ],
+                    current: [
+                        { id: 'mem1', name: 'Alice Mitchell', role: 'President' },
+                        { id: 'mem2', name: 'Bob Johnson', role: 'Vice President' },
+                        { id: 'mem3', name: 'Carol White', role: 'Secretary' },
+                        { id: 'mem4', name: 'David Green', role: 'Treasurer' },
+                        { id: 'mem5', name: 'Eve Black', role: 'Member' }
+                    ]
+                },
+                events: [
+                    { id: 'evt1', title: '🚀 Hackathon 2024', date: 'Dec 23, 2024', description: 'Join us for our annual 48-hour hackathon! Build amazing projects, network with peers, and compete for prizes.', rsvps: 55, teams: 15, daysLeft: 2 },
+                    { id: 'evt2', title: '💻 Weekly Coding Workshop', date: 'Dec 26, 2024', description: 'Learn React.js fundamentals in this hands-on workshop. Perfect for beginners!', rsvps: 35, maxCapacity: 40, daysLeft: 5 }
+                ],
+                announcements: [
+                    { id: 'ann1', title: '🎉 Hackathon Registration Open!', time: '2 hours ago', content: 'Registration for our annual hackathon is now open! Early bird pricing available until December 15th. Don\'t miss out on this amazing opportunity to showcase your skills and win awesome prizes!', views: 180, comments: 15, likes: 30 },
+                    { id: 'ann2', title: '📚 New Study Group Schedule', time: '1 day ago', content: 'We\'ve updated our weekly study group schedule. Sessions will now be held on Tuesdays and Thursdays from 7-9 PM in the computer lab. Topics will include data structures, algorithms, and interview preparation.', views: 100, comments: 10, likes: 20 }
+                ],
+                analytics: {
+                    memberGrowth: [45, 52, 61, 78, 95, 135],
+                    eventAttendance: [32, 28, 35, 42],
+                    engagement: [40, 30, 20, 10] // Events, Announcements, Discussions, Resources
+                },
+                profile: {
+                    name: clubName,
+                    description: 'A community of passionate programmers dedicated to learning, sharing knowledge, and building amazing projects together. We welcome students of all skill levels!',
+                    contactEmail: currentUser.email,
+                    meetingSchedule: 'Wednesdays 6:00 PM - 8:00 PM',
+                    meetingLocation: 'Computer Science Building, Room 203',
+                    category: 'Technology',
+                    logoUrl: 'https://via.placeholder.com/150/FFC107/000000?text=ClubLogo'
                 }
-                currentClubData = await response.json();
-                // Debug log to see what is returned
-                console.log('Club Dashboard API response:', currentClubData);
+            };
+            // --- End Mock Data ---
 
-                // Always use backend values for club/admin name
-                let clubName = (currentClubData.profile && currentClubData.profile.name) ? currentClubData.profile.name : 'Your Club';
-                let adminName = (typeof currentClubData.adminName === 'string' && currentClubData.adminName.trim() !== '') ? currentClubData.adminName : 'Admin';
-
-                // Set club/admin info banner
-                const clubNameDisplay = document.getElementById('clubNameDisplay');
-                if (clubNameDisplay) { clubNameDisplay.textContent = clubName; }
-                const adminNameDisplay = document.getElementById('adminNameDisplay');
-                if (adminNameDisplay) { adminNameDisplay.textContent = `Admin: ${adminName}`; }
-
-                // Set dashboard title and welcome message
-                const dashboardTitle = document.getElementById('dashboardTitle');
-                if (dashboardTitle) dashboardTitle.textContent = `${clubName} Admin Dashboard`;
-                const welcomeMessage = document.getElementById('welcomeMessage');
-                if (welcomeMessage) welcomeMessage.textContent = `Welcome back, ${adminName}!`;
-
-                populateDashboard(currentClubData);
-                // Always render events after fetching dashboard data for debug visibility
-                renderClubEvents();
-            } catch (error) {
-                console.error('Error fetching dashboard data:', error);
-                alert('Failed to load dashboard data. Please try again later.');
-                return;
-            }
+            populateDashboard(currentClubData);
         }
 
-        // --- Dashboard Data Population ---
-        function populateDashboard(clubData) {
-            // Pending Membership Requests
-            const pendingMembersList = document.getElementById('pendingMembersList');
-            const pendingMembersCount = document.getElementById('pendingMembersCount');
-            if (pendingMembersList && pendingMembersCount) {
-                const pending = (clubData.pendingRequests && Array.isArray(clubData.pendingRequests)) ? clubData.pendingRequests : [];
-                pendingMembersCount.textContent = pending.length;
-                pendingMembersList.innerHTML = '';
-                if (pending.length === 0) {
-                    const li = document.createElement('li');
-                    li.textContent = 'No pending membership requests.';
-                    li.style.color = '#888';
-                    pendingMembersList.appendChild(li);
-                } else {
-                    pending.forEach(req => {
-                        const li = document.createElement('li');
-                        li.className = 'member-card';
-                        li.innerHTML = `
-                            <div class="member-info">
-                                <div class="member-avatar">${req.name ? req.name.charAt(0).toUpperCase() : '?'}</div>
-                                <div class="member-details">
-                                    <h4>${req.name || req.email || 'Unknown'}</h4>
-                                    <div class="member-role">${req.email || ''}</div>
-                                </div>
-                            </div>
-                            <div class="member-actions">
-                                <button class="form-button btn-small" onclick="approveMember('${req.id}')">Approve</button>
-                                <button class="form-button btn-small btn-danger" onclick="rejectMember('${req.id}')">Reject</button>
-                            </div>
-                        `;
-                        pendingMembersList.appendChild(li);
-                    });
-                }
-            }
+        function populateDashboard(data) {
+            // Overview Tab
+            document.querySelector('#dashboard .metric-number:nth-child(2)').textContent = data.overview.totalMembers;
+            document.querySelector('#dashboard .metric-label:nth-child(3)').textContent = 'Total Members';
+            document.querySelector('#dashboard .metric-number:nth-child(6)').textContent = data.overview.upcomingEvents;
+            document.querySelector('#dashboard .metric-label:nth-child(7)').textContent = 'Events This Week';
+            document.querySelector('#dashboard .metric-number:nth-child(10)').textContent = data.overview.newInteractionsToday;
+            document.querySelector('#dashboard .metric-label:nth-child(11)').textContent = 'New Interactions Today';
+            document.querySelector('#dashboard .metric-number:nth-child(14)').textContent = data.overview.engagementRate;
+            document.querySelector('#dashboard .metric-label:nth-child(15)').textContent = 'This Month';
 
-            // Current Members
-            const currentMembersList = document.getElementById('currentMembersList');
-            const currentMembersCount = document.getElementById('currentMembersCount');
-            if (currentMembersList && currentMembersCount) {
-                const members = (clubData.members && Array.isArray(clubData.members)) ? clubData.members : [];
-                currentMembersCount.textContent = members.length;
-                currentMembersList.innerHTML = '';
-                if (members.length === 0) {
-                    const li = document.createElement('li');
-                    li.textContent = 'No current members.';
-                    li.style.color = '#888';
-                    currentMembersList.appendChild(li);
-                } else {
-                    members.forEach(mem => {
-                        const li = document.createElement('li');
-                        li.className = 'member-card';
-                        li.innerHTML = `
-                            <div class="member-info">
-                                <div class="member-avatar">${mem.name ? mem.name.charAt(0).toUpperCase() : '?'}</div>
-                                <div class="member-details">
-                                    <h4>${mem.name || mem.email || 'Unknown'}</h4>
-                                    <div class="member-role">${mem.role || 'Member'}</div>
-                                </div>
-                            </div>
-                            <div class="member-actions">
-                                <button class="form-button btn-small" onclick="editMemberRole('${mem.memberId}')">Edit Role</button>
-                            </div>
-                        `;
-                        currentMembersList.appendChild(li);
-                    });
-                }
-            }
+            // Update specific overview details
+            document.querySelector('#dashboard .dashboard-card:nth-child(1) div:nth-child(4) span:nth-child(2)').textContent = data.overview.activeMembers;
+            document.querySelector('#dashboard .dashboard-card:nth-child(1) div:nth-child(5) span:nth-child(2)').textContent = data.overview.pendingRequests;
+            document.querySelector('#dashboard .dashboard-card:nth-child(2) div:nth-child(4) + div').textContent = data.overview.nextEvent.title;
+            document.querySelector('#dashboard .dashboard-card:nth-child(2) div:nth-child(4) + div + div').textContent = data.overview.nextEvent.date;
+            document.querySelector('#dashboard .dashboard-card:nth-child(3) div:nth-child(4) span:nth-child(2)').textContent = data.overview.eventRSVPs;
+            document.querySelector('#dashboard .dashboard-card:nth-child(3) div:nth-child(5) span:nth-child(2)').textContent = data.overview.announcementViews;
+            document.querySelector('#dashboard .dashboard-card:nth-child(4) div:nth-child(4)').textContent = `Trend: ${data.overview.engagementTrend} from last month`;
 
-            // Overview metrics
-            const overviewActiveMembers = document.getElementById('overviewActiveMembers');
-            if (overviewActiveMembers) overviewActiveMembers.textContent = (clubData.members && clubData.members.length) ? clubData.members.length : '0';
-            const overviewPendingRequests = document.getElementById('overviewPendingRequests');
-            if (overviewPendingRequests) overviewPendingRequests.textContent = (clubData.pendingRequests && clubData.pendingRequests.length) ? clubData.pendingRequests.length : '0';
-            const overviewUpcomingEvents = document.getElementById('overviewUpcomingEvents');
-            if (overviewUpcomingEvents) overviewUpcomingEvents.textContent = (clubData.events && clubData.events.length) ? clubData.events.length : '0';
-            const overviewEngagementRate = document.getElementById('overviewEngagementRate');
-            if (overviewEngagementRate) overviewEngagementRate.textContent = clubData.engagementRate ? `${clubData.engagementRate}%` : 'N/A';
+            // Members Tab
+            populateMembers(data.members);
+
+            // Events Tab
+            populateEvents(data.events);
+
+            // Announcements Tab
+            populateAnnouncements(data.announcements);
+
+            // Club Profile Tab
+            populateClubProfile(data.profile);
+
+            // Analytics Tab (charts initialized when tab is active)
+            // The initializeCharts function will be called when the analytics tab is clicked.
         }
 
-        // --- Initial Data Fetch ---
-        document.addEventListener('DOMContentLoaded', function() {
-            // Check if user is logged in and is a club admin
-            const authToken = localStorage.getItem('authToken');
-            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        function populateMembers(membersData) {
+            const pendingList = document.getElementById('pendingRequests');
+            pendingList.innerHTML = ''; // Clear existing
+            membersData.pending.forEach(member => { // member.id here is membership_id from DB
+                pendingList.innerHTML += `
+                    <div class="member-card">
+                        <div class="member-info">
+                            <div class="member-avatar">${member.name.split(' ').map(n => n[0]).join('')}</div>
+                            <div class="member-details">
+                                <h4>${member.name}</h4>
+                                <div class="member-role">${member.role}</div>
+                            </div>
+                        </div>
+                        <div class="member-actions">
+                            <button class="btn btn-primary btn-small" onclick="acceptMember('${member.id}')">Accept</button>
+                            <button class="btn btn-danger btn-small" onclick="rejectMember('${member.id}')">Reject</button>
+                        </div>
+                    </div>
+                `;
+            });
 
-            if (!authToken || !currentUser || currentUser.role !== 'club_admin') {
-                alert('You are not authorized to view this page. Please log in as a Club Admin.');
-                window.location.href = '/login-admin'; // Redirect to admin login
-                return;
-            }
+            const currentMembersList = document.getElementById('membersList');
+            currentMembersList.innerHTML = ''; // Clear existing
+            membersData.current.forEach(member => {
+                currentMembersList.innerHTML += `
+                    <div class="member-card">
+                        <div class="member-info">
+                            <div class="member-avatar">${member.name.split(' ').map(n => n[0]).join('')}</div>
+                            <div class="member-details">
+                                <h4>${member.name}</h4>
+                                <div class="member-role">${member.role}</div>
+                            </div>
+                        </div>
+                        <div class="member-actions">
+                            <button class="btn btn-primary btn-small" onclick="editMemberRole('${member.id}')">Edit Role</button>
+                            <button class="btn btn-danger btn-small">Remove</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
 
-            // Fetch and display the dashboard data
-            fetchDashboardData();
+        function populateEvents(eventsData) {
+            const eventsList = document.getElementById('eventsList');
+            eventsList.innerHTML = ''; // Clear existing
+            eventsData.forEach(event => {
+                eventsList.innerHTML += `
+                    <div class="event-card">
+                        <div class="event-header">
+                            <div class="event-title">${event.title}</div>
+                            <div class="event-date">${event.date}</div>
+                        </div>
+                        <p style="color: #555; margin-bottom: 15px;">${event.description}</p>
+                        <div class="event-stats">
+                            <div class="event-stat">
+                                <div class="event-stat-number">${event.rsvps}</div>
+                                <div class="event-stat-label">RSVPs</div>
+                            </div>
+                            <div class="event-stat">
+                                <div class="event-stat-number">${event.teams || event.maxCapacity || 'N/A'}</div>
+                                <div class="event-stat-label">${event.teams ? 'Teams' : 'Capacity'}</div>
+                            </div>
+                            <div class="event-stat">
+                                <div class="event-stat-number">${event.daysLeft}</div>
+                                <div class="event-stat-label">Days Left</div>
+                            </div>
+                        </div>
+                        <div style="margin-top: 15px; display: flex; gap: 10px;">
+                            <button class="btn btn-primary btn-small">Edit Event</button>
+                            <button class="btn btn-danger btn-small">Cancel Event</button>
+                            <button class="btn btn-primary btn-small">View RSVPs</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function populateAnnouncements(announcementsData) {
+            const announcementsList = document.getElementById('announcementsList');
+            announcementsList.innerHTML = ''; // Clear existing
+            announcementsData.forEach(announcement => {
+                announcementsList.innerHTML += `
+                    <div class="announcement-card">
+                        <div class="announcement-header">
+                            <div class="announcement-title">${announcement.title}</div>
+                            <div class="announcement-time">${announcement.time}</div>
+                        </div>
+                        <div class="announcement-content">
+                            ${announcement.content}
+                        </div>
+                        <div class="announcement-stats">
+                            <span>👁️ ${announcement.views} views</span>
+                            <span>💬 ${announcement.comments} comments</span>
+                            <span>❤️ ${announcement.likes} likes</span>
+                        </div>
+                        <div style="margin-top: 15px; display: flex; gap: 10px;">
+                            <button class="btn btn-primary btn-small">Edit</button>
+                            <button class="btn btn-danger btn-small">Delete</button>
+                            <button class="btn btn-primary btn-small">Pin</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function populateClubProfile(profileData) {
+            document.getElementById('clubName').value = profileData.name;
+            document.getElementById('clubDescription').value = profileData.description;
+            document.getElementById('clubContactEmail').value = profileData.contactEmail;
+            document.getElementById('clubMeetingSchedule').value = profileData.meetingSchedule;
+            document.getElementById('clubMeetingLocation').value = profileData.meetingLocation;
+            // For select, you might need to iterate options or set selected based on value
+            document.querySelector('#clubCategory').value = profileData.category;
+            document.getElementById('clubLogoUrl').value = profileData.logoUrl;
+        }
+
+        // Initial data fetch on page load
+        document.addEventListener('DOMContentLoaded', fetchDashboardData);
+
+        // Logout functionality
+        document.querySelector('.header-actions .btn-danger').addEventListener('click', function(event) {
+            event.preventDefault();
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('currentUser');
+            alert('You have been logged out.');
+
+            window.location.href = '/welcome'; // Redirect to welcome or login page
         });
     </script>
-    <script src="club-admin-dashboard.js"></script>
 </body>
 </html>
