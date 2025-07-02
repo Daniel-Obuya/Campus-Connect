@@ -192,10 +192,6 @@
                 <div class="form-group">
                     <input type="text" class="form-input" name="advisorName" placeholder="Faculty Advisor Name">
                 </div>
-                <div class="form-group">
-                    <label for="clubLogo" style="font-size: 14px; color: #333; margin-bottom: 6px; display: block;">Club Logo/Image (optional)</label>
-                    <input type="file" class="form-input" id="clubLogo" name="clubLogo" accept="image/*">
-                </div>
             </div>
 
             <div class="conditional-fields" id="departmentFields">
@@ -430,34 +426,12 @@
             };
 
             if (selectedRole === 'club') {
-                // Handle club logo image
-                let logoUrl = '';
-                const logoInput = document.getElementById('clubLogo');
-                if (logoInput && logoInput.files && logoInput.files[0]) {
-                    const file = logoInput.files[0];
-                    // We'll read the file as a base64 string
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        userData.clubDetails = {
-                            name: document.querySelector('#clubFields select[name="clubName"]').value,
-                            description: document.querySelector('#clubFields textarea[name="clubDescription"]').value.trim(),
-                            category: document.querySelector('#clubFields select[name="clubCategory"]').value,
-                            advisorName: document.querySelector('#clubFields input[name="advisorName"]').value.trim(),
-                            logoUrl: e.target.result // base64 string
-                        };
-                        submitAdminData(userData);
-                    };
-                    reader.readAsDataURL(file);
-                    return; // Wait for FileReader before submitting
-                } else {
-                    userData.clubDetails = {
-                        name: document.querySelector('#clubFields select[name="clubName"]').value,
-                        description: document.querySelector('#clubFields textarea[name="clubDescription"]').value.trim(),
-                        category: document.querySelector('#clubFields select[name="clubCategory"]').value,
-                        advisorName: document.querySelector('#clubFields input[name="advisorName"]').value.trim(),
-                        logoUrl: ''
-                    };
-                }
+                userData.clubDetails = {
+                    name: document.querySelector('#clubFields select[name="clubName"]').value,
+                    description: document.querySelector('#clubFields textarea[name="clubDescription"]').value.trim(),
+                    category: document.querySelector('#clubFields select[name="clubCategory"]').value,
+                    advisorName: document.querySelector('#clubFields input[name="advisorName"]').value.trim()
+                };
             } else if (selectedRole === 'department') {
                 userData.departmentDetails = {
                     name: document.querySelector('#departmentFields select[name="departmentName"]').value,
@@ -469,44 +443,36 @@
                 };
             }
 
-            // Move fetch logic to a function so it can be called after FileReader
-            function submitAdminData(userData) {
-                console.log('Submitting admin data:', userData);
-                fetch('/api/signup', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(userData)
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        return response.json().then(err => { throw new Error(err.message || `Server error: ${response.status}`); })
-                                         .catch(() => { throw new Error(`Server error: ${response.status} ${response.statusText}`); });
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.success) {
-                        alert(`Admin account for ${userData.role.replace('_', ' ')} created successfully. Please log in.`);
-                        setTimeout(() => { window.location.href = '/login-admin'; }, 1500);
-                    } else {
-                        throw new Error(data.message || 'Registration failed');
-                    }
-                })
-                .catch(error => {
-                    console.error('Admin registration error:', error);
-                    alert(`Registration failed: ${error.message}`);
-                })
-                .finally(() => {
-                    signupBtn.textContent = 'Create Admin Account';
-                    checkFormValidity(); // Re-enable button if form is valid
-                });
-            }
+            console.log('Submitting admin data:', userData);
 
-            // If image is being uploaded, submission will happen in FileReader.onload
-            if (selectedRole === 'club') {
-                if (document.getElementById('clubLogo').files.length > 0) return;
-            }
-            submitAdminData(userData);
+            fetch('/api/signup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(userData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => { throw new Error(err.message || `Server error: ${response.status}`); })
+                                     .catch(() => { throw new Error(`Server error: ${response.status} ${response.statusText}`); });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    alert(`Admin account for ${userData.role.replace('_', ' ')} created successfully. Please log in.`);
+                    setTimeout(() => { window.location.href = '/login-admin'; }, 1500);
+                } else {
+                    throw new Error(data.message || 'Registration failed');
+                }
+            })
+            .catch(error => {
+                console.error('Admin registration error:', error);
+                alert(`Registration failed: ${error.message}`);
+            })
+            .finally(() => {
+                signupBtn.textContent = 'Create Admin Account';
+                checkFormValidity(); // Re-enable button if form is valid
+            });
         });
         checkFormValidity(); // Initial check
     </script>

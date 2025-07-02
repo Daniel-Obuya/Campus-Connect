@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -8,7 +8,7 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; /* Keep original font family */
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             background: linear-gradient(135deg, #f5deb3 0%, #deb887 50%, #cd853f 100%);
             min-height: 100vh; display: flex; flex-direction: column; align-items: center;
             padding: 20px; position: relative; overflow-x: hidden;
@@ -19,77 +19,83 @@
                         radial-gradient(circle at 80% 80%, rgba(255,255,255,0.05) 0%, transparent 50%);
             pointer-events: none; z-index: -1;
         }
-        /* body padding handled by common-header.css */
         .edit-profile-container {
-            background: rgba(255,255,255,0.25); backdrop-filter: blur(30px);
-            border: 1.5px solid rgba(255,255,255,0.25); border-radius: 20px; padding: 22px 28px;
-            width: 100%; max-width: 410px; box-shadow: 0 10px 32px rgba(0,0,0,0.13);
-            margin-top: 40px;
-            animation: fadeInUp 0.7s cubic-bezier(.39,.575,.56,1.000);
-        }
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(40px); }
-            to { opacity: 1; transform: translateY(0); }
+            background: rgba(255,255,255,0.15); backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.2); border-radius: 24px; padding: 30px 40px;
+            width: 100%; max-width: 700px; box-shadow: 0 20px 40px rgba(0,0,0,0.15);
         }
         .edit-profile-container h1 {
-            font-size: 22px; color: #333; margin-bottom: 18px; text-align: center;
-            border-bottom: 1px solid rgba(0,0,0,0.08); padding-bottom: 10px;
-            letter-spacing: 0.5px;
+            font-size: 26px; color: #333; margin-bottom: 25px; text-align: center;
+            border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 15px;
         }
-        .form-group { margin-bottom: 15px; }
+        .form-group { margin-bottom: 20px; }
         .form-group label {
-            display: block; font-size: 14px; color: #444; margin-bottom: 5px; font-weight: 500;
+            display: block; font-size: 16px; color: #444; margin-bottom: 8px; font-weight: 500;
         }
         .form-group input[type="text"],
         .form-group input[type="email"],
         .form-group input[type="url"],
         .form-group textarea {
-            width: 100%; padding: 9px 11px;
-            border: 1px solid rgba(0,0,0,0.09); border-radius: 7px;
-            background: rgba(255,255,255,0.7); font-size: 14px; color: #333;
-            transition: border-color 0.3s, box-shadow 0.3s;
+            width: 100%; padding: 12px;
+            border: 1px solid rgba(0,0,0,0.1); border-radius: 8px;
+            background: rgba(255,255,255,0.5); font-size: 15px; color: #333;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
         }
         .form-group input[type="text"]:focus,
         .form-group input[type="email"]:focus,
         .form-group input[type="url"]:focus,
         .form-group textarea:focus {
             outline: none; border-color: #ff9800;
-            box-shadow: 0 0 0 2px rgba(255, 152, 0, 0.13);
+            box-shadow: 0 0 0 2px rgba(255, 152, 0, 0.2);
         }
-        .form-group textarea { min-height: 60px; resize: vertical; }
-        .form-actions { text-align: center; margin-top: 18px; }
+        .form-group textarea { min-height: 100px; resize: vertical; }
+
+        .form-actions { text-align: right; margin-top: 30px; }
         .form-actions .btn {
-            padding: 9px 18px; border: none; border-radius: 8px;
-            font-size: 14px; font-weight: 600; cursor: pointer;
-            text-decoration: none; transition: all 0.2s; margin-left: 7px;
+            padding: 12px 25px; border: none; border-radius: 10px;
+            font-size: 15px; font-weight: 600; cursor: pointer;
+            text-decoration: none; transition: all 0.3s ease; margin-left: 10px;
         }
         .form-actions .btn-save {
             background: linear-gradient(135deg, #4CAF50 0%, #8BC34A 100%); color: white;
         }
-        .form-actions .btn-save:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(76,175,80,0.18); }
+        .form-actions .btn-save:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(76,175,80,0.3); }
         .form-actions .btn-cancel {
             background: linear-gradient(135deg, #f44336 0%, #e57373 100%); color: white;
         }
-        .form-actions .btn-cancel:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(244,67,54,0.18); }
-        /* Add a subtle card shadow and rounded corners for inputs */
-        .form-group input, .form-group textarea {
-            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+        .form-actions .btn-cancel:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(244,67,54,0.3); }
+
+        .profile-picture-section { text-align: center; margin-bottom: 25px; }
+        .profile-picture-preview {
+            width: 120px; height: 120px; border-radius: 50%;
+            background: #e0e0e0 url('https://via.placeholder.com/120') no-repeat center center;
+            background-size: cover; margin: 0 auto 15px auto;
+            border: 3px solid rgba(255,255,255,0.3);
         }
+        .profile-picture-section input[type="file"] { display: none; }
+        .profile-picture-section .upload-btn {
+            padding: 10px 20px; background: #ffc107; border:none; border-radius:8px;
+            font-size:14px; font-weight:500; color:#333; cursor:pointer;
+        }
+        .profile-picture-section .upload-btn:hover { background: #ff9800; }
+
     </style>
 </head>
 <body>
-    <header class="header">
+    <header class="header"> <!-- Changed div to header -->
         <div class="header-left">
             <img src="images/logo 1.png" alt="Campus Connect Logo" class="logo">
             <div class="brand-name">Campus Connect</div>
         </div>
         <!-- No page title here -->
-        <a href="student-profile.html" class="btn-header btn-header-secondary">Back to Profile</a> <!-- This is a good pattern -->
+        <a href="student-profile.html" class="btn-header btn-header-secondary">Back to Profile</a>
     </header>
 
     <div class="edit-profile-container">
         <h1>Edit Your Profile</h1>
         <form id="editProfileForm">
+
+
             <div class="form-group">
                 <label for="firstName">First Name</label>
                 <input type="text" id="firstName" name="firstName" required>
@@ -97,6 +103,10 @@
             <div class="form-group">
                 <label for="lastName">Last Name</label>
                 <input type="text" id="lastName" name="lastName" required>
+            </div>
+            <div class="form-group">
+                <label for="bio">About Me / Biography</label>
+                <textarea id="bio" name="bio" rows="4"></textarea>
             </div>
             <div class="form-group">
                 <label for="major">Major</label>
@@ -130,6 +140,7 @@
             const currentUser = JSON.parse(localStorage.getItem('currentUser'));
             const form = document.getElementById('editProfileForm');
 
+
             if (!currentUser || currentUser.role !== 'student') {
                 alert('User not found or not authorized. Redirecting to login.');
                 window.location.href = '/login-student'; // Adjust as needed
@@ -139,6 +150,7 @@
             // Populate form with existing data
             form.firstName.value = currentUser.firstName || '';
             form.lastName.value = currentUser.lastName || '';
+            form.bio.value = currentUser.bio || '';
             if (currentUser.studentDetails) {
                 form.major.value = currentUser.studentDetails.major || '';
                 form.graduationYear.value = currentUser.studentDetails.graduationYear || '';
@@ -147,12 +159,18 @@
                 form.portfolio.value = currentUser.studentDetails.portfolio || '';
             }
 
+
+
+
             form.addEventListener('submit', async function(event) {
+                console.log('Form submission initiated.');
                 event.preventDefault();
 
                 // Update currentUser object from form fields
                 currentUser.firstName = form.firstName.value;
                 currentUser.lastName = form.lastName.value;
+                currentUser.bio = form.bio.value;
+
 
                 if (!currentUser.studentDetails) {
                     currentUser.studentDetails = {}; // Initialize if not present
@@ -169,20 +187,29 @@
 
                 // Prepare data for the API
                 const profileData = {
-                    firstName: currentUser.firstName,
-                    lastName: currentUser.lastName,
-                    studentDetails: currentUser.studentDetails
+                    first_name: currentUser.firstName,
+                    last_name: currentUser.lastName,
+                    bio: currentUser.bio,
+                    // Map student details to expected backend fields
+                    major: currentUser.studentDetails.major,
+                    graduation_year: currentUser.studentDetails.graduationYear,
+                    linkedin_url: currentUser.studentDetails.linkedin,
+                    github_url: currentUser.studentDetails.github,
+                    personal_website: currentUser.studentDetails.portfolio
                 };
 
                 const authToken = localStorage.getItem('authToken');
                 if (!authToken) {
                     alert('You are not logged in. Please log in again.');
+                    console.error('Authentication token missing.');
                     window.location.href = '/login-student';
                     return;
                 }
 
+                console.log('Sending profile data:', profileData);
+
                 try {
-                    const response = await fetch('/api/user/profile', {
+                    const response = await fetch('/api/student/profile', {
                         method: 'PUT',
                         headers: {
                             'Content-Type': 'application/json',
@@ -191,17 +218,22 @@
                         body: JSON.stringify(profileData)
                     });
 
+                    console.log('Received response from server.');
                     const result = await response.json();
+                    console.log('Parsed JSON response:', result);
 
-                    if (response.ok && result.success) {
-                        // IMPORTANT: Save the updated user object back to localStorage
-                        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    if (response.ok && result.success && result.user) {
+                        // Save the updated user object from backend to localStorage
+                        localStorage.setItem('currentUser', JSON.stringify(result.user));
                         alert('Profile updated successfully!');
+                        console.log('Profile updated successfully. Redirecting...');
                         window.location.href = 'student-profile.html'; // Redirect back to profile
                     } else {
                         alert(`Failed to update profile: ${result.message || 'An unknown server error occurred.'}`);
+                        console.error('Server reported failure:', result.message || 'Unknown error');
                     }
                 } catch (error) {
+                    console.error('Error updating profile:', error);
                     alert('An error occurred while updating your profile. Please try again.');
                 } finally {
                     saveButton.textContent = 'Save Changes'; // Restore button text

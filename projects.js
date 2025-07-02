@@ -304,7 +304,7 @@ function openProjectModal(project) {
                 <div style="font-size: 14px; color: #777;">Contributors</div>
             </div>
             <div style="text-align: center;">
-                <div style="font-size: 24px; font-weight: bold; color: #cd853f;">${project.likes}</div>
+                <div style="font-size: 24px; font-weight: bold, color: #cd853f;">${project.likes}</div>
                 <div style="font-size: 14px; color: #777;">Likes</div>
             </div>
             <div style="text-align: center;">
@@ -336,32 +336,63 @@ function closeCreateProjectModal() {
 }
 
 // Handle create project form submission
-document.getElementById('createProjectForm').addEventListener('submit', function(e) {
+document.getElementById('createProjectForm').addEventListener('submit', async function(e) {
     e.preventDefault();
-    
-    const formData = new FormData(e.target);
-    const newProject = {
-        id: projectsData.length + 1,
-        title: document.getElementById('projectTitle').value,
-        description: document.getElementById('projectDescription').value,
-        owner: "You", // In a real app, this would be the current user
-        department: "Your Department",
-        category: document.getElementById('projectCategory').value,
-        status: document.getElementById('projectStatus').value,
-        technologies: document.getElementById('projectTechnologies').value.split(',').map(t => t.trim()),
-        skills: document.getElementById('projectSkills').value.split(',').map(s => s.trim()),
-        collaborators: 1,
-        likes: 0,
-        views: 0,
-        icon: "🚀" // Default icon, in a real app this could be customizable
+
+    // Collect form data
+    const title = document.getElementById('projectTitle').value;
+    const description = document.getElementById('projectDescription').value;
+    const project_type = document.getElementById('projectType').value;
+    const status = document.getElementById('projectStatus').value;
+    const start_date = document.getElementById('startDate').value;
+    const end_date = document.getElementById('endDate').value;
+    const technologies_used = document.getElementById('projectTechnologies').value.split(',').map(t => t.trim()).filter(Boolean);
+    const skills_required = document.getElementById('projectSkills').value.split(',').map(s => s.trim()).filter(Boolean);
+    const team_size_needed = document.getElementById('teamSize').value;
+    const github_url = document.getElementById('githubUrl').value;
+    const demo_url = document.getElementById('demoUrl').value;
+    const visibility = document.getElementById('visibility').value;
+    const is_seeking_collaborators = document.getElementById('seekingCollaborators').checked;
+
+    // Prepare payload for backend
+    const payload = {
+        title,
+        description,
+        project_type,
+        status,
+        start_date: start_date || null,
+        end_date: end_date || null,
+        technologies_used,
+        skills_required,
+        team_size_needed: team_size_needed ? parseInt(team_size_needed, 10) : null,
+        github_url: github_url || null,
+        demo_url: demo_url || null,
+        visibility,
+        is_seeking_collaborators
     };
-    
-    projectsData.unshift(newProject);
-    applyFilters();
-    closeCreateProjectModal();
-    e.target.reset();
-    
-    alert('Project created successfully! 🎉');
+
+    try {
+        const response = await fetch('/api/projects', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+            },
+            body: JSON.stringify(payload)
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            alert('Error creating project: ' + (error.message || response.status));
+            return;
+        }
+        closeCreateProjectModal();
+        e.target.reset();
+        alert('Project created successfully! 🎉');
+        // Optionally, refresh the project list from backend here
+        if (typeof fetchAndRenderProjects === 'function') fetchAndRenderProjects();
+    } catch (err) {
+        alert('Error creating project: ' + err.message);
+    }
 });
 
 // Join project function
