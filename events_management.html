@@ -4,59 +4,73 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Events Management - Campus Connect</title>
-    <link rel="stylesheet" href="common-header.css"> <!-- common-header.css is linked directly -->
+    <link rel="stylesheet" href="common-header.css">
     <link rel="stylesheet" href="department_admin.css">
+    <!-- Add Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        .event-list-item {
+        .events-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: var(--spacing-lg);
+        }
+
+        .event-card {
+            display: flex;
+            flex-direction: column;
+            background: var(--color-bg-glass-secondary);
+            backdrop-filter: blur(var(--backdrop-blur-medium));
+            border-radius: var(--border-radius-md);
+            border: var(--border-width) solid var(--color-border-glass);
+            box-shadow: var(--box-shadow-soft);
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+
+        .event-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--box-shadow-medium);
+        }
+
+        .event-card-header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            border-bottom: 1px solid #eee;
+            align-items: flex-start;
+            padding: var(--spacing-md);
+            border-bottom: 1px solid var(--color-border-divider);
         }
-        .event-list-item:last-child {
-            border-bottom: none;
+
+        .event-card-title {
+            margin: 0;
+            color: var(--color-text-base);
+            font-size: 1.2em;
+            flex-grow: 1;
+            padding-right: var(--spacing-sm);
         }
-        .event-details p {
-            margin: 2px 0;
-            font-size: 0.9em;
-            color: #555;
+
+        .event-status-badge {
+            flex-shrink: 0; padding: 4px 10px; border-radius: 12px;
+            font-size: 0.75em; font-weight: 600; text-transform: uppercase; color: #fff;
         }
-        .event-actions button, .event-actions a {
-            /* margin-left: 8px; /* Removed as buttons are now stacked */
-            padding: 6px 10px;
-            font-size: 0.85em;
-            width: 130px; /* Give buttons a consistent width in the column */
-            box-sizing: border-box; /* Ensure padding doesn't add to the width */
-        }
-        .event-actions {
-            display: flex;
-            flex-direction: column; /* Stack buttons vertically */
-            gap: 5px; /* Space between stacked buttons */
-            align-items: flex-start; /* Align buttons to the start (left) of the column */
-        }
-        .feature-section {
-            background-color: #f9f9f9;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border: 1px solid #e0e0e0;
-        }
-        .feature-section h3 {
-            margin-top: 0;
-            color: #333;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 5px;
-            margin-bottom: 10px;
-        }
-        .placeholder-text {
-            color: #777;
-            font-style: italic;
-        }
+        .event-status-badge.upcoming { background-color: #2196F3; } /* Blue */
+        .event-status-badge.past { background-color: #757575; } /* Grey */
+        .event-status-badge.cancelled { background-color: #f44336; } /* Red */
+        .event-status-badge.live { background-color: #4CAF50; animation: pulse-live 2s infinite; }
+
+        @keyframes pulse-live { 0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(76, 175, 80, 0); } 100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); } }
+
+        .event-card-body { padding: var(--spacing-md); flex-grow: 1; display: flex; flex-direction: column; }
+        .event-card-description { margin-bottom: var(--spacing-md); flex-grow: 1; }
+        .event-card-details { display: flex; flex-direction: column; gap: var(--spacing-xs); font-size: var(--font-size-small); color: var(--color-text-secondary); }
+        .event-detail-item { display: flex; align-items: center; gap: var(--spacing-sm); }
+        .event-detail-item i { color: var(--theme-color-primary); width: 16px; text-align: center; }
+
+        .event-card-actions { display: flex; gap: var(--spacing-sm); padding: var(--spacing-md); background-color: rgba(0,0,0,0.03); border-top: 1px solid var(--color-border-divider); }
+        .event-card-actions .action-button { flex-grow: 1; text-align: center; }
+
     </style>
 </head>
 <body>
-    <header class="header"> <!-- This header uses the common-header.css styles -->
+    <header class="header">
         <div class="header-left">
             <img src="images/logo 1.png" alt="Campus Connect Logo" class="logo">
             <div class="brand-name">Campus Connect</div>
@@ -70,82 +84,20 @@
 
     <main>
         <section class="dashboard-section">
-            <div style="margin-bottom: 20px;">
-                <a href="create_event.html" class="action-button" style="font-size: 1.1em; padding: 12px 20px;">+ Create New Event</a>
+            <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2>Manage Your Events</h2>
+                <a href="create_event.html" class="action-button pulse-glow"><i class="fas fa-plus-circle"></i> Create New Event</a>
             </div>
 
-            <!-- Event Listing -->
-            <div class="dashboard-box">
-                <h2>Current & Upcoming Events</h2>
-                <ul id="eventsListContainer">
-                    <!-- Events will be loaded here by JavaScript -->
-                    <li class="event-list-item">
-                        <div class="event-info">
-                            <strong>Sample Event: Tech Workshop</strong>
-                            <div class="event-details">
-                                <p>Date: 2024-12-01 | Type: Workshop | Location: Room 101</p>
-                            </div>
-                        </div>
-                        <div class="event-actions">
-                            <a href="create_event.html?eventIdToEdit=sample1" class="action-button action-button-secondary header-button">Edit</a>
-                            <button class="action-button action-button-danger header-button" onclick="deleteEvent('sample1')">Delete</button>
-                            <button class="action-button action-button-info header-button" onclick="viewRsvps('sample1')">View RSVPs</button>
-                        </div>
-                    </li>
-                    <li class="event-list-item">
-                         <div class="event-info">
-                            <strong>Sample Event: Guest Lecture</strong>
-                             <div class="event-details">
-                                <p>Date: 2024-11-25 | Type: Seminar | Virtual</p>
-                            </div>
-                        </div>
-                        <div class="event-actions">
-                            <a href="create_event.html?eventIdToEdit=sample2" class="action-button action-button-secondary header-button">Edit</a>
-                            <button class="action-button action-button-danger header-button" onclick="deleteEvent('sample2')">Delete</button>
-                            <button class="action-button action-button-info header-button" onclick="viewRsvps('sample2')">View RSVPs</button>
-                        </div>
-                    </li>
-                </ul>
-                <p id="noEventsMessage" style="display:none; text-align:center; padding: 20px;">No events found.</p>
+            <!-- Event Grid -->
+            <div class="events-grid" id="eventsGrid">
+                <!-- Events will be loaded here by JavaScript -->
             </div>
-
-            <!-- Event Categorization and Tagging -->
-            <div class="feature-section">
-                <h3>Event Categorization & Tagging</h3>
-                <p class="placeholder-text">[Interface for managing event categories and global tags will be here. This could involve adding, editing, or deleting predefined categories/tags that can be used during event creation.]</p>
+            <div id="noEventsMessage" class="empty-state" style="display:none;">
+                <div class="empty-state-icon"><i class="fas fa-calendar-times fa-3x"></i></div>
+                <h3>No Events Found</h3>
+                <p>You haven't created any events yet. Click the button above to get started!</p>
             </div>
-
-            <!-- RSVP Management Overview -->
-            <div class="feature-section">
-                <h3>RSVP Management</h3>
-                <p class="placeholder-text">[Overview of RSVPs across multiple events, or a link to a more detailed RSVP tracking system. Individual event RSVPs can be accessed via the 'View RSVPs' button on each event.]</p>
-            </div>
-
-            <!-- Event Calendar Integration -->
-            <div class="feature-section">
-                <h3>Event Calendar</h3>
-                <p class="placeholder-text">[A visual calendar displaying scheduled events. Could allow filtering by month/week/day and event type. Clicking an event could show details or link to its management page.]</p>
-                <!-- Example: <div id="eventCalendarView"></div> -->
-            </div>
-
-            <!-- Recurring Event Setup Notes -->
-            <div class="feature-section">
-                <h3>Recurring Event Setup</h3>
-                <p class="placeholder-text">[Recurring event functionality is typically handled during event creation (e.g., in <code>create_event.html</code>). This section could provide guidelines or link to advanced scheduling options if available.]</p>
-            </div>
-
-            <!-- Event Promotion Tools -->
-            <div class="feature-section">
-                <h3>Event Promotion Tools</h3>
-                <p class="placeholder-text">[Tools or integrations for promoting events, e.g., generating shareable links, email templates, social media posting (if integrated), or QR code generation for event check-in/info.]</p>
-            </div>
-
-            <!-- Attendance Tracking -->
-            <div class="feature-section">
-                <h3>Attendance Tracking</h3>
-                <p class="placeholder-text">[System for tracking attendance post-event. This might involve manual entry, QR code scanning data, or integration with an RSVP check-in system. Reports on attendance rates could be generated here.]</p>
-            </div>
-
         </section>
     </main>
 
@@ -173,12 +125,12 @@
 
         // Basic JavaScript for future functionality (e.g., loading events)
         async function loadEvents() {
-            const eventsListContainer = document.getElementById('eventsListContainer');
+            const eventsGrid = document.getElementById('eventsGrid');
             const noEventsMessage = document.getElementById('noEventsMessage');
             const authToken = localStorage.getItem('authToken');
 
             if (!authToken) {
-                eventsListContainer.innerHTML = '<li class="event-list-item" style="justify-content: center;">Please log in to view events.</li>';
+                eventsGrid.innerHTML = '<p style="text-align: center; color: var(--color-text-muted);">Please log in to view events.</p>';
                 noEventsMessage.style.display = 'none';
                 return;
             }
@@ -189,45 +141,63 @@
                 });
                 const result = await response.json();
 
-                eventsListContainer.innerHTML = ''; // Clear sample/previous items
+                eventsGrid.innerHTML = ''; // Clear sample/previous items
 
                 if (result.success && result.events) {
                     if (result.events.length === 0) {
-                        noEventsMessage.style.display = 'block';
+                        noEventsMessage.style.display = 'flex'; // Use flex for empty-state
                     } else {
                         noEventsMessage.style.display = 'none'; // Ensure this is hidden if events are found
                         result.events.forEach(event => {
-                            const listItem = document.createElement('li');
-                            listItem.className = 'event-list-item';
-                            listItem.innerHTML = `
-                                <div class="event-info">
-                                    <h3>${escapeHTML(event.title)}</h3>
-                                    <div class="event-details">
-                                        <p><strong>Starts:</strong> ${escapeHTML(event.start_datetime_formatted)}</p>
-                                        ${event.registration_deadline_formatted ? `<p><strong>Apply by:</strong> ${escapeHTML(event.registration_deadline_formatted)}</p>` : ''}
-                                        ${event.location ? `<p><strong>Location:</strong> ${escapeHTML(event.location)}</p>` : '<p><strong>Location:</strong> Virtual Event</p>'}
-                                        ${event.description ? `<p style="margin-top: 5px; font-size: 0.85em; color: #666;"><em>${escapeHTML(event.description.substring(0, 150))}${event.description.length > 150 ? '...' : ''}</em></p>` : ''}
+                            const card = document.createElement('div');
+                            card.className = 'event-card';
+                            card.innerHTML = `
+                                <div class="event-card-header">
+                                    <h3 class="event-card-title">${escapeHTML(event.title)}</h3>
+                                    <div class="event-card-date">
+                                        <i class="fas fa-calendar-alt"></i>
+                                        <span>${escapeHTML(event.start_datetime_formatted)}</span>
                                     </div>
                                 </div>
-                                <div class="event-actions">
-                                    <a href="create_event.html?eventIdToEdit=${event.event_id}" class="action-button action-button-secondary header-button">Edit</a>
-                                    <button class="action-button action-button-danger header-button" onclick="deleteEvent('${event.event_id}')">Delete</button>
-                                    <button class="action-button action-button-info header-button" onclick="viewRsvps('${event.event_id}')">View RSVPs</button>
+                                <div class="event-card-body">
+                                    <p class="event-card-description">${escapeHTML(event.description ? event.description.substring(0, 150) + (event.description.length > 150 ? '...' : '') : 'No description provided.')}</p>
+                                    <div class="event-card-details">
+                                        <div class="event-detail-item">
+                                            <i class="fas fa-map-marker-alt"></i>
+                                            <span>${escapeHTML(event.location || 'Virtual Event')}</span>
+                                        </div>
+                                        ${event.registration_deadline_formatted ? `
+                                        <div class="event-detail-item">
+                                            <i class="fas fa-hourglass-end"></i>
+                                            <span>Apply by: ${escapeHTML(event.registration_deadline_formatted)}</span>
+                                        </div>` : ''}
+                                    </div>
+                                </div>
+                                <div class="event-card-actions">
+                                    <a href="create_event.html?eventIdToEdit=${event.event_id}" class="action-button action-button-secondary">
+                                        <i class="fas fa-pencil-alt"></i> Edit
+                                    </a>
+                                    <button class="action-button action-button-danger" onclick="deleteEvent('${event.event_id}')">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                    <a href="view_event_registrations.html?eventId=${event.event_id}" class="action-button action-button-info">
+                                        <i class="fas fa-users"></i> View RSVPs
+                                    </a>
                                 </div>
                             `;
-                            eventsListContainer.appendChild(listItem);
+                            eventsGrid.appendChild(card);
                         });
                     }
                 } else {
                     noEventsMessage.style.display = 'none';
                     const errorMessage = result && result.message ? result.message : 'Unknown error from server.';
-                    eventsListContainer.innerHTML = `<li class="event-list-item" style="justify-content: center; color: var(--color-text-muted);">Error fetching events: ${escapeHTML(errorMessage)}</li>`;
+                    eventsGrid.innerHTML = `<p style="text-align: center; color: var(--color-text-muted);">Error fetching events: ${escapeHTML(errorMessage)}</p>`;
                     console.error('API call to /api/events/department was not successful:', result);
                 }
             } catch (error) {
                 console.error("Error fetching events for management page:", error);
                 noEventsMessage.style.display = 'none';
-                eventsListContainer.innerHTML = '<li class="event-list-item" style="justify-content: center; color: var(--color-text-muted);">Could not connect to server or an error occurred while fetching events. Check console.</li>';
+                eventsGrid.innerHTML = '<p style="text-align: center; color: var(--color-text-muted);">Could not connect to server. Please check the console.</p>';
             }
         }
 
@@ -241,7 +211,7 @@
 
         function viewRsvps(eventId) {
             console.log(`Viewing RSVPs for event: ${eventId}`);
-            // Placeholder: Redirect to an RSVP management page or display a modal
+            // This is now a link, but the function is kept for the old button if needed.
             alert(`RSVP management for event ${eventId} is a future feature.`);
         }
 

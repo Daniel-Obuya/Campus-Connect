@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Messages - Campus Connect</title>
+    <link rel="stylesheet" href="common-header.css">
+    <link rel="stylesheet" href="department_admin.css">
+    <link rel="stylesheet" href="messaging.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-left">
+            <img src="images/logo 1.png" alt="Campus Connect Logo" class="logo">
+            <div class="brand-name">Campus Connect</div>
+        </div>
+        <div class="page-title">My Messages</div>
+        <div class="header-actions">
+            <a href="student_dashboard.html" class="btn-header">Back to Home</a>
+            <a href="#" id="logoutButton" class="btn-header btn-header-danger">Logout</a>
+        </div>
+    </header>
+
+    <main class="messaging-container">
+        <aside class="conversations-panel">
+            <div class="panel-header">
+                <h2>Conversations</h2>
+                <button class="action-button" title="New Message"><i class="fas fa-plus"></i></button>
+            </div>
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search messages or users...">
+            </div>
+            <ul class="conversations-list" id="conversationsList">
+                <!-- Conversations will be loaded here by JavaScript -->
+                <div class="loading-placeholder">
+                    <p>Loading conversations...</p>
+                </div>
+            </ul>
+        </aside>
+
+        <section class="chat-panel">
+            <div class="chat-header" id="chatHeader">
+                <div class="chat-info">
+                    <h3 id="chatPartnerName">Select a conversation</h3>
+                    <p id="chatPartnerStatus" class="status-offline">Offline</p>
+                </div>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <div class="empty-chat-placeholder">
+                    <i class="fas fa-comments fa-3x"></i>
+                    <p>Your messages will appear here.</p>
+                </div>
+            </div>
+            <div class="chat-input-area">
+                <form id="messageForm">
+                    <input type="text" id="messageInput" placeholder="Type a message..." autocomplete="off" disabled>
+                    <button type="submit" class="action-button" id="sendMessageBtn" disabled>
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <div class="floating-icons-container">
+        <div class="floating-icon icon1"></div>
+        <div class="floating-icon icon2"></div>
+        <div class="floating-icon icon3"></div>
+    </div>
+
+    <!-- Add Socket.IO client library -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/public/js/utils.js"></script>
+    <script src="/public/js/messaging.js"></script>
+</body>
+</html>

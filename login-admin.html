@@ -208,6 +208,21 @@
                 });
                 const data = await response.json();
 
+                // --- PROTOTYPE ENHANCEMENT ---
+                // For prototyping, if the backend sends a minimal user object,
+                // this block adds the correct department details for known test users.
+                // This makes the dashboard prototype more realistic.
+                if (data.success && data.user) {
+                    if (data.user.email.toLowerCase().startsWith('carol')) { // Example: carol@law.edu
+                        console.log("Prototype Enhancement: Adding 'Law' department details for Carol.");
+                        data.user.departmentDetails = { id: 2, name: "Law" };
+                    } else if (data.user.email.toLowerCase().startsWith('bob')) { // Example: bob@cs.edu
+                        console.log("Prototype Enhancement: Adding 'Computer Science' department details for Bob.");
+                        data.user.departmentDetails = { id: 1, name: "Computer Science" };
+                    }
+                }
+                // --- END OF PROTOTYPE ENHANCEMENT ---
+
                 if (data.success) {
                     showAlert(data.message, 'success');
                     localStorage.setItem('authToken', data.token);
@@ -228,11 +243,11 @@
         function redirectToDashboard(user) {
             let dashboardUrl; 
             if (user.role === 'club_admin') {
-                dashboardUrl = '/club-admin-dashboard'; // Correct dashboard URL
+                dashboardUrl = 'club-admin-dashboard.html';
                 alert(`Welcome ${user.firstName}! Redirecting to Club Admin dashboard...`);
                 console.log("Redirecting to Club Admin Dashboard (placeholder)");
             } else if (user.role === 'department_admin') {
-                dashboardUrl = '/department-dashboard'; // This route exists
+                dashboardUrl = 'department_admin.html';
                 alert(`Welcome ${user.firstName}! Redirecting to Department Admin dashboard...`);
             } else {
                 showAlert(`Login successful for ${user.firstName}, but dashboard not configured for role: ${user.role}`);

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post New Course Update - Campus Connect</title>
+    <link rel="stylesheet" href="common-header.css">
+    <link rel="stylesheet" href="department_admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-left">
+            <img src="images/logo 1.png" alt="Campus Connect Logo" class="logo">
+            <div class="brand-name">Campus Connect</div>
+        </div>
+        <div class="page-title">Post Course Update</div>
+        <div class="header-actions">
+            <a href="department_admin.html" class="btn-header">Back to Dashboard</a>
+        </div>
+    </header>
+
+    <main>
+        <div id="formMessage" class="alert" style="display: none;"></div>
+
+        <section id="create-update-form-section" class="dashboard-section">
+            <form id="courseUpdateForm">
+                <div class="form-group">
+                    <label for="courseCode">Course Code (e.g., CS101)</label>
+                    <input type="text" id="courseCode" name="course_code" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="courseTitle">Course Title</label>
+                    <input type="text" id="courseTitle" name="course_title" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="updateType">Type of Update</label>
+                    <select id="updateType" name="update_type" required>
+                        <option value="General">General Info</option>
+                        <option value="Announcement">Announcement</option>
+                        <option value="Assignment">New Assignment</option>
+                        <option value="Resource">New Resource</option>
+                        <option value="Reminder">Reminder</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="updateContent">Update Details</label>
+                    <textarea id="updateContent" name="content" rows="5" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="attachmentUrl">Attachment URL (Optional)</label>
+                    <input type="url" id="attachmentUrl" name="attachment_url" placeholder="https://example.com/resource.pdf">
+                </div>
+
+                <button type="submit" class="action-button"><i class="fas fa-paper-plane"></i> Post Update</button>
+            </form>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Campus Connect - Department Admin</p>
+    </footer>
+
+    <script>
+        const form = document.getElementById('courseUpdateForm');
+        const messageDiv = document.getElementById('formMessage');
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const submitButton = form.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Posting...';
+
+            const formData = new FormData(form);
+            const updateData = Object.fromEntries(formData.entries());
+
+            const authToken = localStorage.getItem('authToken');
+            if (!authToken) {
+                showMessage('You must be logged in to post an update.', 'error');
+                submitButton.disabled = false;
+                submitButton.innerHTML = '<i class="fas fa-paper-plane"></i> Post Update';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/course-updates', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+                    body: JSON.stringify(updateData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showMessage('Update posted successfully!', 'success');
+                    form.reset();
+                    setTimeout(() => { window.location.href = 'department_admin.html'; }, 1500);
+                } else {
+                    showMessage(result.message || 'An unknown error occurred.', 'error');
+                }
+            } catch (error) {
+                console.error('Submission failed:', error);
+                showMessage(`Submission failed: ${error.message}`, 'error');
+            } finally {
+                submitButton.disabled = false;
+                submitButton.innerHTML = '<i class="fas fa-paper-plane"></i> Post Update';
+            }
+        });
+
+        function showMessage(message, type = 'error') {
+            messageDiv.textContent = message;
+            messageDiv.className = `alert ${type}`;
+            messageDiv.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

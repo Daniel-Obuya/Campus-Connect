@@ -3,11 +3,13 @@ const secret = process.env.JWT_SECRET;
 const jwt = require('jsonwebtoken');
 const express = require('express');
 const path = require('path');
-const mysql = require('mysql2/promise'); 
+const mysql = require('mysql2/promise');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto'); // For generating tokens
 const fetch = require('node-fetch'); // For making HTTP requests from the backend
 const { google } = require('googleapis'); // For Google Calendar API
+const http = require('http');
+const { Server } = require("socket.io");
 
 const app = express();
 const PORT = process.env.PORT || 3001; // Changed default port to 3001 to avoid conflict with MySQL default
@@ -15,6 +17,10 @@ const PORT = process.env.PORT || 3001; // Changed default port to 3001 to avoid 
 // Middleware
 app.use(express.json({ limit: '50mb' })); // Increased Limit to 50mb to accomodate image uploads
 app.use(express.urlencoded({ extended: true }));
+
+// Socket.IO Setup
+const server = http.createServer(app);
+const io = new Server(server);
 
 // Google OAuth2 Client Setup
 const oauth2Client = new google.auth.OAuth2(
@@ -138,6 +144,11 @@ app.get('/reset-password', (req, res) => {
     res.sendFile(path.join(__dirname, 'reset_password.html'));
 });
 
+// --- Route for Messaging Page ---
+app.get('/messaging', (req, res) => {
+    res.sendFile(path.join(__dirname, 'messaging.html'));
+});
+
 // --- Google Calendar Auth Routes ---
 const G_SCOPES = [
     'https://www.googleapis.com/auth/calendar.readonly',
@@ -236,6 +247,80 @@ app.get('/api/external-events', async (req, res) => {
 });
 
 // --- API Routes ---
+
+// --- Messaging API Routes ---
+
+// Get all conversations for the logged-in user
+app.get('/api/conversations', authenticateJWT, async (req, res) => {
+    try {
+        // This query now handles both DMs and Group Chats
+        const [conversations] = await pool.query(`
+            SELECT 
+                c.conversation_id,
+                c.is_group_chat,
+                c.last_message_at,
+                -- Determine the display name: group name for groups, other user's name for DMs
+                IF(c.is_group_chat, c.group_name, CONCAT(other_user.first_name, ' ', other_user.last_name)) AS display_name,
+                -- Determine the avatar: group avatar for groups, other user's avatar for DMs
+                IF(c.is_group_chat, c.group_avatar_url, other_user.profile_picture_url) AS avatar_url,
+                -- Get the last message content
+                (SELECT content FROM messages WHERE conversation_id = c.conversation_id ORDER BY created_at DESC LIMIT 1) AS last_message,
+                -- Get the last message sender's name
+                (SELECT u_sender.first_name FROM messages m JOIN users u_sender ON m.sender_id = u_sender.user_id WHERE m.conversation_id = c.conversation_id ORDER BY m.created_at DESC LIMIT 1) AS last_message_sender
+            FROM 
+                conversations c
+            JOIN 
+                conversation_participants cp ON c.conversation_id = cp.conversation_id
+            LEFT JOIN 
+                conversation_participants other_cp ON c.conversation_id = other_cp.conversation_id AND other_cp.user_id != ?
+            LEFT JOIN 
+                users other_user ON other_cp.user_id = other_user.user_id AND c.is_group_chat = FALSE
+            WHERE cp.user_id = ?
+            GROUP BY c.conversation_id
+            ORDER BY c.last_message_at DESC;
+        `, [req.user.id, req.user.id]);
+        res.json({ success: true, conversations });
+    } catch (error) {
+        console.error("Error fetching conversations:", error);
+        res.status(500).json({ success: false, message: 'Server error fetching conversations.' });
+    }
+});
+
+// Get messages for a specific conversation
+app.get('/api/conversations/:id/messages', authenticateJWT, async (req, res) => {
+    try {
+        const conversationId = req.params.id;
+        // Security check: Ensure the user is part of this conversation
+        const [participants] = await pool.query(
+            'SELECT * FROM conversation_participants WHERE conversation_id = ? AND user_id = ?',
+            [conversationId, req.user.id] // Use req.user.id from authenticateJWT
+        );
+        if (participants.length === 0) {
+            return res.status(403).json({ success: false, message: 'Not authorized to view this conversation.' });
+        }
+
+        const [messages] = await pool.query(
+            'SELECT message_id, sender_id, content, created_at FROM messages WHERE conversation_id = ? ORDER BY created_at ASC',
+            [conversationId]
+        );
+        res.json({ success: true, messages });
+    } catch (error) {
+        console.error("Error fetching messages:", error);
+        res.status(500).json({ success: false, message: 'Server error fetching messages.' });
+    }
+});
+
+// --- End of Messaging API Routes ---
+
+
+
+
+
+
+
+
+
+
 
 // VERY SIMPLE TEST ROUTE - Add this just before /api/events/department
 app.get('/api/test-events-route-unique-name', (req, res) => {
@@ -1376,8 +1461,82 @@ app.get('/api/club/dashboard', authenticateJWT, async (req, res) => {
     }
 });
 
-// Start server
-app.listen(PORT, () => {
+// --- Socket.IO Real-time Logic ---
+
+const userSockets = {}; // Map userId to socketId
+
+io.on('connection', (socket) => {
+    console.log('A user connected:', socket.id);
+
+    // Store user's socket ID when they connect
+    socket.on('register', (userId) => {
+        console.log(`User ${userId} registered with socket ${socket.id}`);
+        userSockets[userId] = socket.id;
+    });
+
+    // Handle sending a message
+    socket.on('sendMessage', async (data) => {
+        const { conversationId, senderId, content } = data;
+        
+        if (!content || !senderId || !conversationId) {
+            socket.emit('messageError', { message: 'Missing message data.' });
+            return;
+        }
+
+        try {
+            // 1. Insert the new message
+            const [result] = await pool.query(
+                'INSERT INTO messages (conversation_id, sender_id, content) VALUES (?, ?, ?)',
+                [conversationId, senderId, content]
+            );
+            const messageId = result.insertId;
+
+            // 2. Update the conversation's last_message_at timestamp
+            await pool.query(
+                'UPDATE conversations SET last_message_at = CURRENT_TIMESTAMP WHERE conversation_id = ?',
+                [conversationId]
+            );
+
+            const newMessage = {
+                message_id: messageId,
+                conversation_id: conversationId,
+                sender_id: senderId,
+                content: content,
+                created_at: new Date().toISOString()
+            };
+
+            // 3. Get all participants of the conversation to notify them
+            const [participants] = await pool.query(
+                'SELECT user_id FROM conversation_participants WHERE conversation_id = ?',
+                [conversationId]
+            );
+
+            // 4. Emit the new message to all connected participants in the conversation
+            participants.forEach(participant => {
+                const receiverSocketId = userSockets[participant.user_id];
+                if (receiverSocketId) {
+                    io.to(receiverSocketId).emit('newMessage', newMessage);
+                }
+            });
+        } catch (error) {
+            console.error('Error saving or sending message:', error);
+            socket.emit('messageError', { message: 'Could not send message.' });
+        }
+    });
+
+    socket.on('disconnect', () => {
+        console.log('User disconnected:', socket.id);
+        for (const userId in userSockets) {
+            if (userSockets[userId] === socket.id) {
+                delete userSockets[userId];
+                break;
+            }
+        }
+    });
+});
+
+// Start server using the http server instance
+server.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
   console.log(`Welcome page: http://localhost:${PORT}/welcome`);
   console.log(`Admin Portals Welcome: http://localhost:${PORT}/welcome-admin-portals`);
