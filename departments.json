@@ -2,171 +2,73 @@
   {
     "name": "Computer Science",
     "description": "Focuses on computing, software development, and artificial intelligence.",
-    "icon": "💻"
+    "icon": "💻",
+    "programs": 15,
+    "facultyCount": 50,
+    "website": "https://cs.example.edu",
+    "email": "cs@university.edu"
   },
   {
     "name": "Information Technology",
     "description": "Emphasizes IT systems, networks, and tech support.",
-    "icon": "🖥️"
+    "icon": "🖥️",
+    "programs": 10,
+    "facultyCount": 35,
+    "website": "https://it.example.edu",
+    "email": "it@university.edu"
   },
   {
     "name": "Data Science",
     "description": "Deals with data analysis, machine learning, and statistics.",
-    "icon": "📊"
-  },
-  {
-    "name": "Cybersecurity",
-    "description": "Focuses on protecting systems and networks from digital attacks.",
-    "icon": "🛡️"
-  },
-  {
-    "name": "Electrical Engineering",
-    "description": "Covers electronics, circuits, and power systems.",
-    "icon": "🔌"
-  },
-  {
-    "name": "Mechanical Engineering",
-    "description": "Deals with design and manufacturing of machines.",
-    "icon": "⚙️"
-  },
-  {
-    "name": "Civil Engineering",
-    "description": "Focuses on infrastructure like roads, bridges, and buildings.",
-    "icon": "🏗️"
-  },
-  {
-    "name": "Chemical Engineering",
-    "description": "Applies chemistry to industrial processes and materials.",
-    "icon": "⚗️"
-  },
-  {
-    "name": "Mechatronics",
-    "description": "Integrates mechanical, electrical, and software systems.",
-    "icon": "🤖"
-  },
-  {
-    "name": "Agriculture",
-    "description": "Covers farming, food production, and agribusiness.",
-    "icon": "🌾"
-  },
-  {
-    "name": "Animal Science",
-    "description": "Studies livestock, veterinary care, and animal production.",
-    "icon": "🐄"
-  },
-  {
-    "name": "Food Science",
-    "description": "Focuses on food safety, nutrition, and processing.",
-    "icon": "🥫"
-  },
-  {
-    "name": "Environmental Science",
-    "description": "Focuses on sustainability and ecosystems.",
-    "icon": "🌍"
-  },
-  {
-    "name": "Geology",
-    "description": "Studies the earth’s structure, minerals, and natural resources.",
-    "icon": "🪨"
-  },
-  {
-    "name": "Architecture",
-    "description": "Combines art and engineering to design buildings.",
-    "icon": "🏛️"
-  },
-  {
-    "name": "Urban Planning",
-    "description": "Designs city infrastructure and public spaces.",
-    "icon": "🏙️"
+    "icon": "📊",
+    "programs": 8,
+    "facultyCount": 20,
+    "website": "https://datasci.example.edu",
+    "email": "datasci@university.edu"
   },
   {
     "name": "Business Administration",
     "description": "Covers management, finance, and entrepreneurship.",
-    "icon": "📈"
-  },
-  {
-    "name": "Accounting",
-    "description": "Focuses on financial reporting, auditing, and tax.",
-    "icon": "🧾"
-  },
-  {
-    "name": "Economics",
-    "description": "Studies markets, policies, and financial systems.",
-    "icon": "💹"
-  },
-  {
-    "name": "Human Resource Management",
-    "description": "Handles recruitment, employee welfare, and labor relations.",
-    "icon": "👥"
-  },
-  {
-    "name": "Law",
-    "description": "Covers legal systems, rights, and judicial practice.",
-    "icon": "⚖️"
-  },
-  {
-    "name": "Criminology",
-    "description": "Studies crime, criminal behavior, and law enforcement.",
-    "icon": "🚓"
-  },
-  {
-    "name": "Medicine",
-    "description": "Trains future doctors and healthcare professionals.",
-    "icon": "🩺"
-  },
-  {
-    "name": "Pharmacy",
-    "description": "Deals with drug development, prescription, and safety.",
-    "icon": "💊"
-  },
-  {
-    "name": "Nursing",
-    "description": "Focuses on patient care and clinical support.",
-    "icon": "👩‍⚕️"
-  },
-  {
-    "name": "Public Health",
-    "description": "Promotes community health and disease prevention.",
-    "icon": "🧼"
-  },
-  {
-    "name": "Psychology",
-    "description": "Studies human behavior and mental processes.",
-    "icon": "🧠"
-  },
-  {
-    "name": "Sociology",
-    "description": "Analyzes human society, relationships, and culture.",
-    "icon": "👥"
-  },
-  {
-    "name": "Education",
-    "description": "Prepares students to become teachers and educators.",
-    "icon": "📚"
-  },
-  {
-    "name": "Special Needs Education",
-    "description": "Trains educators to support learners with disabilities.",
-    "icon": "♿"
-  },
-  {
-    "name": "Languages & Linguistics",
-    "description": "Studies languages, their structure, and communication.",
-    "icon": "🗣️"
+    "icon": "📈",
+    "programs": 12,
+    "facultyCount": 40,
+    "website": "https://business.example.edu",
+    "email": "business@university.edu"
   },
   {
     "name": "Fine Arts",
     "description": "Covers visual arts, design, and creative expression.",
-    "icon": "🎨"
+    "icon": "🎨",
+    "programs": 7,
+    "facultyCount": 18,
+    "website": "https://arts.example.edu",
+    "email": "arts@university.edu"
   },
   {
-    "name": "Performing Arts",
-    "description": "Focuses on music, dance, and drama.",
-    "icon": "🎭"
+    "name": "Mechanical Engineering",
+    "description": "Deals with design and manufacturing of machines.",
+    "icon": "⚙️",
+    "programs": 9,
+    "facultyCount": 28,
+    "website": "https://mecheng.example.edu",
+    "email": "mecheng@university.edu"
   },
   {
-    "name": "Library and Information Science",
-    "description": "Manages information systems and digital archives.",
-    "icon": "📖"
+    "name": "Psychology",
+    "description": "Studies human behavior and mental processes.",
+    "icon": "🧠",
+    "programs": 6,
+    "facultyCount": 22,
+    "website": "https://psych.example.edu",
+    "email": "psych@university.edu"
+  },
+  {
+    "name": "Education",
+    "description": "Prepares students to become teachers and educators.",
+    "icon": "📚",
+    "programs": 11,
+    "facultyCount": 30,
+    "website": "https://education.example.edu",
+    "email": "education@university.edu"
   }
 ]

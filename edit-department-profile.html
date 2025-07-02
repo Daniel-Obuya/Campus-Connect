@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Department Profile</title>
+    <link rel="stylesheet" href="common-header.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #f5deb3 0%, #deb887 50%, #cd853f 100%);
+            color: #333;
+            min-height: 100vh;
+            padding-top: 80px;
+        }
+        .edit-profile-container {
+            max-width: 500px;
+            margin: 40px auto;
+            background: rgba(255,255,255,0.18);
+            border-radius: 18px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+            padding: 40px 30px;
+            backdrop-filter: blur(10px);
+        }
+        .edit-profile-title {
+            font-size: 26px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 28px;
+            background: linear-gradient(135deg, #8b4513, #cd853f);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .form-group {
+            margin-bottom: 18px;
+        }
+        .form-label {
+            font-size: 15px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            display: block;
+        }
+        .form-input {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 8px;
+            border: 1px solid #deb887;
+            font-size: 15px;
+            background: rgba(255,255,255,0.7);
+            margin-bottom: 2px;
+        }
+        .form-button {
+            width: 100%;
+            padding: 14px 0;
+            background: linear-gradient(135deg, #ffc107, #ff9800);
+            color: #333;
+            border: none;
+            border-radius: 10px;
+            font-size: 17px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255,193,7,0.2);
+            margin-top: 10px;
+        }
+        .form-button:hover {
+            background: linear-gradient(135deg, #ff9800, #ffc107);
+            color: #fff;
+        }
+        .success-message {
+            color: #388e3c;
+            text-align: center;
+            margin-top: 18px;
+            font-weight: 500;
+        }
+        .error-message {
+            color: #dc3545;
+            text-align: center;
+            margin-top: 18px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="edit-profile-container">
+        <div class="edit-profile-title">Edit Department Profile</div>
+        <form id="editDeptProfileForm">
+            <div class="form-group">
+                <label class="form-label" for="deptName">Department Name</label>
+                <input class="form-input" type="text" id="deptName" name="deptName" required value="Computer Science Department">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="deptEmail">Email</label>
+                <input class="form-input" type="email" id="deptEmail" name="deptEmail" required value="admin@csdept.edu">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="deptLocation">Location</label>
+                <input class="form-input" type="text" id="deptLocation" name="deptLocation" required value="Main Campus, Block B">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="deptPhone">Phone</label>
+                <input class="form-input" type="text" id="deptPhone" name="deptPhone" required value="+254 700 123456">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="deptHead">Department Head</label>
+                <input class="form-input" type="text" id="deptHead" name="deptHead" required value="Jane Doe">
+            </div>
+            <button type="submit" class="form-button">Save Changes</button>
+            <div id="formMessage"></div>
+        </form>
+    </div>
+    <script>
+    // Prefill logic (simulate fetching from DB)
+    document.addEventListener('DOMContentLoaded', function() {
+        // In real app, fetch department data here and set values
+    });
+
+    document.getElementById('editDeptProfileForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const form = e.target;
+        const data = {
+            deptName: form.deptName.value,
+            deptEmail: form.deptEmail.value,
+            deptLocation: form.deptLocation.value,
+            deptPhone: form.deptPhone.value,
+            deptHead: form.deptHead.value
+        };
+        try {
+            // Simulate API call to update department profile
+            const response = await fetch('/api/department/profile', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            if (response.ok) {
+                document.getElementById('formMessage').innerHTML = '<div class="success-message">Profile updated successfully!</div>';
+                setTimeout(() => { window.location.href = 'department_admin.html?profileUpdated=1'; }, 1200);
+            } else {
+                document.getElementById('formMessage').innerHTML = '<div class="error-message">Failed to update profile. Please try again.</div>';
+            }
+        } catch (err) {
+            document.getElementById('formMessage').innerHTML = '<div class="error-message">Server error. Please try again later.</div>';
+        }
+    });
+    </script>
+</body>
+</html>

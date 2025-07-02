@@ -74,5 +74,35 @@
     <script src="/socket.io/socket.io.js"></script>
     <script src="/public/js/utils.js"></script>
     <script src="/public/js/messaging.js"></script>
+    <script>
+    // --- Messaging: Start conversation if userId is in query or localStorage ---
+    document.addEventListener('DOMContentLoaded', function() {
+        // Parse userId from query string
+        const urlParams = new URLSearchParams(window.location.search);
+        let targetUserId = urlParams.get('userId') || localStorage.getItem('messageTargetUserId');
+        if (targetUserId) {
+            // Remove from localStorage after use
+            localStorage.removeItem('messageTargetUserId');
+            // Wait for conversations to load, then check if a DM exists, else start new
+            const tryStartConversation = () => {
+                const conversations = window.conversations || [];
+                let convoItem = null;
+                for (const item of document.querySelectorAll('.conversation-item')) {
+                    if (item.dataset.receiverId == targetUserId) {
+                        convoItem = item;
+                        break;
+                    }
+                }
+                if (convoItem) {
+                    convoItem.click();
+                } else {
+                    // Optionally, you could implement an API to start a new DM if not found
+                    alert('No existing conversation with this user. Start a new message from the + button.');
+                }
+            };
+            setTimeout(tryStartConversation, 1200); // Wait for conversations to load
+        }
+    });
+    </script>
 </body>
 </html>

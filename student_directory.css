@@ -1,0 +1,126 @@
+/* Student Directory - Card Layout (matches projects)
+-------------------------------------------------- */
+.student-card {
+    background: rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(12px);
+    border-radius: 20px;
+    padding: 30px;
+    border: 1.5px solid #cd853f;
+    box-shadow: 0 8px 32px rgba(205, 133, 63, 0.08);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 260px;
+    max-width: 350px;
+}
+.student-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 15px 40px rgba(205, 133, 63, 0.18);
+    border-color: #8b4513;
+}
+.students-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 30px;
+    justify-content: flex-start;
+    margin-top: 32px;
+}
+.student-card .student-name {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #8b4513;
+}
+.student-card .student-meta {
+    font-size: 1rem;
+    color: #555;
+    margin-bottom: 6px;
+}
+.student-card .student-email {
+    font-size: 0.98rem;
+    color: #cd853f;
+    margin-bottom: 12px;
+    word-break: break-all;
+}
+.student-card .student-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 10px;
+}
+.student-card button {
+    padding: 7px 18px;
+    border-radius: 8px;
+    border: none;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    background: #cd853f;
+    color: #fff;
+    transition: background 0.2s;
+}
+.student-card button:disabled {
+    background: #b0b0b0;
+    color: #eee;
+    cursor: not-allowed;
+}
+.student-card button.follow-btn {
+    background: #cd853f;
+}
+.student-card button.follow-btn:hover {
+    background: #8b4513;
+}
+.student-card button.message-btn {
+    background: #8b4513;
+}
+.student-card button.message-btn:hover {
+    background: #cd853f;
+}
+
+/* Search Bar Styling */
+.search-filter-bar {
+    display: flex;
+    justify-content: center;
+    margin: 0 0 24px 0;
+}
+#searchForm {
+    display: flex;
+    gap: 12px;
+    background: rgba(255,255,255,0.25);
+    padding: 16px 24px;
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(205,133,63,0.07);
+    align-items: center;
+}
+#searchForm input[type="text"] {
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1.5px solid #cd853f;
+    font-size: 1rem;
+    outline: none;
+    min-width: 120px;
+    background: #fff;
+    transition: border 0.2s;
+    color: #8b4513;
+}
+#searchForm input[type="text"]:focus {
+    border: 2px solid #8b4513;
+}
+#searchForm button {
+    padding: 8px 22px;
+    border-radius: 8px;
+    border: none;
+    background: #cd853f;
+    color: #fff;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+#searchForm button:hover {
+    background: #8b4513;
+}

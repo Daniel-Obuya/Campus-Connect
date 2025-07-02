@@ -25,12 +25,24 @@ document.addEventListener('DOMContentLoaded', () => {
         socket.emit('register', currentUser.user_id);
     });
 
+    // When a new message is received, update the conversation preview and move to top
     socket.on('newMessage', (message) => {
         console.log('New message received:', message);
         // If the message belongs to the currently active conversation, render it
         if (message.conversation_id === currentConversationId) {
             renderMessage(message);
             chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        // Update conversation preview and move to top
+        const convoItem = Array.from(document.querySelectorAll('.conversation-item')).find(item => parseInt(item.dataset.conversationId, 10) === message.conversation_id);
+        if (convoItem) {
+            // Update last message preview
+            const lastMsgElem = convoItem.querySelector('.last-message');
+            if (lastMsgElem) {
+                lastMsgElem.innerHTML = `${message.sender_id === currentUser.id ? '<strong>You:</strong> ' : ''}${escapeHTML(message.content)}`;
+            }
+            // Move to top
+            conversationsList.prepend(convoItem);
         }
         // TODO: Update the conversation list to show the new last message and move to top
     });
@@ -70,8 +82,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const item = document.createElement('li');
             item.className = 'conversation-item';
             item.dataset.conversationId = convo.conversation_id;
-            item.dataset.displayName = convo.display_name;
-            
+            // Set receiverId and receiverName for DMs, leave blank for group chats
+            if (!convo.is_group_chat && convo.receiver_id) {
+                item.dataset.receiverId = convo.receiver_id;
+                item.dataset.receiverName = convo.display_name;
+            } else {
+                item.dataset.receiverId = '';
+                item.dataset.receiverName = convo.display_name;
+            }
+
             const displayName = convo.display_name || 'Unknown';
             const initials = displayName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
 
@@ -141,13 +160,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Event Listeners ---
 
+    // After sending a message, optimistically render it
     messageForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const content = messageInput.value.trim();
         if (!content || !currentConversationId) return;
 
         const activeConvoItem = document.querySelector('.conversation-item.active');
-        const receiverId = parseInt(activeConvoItem.dataset.receiverId, 10);
+        const receiverId = activeConvoItem ? parseInt(activeConvoItem.dataset.receiverId, 10) : null;
 
         const messageData = {
             conversationId: currentConversationId,
@@ -156,6 +176,12 @@ document.addEventListener('DOMContentLoaded', () => {
             content: content
         };
 
+        // Optimistically render the message
+        renderMessage({
+            sender_id: currentUser.id,
+            content: content
+        });
+        chatMessages.scrollTop = chatMessages.scrollHeight;
         socket.emit('sendMessage', messageData);
         messageInput.value = '';
     });

@@ -1,4 +1,3 @@
-
 const categories = ["All", "Technology", "Outdoor", "Environment", "Arts", "Academic"];
 let selectedCategory = "All";
 let clubs = [];
@@ -58,27 +57,16 @@ function renderClubs() {
         <div class="club-card" data-club-id="${club.id}">
             <div class="club-category-badge">${club.category || ''}</div>
             <div class="club-logo">
-                <img src="${club.logo_url || 'images/logo 1.png'}" alt="${club.name} Logo" style="width:48px;height:48px;object-fit:cover;border-radius:50%;background:#f4f4f4;">
+                <img src="${club.logo_url || 'https://via.placeholder.com/60/deb887/FFFFFF?text=Logo'}" alt="${club.name} Logo">
             </div>
-            <h3 class="club-name">${club.name}</h3>
-            <p class="club-description">${club.description || ''}</p>
-            <div class="club-stats">
-                <div class="club-stat">
-                    <div class="club-stat-number">${club.member_count || 0}</div>
-                    <div class="club-stat-label">Members</div>
+            <div class="club-info">
+                <h3 class="club-name">${club.name}</h3>
+                <p class="club-description">${club.description || 'No description available.'}</p>
+                <div class="club-actions">
+                    <button class="club-btn club-btn-primary join-club-btn" data-club-id="${club.id}">Join</button>
+                    <button class="club-btn club-btn-secondary view-details-btn" data-club-id="${club.id}">View Details</button>
+                    <button class="club-btn club-btn-message message-btn" onclick="alert('Messaging club: ${club.name}')">Message</button>
                 </div>
-                <div class="club-stat">
-                    <div class="club-meeting-day">${club.meeting_schedule || 'TBA'}</div>
-                    <div class="club-stat-label">Meetings</div>
-                </div>
-            </div>
-            <div class="club-actions">
-                <button class="club-btn club-btn-primary" onclick="openModal(${club.id})">
-                    Learn More
-                </button>
-                <button class="club-btn club-btn-secondary" onclick="openModal(${club.id})">
-                    Quick Join
-                </button>
             </div>
         </div>
     `).join('');

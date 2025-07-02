@@ -26,12 +26,8 @@
             <div class="brand-name">Campus Connect</div>
         </div>
         <div class="page-title">Student Dashboard</div>
+        <!-- Remove all nav links from header-actions except logout -->
         <div class="header-actions">
-            <a href="student-profile.html" class="header-button" title="Profile"><span style="font-size:1.2em;">👤</span> Profile</a>
-            <a href="clubs-directory.html" class="header-button">Clubs</a>
-            <a href="events_directory.html" class="header-button">Events</a>
-            <a href="projects_directory.html" class="header-button">Projects</a>
-            <a href="departments_directory.html" class="header-button">Departments</a>
             <button id="notification-icon" class="header-button notification-bell" title="Notifications" style="position:relative; background:transparent; box-shadow:none;">
                 <span style="font-size: 1.3em;">🔔</span>
                 <span id="notification-count" style="position:absolute;top:2px;right:2px;background:#ff9800;color:#fff;font-size:12px;border-radius:50%;padding:2px 6px;min-width:18px;text-align:center;">0</span>
@@ -39,9 +35,62 @@
             <a href="welcome.html" class="action-button header-button action-button-danger" id="logoutButton">Logout</a>
         </div>
     </header>
-
+    <!-- Quick Access Links (like Projects Directory) -->
+    <div class="dashboard-quick-links">
+        <a href="student-profile.html" class="btn-header" title="Profile"><span class="button-icon">👤</span><span class="quick-link-label">Profile</span></a>
+        <a href="messaging.html" class="btn-header" title="Messages"><span class="button-icon">💬</span><span class="quick-link-label">Messages</span></a>
+        <a href="clubs-directory.html" class="btn-header" title="Clubs"><span class="button-icon">🎭</span><span class="quick-link-label">Clubs</span></a>
+        <a href="events_directory.html" class="btn-header" title="Events"><span class="button-icon">📅</span><span class="quick-link-label">Events</span></a>
+        <a href="projects_directory.html" class="btn-header" title="Projects"><span class="button-icon">🚀</span><span class="quick-link-label">Projects</span></a>
+        <a href="departments_directory.html" class="btn-header" title="Departments"><span class="button-icon">🏛️</span><span class="quick-link-label">Departments</span></a>
+        <a href="student_directory.html" class="btn-header" title="Student Directory"><span class="button-icon">🧑‍🎓</span><span class="quick-link-label">Students</span></a>
+        <a href="interactive_calendar.html" class="btn-header" title="Calendar"><span class="button-icon">🗓️</span><span class="quick-link-label">Calendar</span></a>
+    </div>
     <style>
-   
+    /* Glassy, color-scheme-adhering welcome and card styles */
+.enhanced-welcome {
+    background: rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(18px) saturate(1.2);
+    -webkit-backdrop-filter: blur(18px) saturate(1.2);
+    border: 1.5px solid #ffd180cc;
+    box-shadow: 0 4px 24px #deb88733;
+}
+.profile-widget, .clubs-widget, .events-widget, .motivation-widget {
+    background: rgba(255, 255, 255, 0.16);
+    backdrop-filter: blur(14px) saturate(1.1);
+    -webkit-backdrop-filter: blur(14px) saturate(1.1);
+    border: 1.5px solid #deb88788;
+    box-shadow: 0 2px 12px #cd853f22;
+}
+.recommended-card, .event-card {
+    background: rgba(255, 255, 255, 0.13);
+    border: 1.2px solid #ffd18099;
+    box-shadow: 0 1px 6px #deb88722;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+.profile-edit-btn, .recommended-btn, .action-button {
+    background: linear-gradient(135deg, #ff9800, #8b4513);
+    color: #fff;
+    border: none;
+    font-weight: 600;
+    border-radius: 8px;
+    padding: 8px 18px;
+    font-size: 1em;
+    box-shadow: 0 2px 8px #ff980033;
+    transition: background 0.2s, color 0.2s;
+}
+.profile-edit-btn:hover, .recommended-btn:hover, .action-button:hover {
+    background: linear-gradient(135deg, #8b4513, #ff9800);
+    color: #fff;
+}
+/* Text color tweaks for glassy backgrounds */
+.enhanced-welcome, .profile-widget, .clubs-widget, .events-widget, .motivation-widget {
+    color: #8b4513;
+}
+.stat-label, .stat-value {
+    color: #b8860b;
+}
     .header-left {
         display: flex;
         align-items: center;
@@ -112,128 +161,404 @@
         background: linear-gradient(135deg, #ff9800, #ff5252);
         color: #fff;
     }
-    body { padding-top: 100px; }
+    body {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: linear-gradient(135deg, #f5deb3 0%, #deb887 50%, #cd853f 100%);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding-top: 80px;
+        position: relative;
+        overflow-x: hidden;
+    }
+    .dashboard-grid {
+        width: 100%;
+        max-width: 950px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 28px;
+        align-items: flex-start;
+        padding: 0 18px 40px 18px;
+    }
+    @media (max-width: 900px) {
+        .dashboard-grid {
+            grid-template-columns: 1fr;
+            gap: 18px;
+            padding: 0 6px 30px 6px;
+        }
+    }
+    .dashboard-widget {
+        width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+        /* Remove forced max-width and margin overrides */
+    }
+    .enhanced-welcome {
+        grid-column: 1 / -1;
+        margin-bottom: 0;
+        /* Remove forced padding overrides */
+    }
+    .profile-widget, .clubs-widget, .events-widget, .motivation-widget {
+        margin-bottom: 0;
+    }
+    /* Button styling to match student directory */
+    .action-button, .profile-edit-btn, .recommended-btn {
+        /* Remove custom button overrides, revert to previous or default styles */
+    }
+    .quick-stats .stat-item {
+        background: rgba(255,255,255,0.18);
+        border-radius: 8px;
+        padding: 8px 14px;
+        margin: 0 6px 0 0;
+        display: inline-block;
+        color: #8b4513;
+        font-weight: 500;
+    }
+    @media (max-width: 900px) {
+        .dashboard-grid, footer {
+            max-width: 98vw;
+            padding: 0 2vw 24px 2vw;
+        }
+        .dashboard-widget {
+            max-width: 98vw;
+            padding: 16px 6vw 14px 6vw;
+        }
+    }
+    footer {
+        width: 100%;
+        max-width: 950px;
+        margin: 0 auto;
+        text-align: center;
+        padding: 18px 0 8px 0;
+        color: #8b4513;
+        font-size: 1em;
+        background: none;
+    }
+    .dashboard-quick-links {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-top: 10px;
+        margin-bottom: 30px;
+        padding: 12px 20px;
+        background: rgba(255,255,255,0.15);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-radius: 16px;
+        border: 1px solid rgba(255,255,255,0.25);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    }
+    .dashboard-quick-links .btn-header {
+        padding: 10px 18px;
+        font-size: 15px;
+        display: flex;
+        align-items: center;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #fffbe6, #ffe0b2);
+        color: #8b4513;
+        font-weight: 600;
+        border: none;
+        text-decoration: none;
+        box-shadow: 0 2px 8px rgba(255,193,7,0.10);
+        transition: background 0.2s, color 0.2s;
+        gap: 8px;
+    }
+    .dashboard-quick-links .btn-header:hover, .dashboard-quick-links .btn-header:focus {
+        background: linear-gradient(135deg, #ffecb3, #ffd180);
+        color: #ff9800;
+    }
+    .dashboard-quick-links .button-icon {
+        font-size: 1.3em;
+        margin-right: 4px;
+    }
+    .dashboard-quick-links .quick-link-label {
+        font-size: 1em;
+        display: inline-block;
+    }
+    /* Add or update notification panel styles for better appearance */
+.notification-panel {
+    display: none;
+    position: fixed;
+    top: 80px;
+    right: 30px;
+    width: 340px;
+    max-width: 90vw;
+    background: #fffbe6;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(205,133,63,0.18), 0 1.5px 8px #deb88744;
+    border: 1.5px solid #ffd180;
+    z-index: 1000;
+    padding: 0 0 12px 0;
+    animation: notif-fade-in 0.4s;
+}
+@keyframes notif-fade-in {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.notification-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px 8px 20px;
+    border-bottom: 1px solid #ffe0b2;
+    background: #fff8e1;
+    border-radius: 16px 16px 0 0;
+}
+.notification-header h3 {
+    font-size: 1.2em;
+    color: #8b4513;
+    margin: 0;
+}
+.close-notifications {
+    background: none;
+    border: none;
+    font-size: 1.3em;
+    color: #ff9800;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+.close-notifications:hover {
+    color: #ff5252;
+}
+#notification-list {
+    list-style: none;
+    margin: 0;
+    padding: 10px 20px 0 20px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+#notification-list li {
+    background: #fff;
+    margin-bottom: 10px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    box-shadow: 0 1px 4px #deb88722;
+    color: #8b4513;
+    font-size: 1em;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+#notification-list li:last-child { margin-bottom: 0; }
     @media (max-width: 700px) {
         .header { flex-direction: column; height: auto; padding: 12px; }
         .page-title { font-size: 1rem; }
         .brand-name { font-size: 1.1rem; }
         .header-actions { gap: 6px; }
+        .dashboard-quick-links {
+            gap: 8px;
+            padding: 8px 4px;
+        }
+        .dashboard-quick-links .btn-header {
+            font-size: 13px;
+            padding: 8px 10px;
+        }
+        .dashboard-quick-links .button-icon {
+            font-size: 1.1em;
+        }
     }
     @media (max-width: 900px) {
         .header-actions { flex-wrap: wrap; gap: 6px; }
         .header-button { font-size: 0.95rem; padding: 8px 10px; }
     }
+    /* Enhanced Welcome Section */
+.enhanced-welcome {
+    background: rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(18px) saturate(1.2);
+    -webkit-backdrop-filter: blur(18px) saturate(1.2);
+    border: 1.5px solid #ffd180cc;
+    box-shadow: 0 4px 24px #deb88733;
+    border-radius: 18px;
+    padding: 32px 32px 24px 32px;
+    margin-bottom: 24px;
+    position: relative;
+}
+.welcome-flex {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 32px;
+}
+.big-welcome {
+    font-size: 2.2em;
+    font-weight: 700;
+    color: #8b4513;
+    margin-bottom: 6px;
+    letter-spacing: 1px;
+}
+.welcome-subtext {
+    font-size: 1.1em;
+    color: #b8860b;
+    margin-bottom: 0;
+    font-weight: 500;
+}
+#welcome-profile-pic {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    box-shadow: 0 2px 12px #cd853f33;
+    border: 3px solid #ffd180;
+    background: #fff;
+}
+@media (max-width: 700px) {
+    .welcome-flex { flex-direction: column; gap: 12px; align-items: flex-start; }
+    #welcome-profile-pic { width: 70px; height: 70px; }
+    .big-welcome { font-size: 1.3em; }
+}
+/* Profile Edit Button Right */
+.profile-widget .widget-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+.profile-edit-btn {
+    margin-left: auto;
+    background: linear-gradient(135deg, #ff9800, #8b4513);
+    color: #fff;
+    font-weight: 600;
+    border-radius: 8px;
+    padding: 8px 18px;
+    font-size: 1em;
+    box-shadow: 0 2px 8px #ff980033;
+    transition: background 0.2s, color 0.2s;
+}
+.profile-edit-btn:hover, .profile-edit-btn:focus {
+    background: linear-gradient(135deg, #8b4513, #ff9800);
+    color: #fff;
+}
+/* Recommended Join Button Right */
+.recommended-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 18px;
+    background: rgba(255, 255, 255, 0.13);
+    border: 1.2px solid #ffd18099;
+    box-shadow: 0 1px 6px #deb88722;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-radius: 12px;
+    margin-bottom: 12px;
+}
+.recommended-btn {
+    margin-left: auto;
+    background: linear-gradient(135deg, #8b4513, #ff9800);
+    color: #fff;
+    font-weight: 600;
+    border-radius: 8px;
+    padding: 8px 18px;
+    font-size: 1em;
+    box-shadow: 0 2px 8px #ff980033;
+    transition: background 0.2s, color 0.2s;
+}
+.recommended-btn:hover, .recommended-btn:focus {
+    background: linear-gradient(135deg, #ff9800, #8b4513);
+    color: #fff;
+}
     </style>
 
     <main class="dashboard-grid">
-        <section id="profile-completion-widget" class="dashboard-widget profile-widget">
-            <div class="widget-header">
-                <h2>
-                    <span class="widget-icon">📊</span>
-                    Profile Status
-                </h2>
-            </div>
-            <div class="progress-bar-container">
-                <div id="profile-progress" style="width: 0%">
-                    <span class="progress-text">0%</span>
+        <section class="dashboard-widget welcome-widget enhanced-welcome">
+            <div class="welcome-flex">
+                <div class="welcome-greeting">
+                    <div id="welcome-message" class="personalized-welcome big-welcome">Welcome!</div>
+                    <div class="welcome-subtext">Here's your personalized campus experience. Stay inspired and connected!</div>
                 </div>
+                <img src="images/default-profile.png" alt="Profile Picture" class="profile-avatar-header" id="welcome-profile-pic">
             </div>
-            <p class="widget-action">
-                <a href="edit-student-profile.html" class="action-link">
-                    Complete your profile
-                    <span class="arrow">→</span>
-                </a>
-            </p>
-        </section>
-
-        <section id="personalized-feed" class="dashboard-widget feed-widget">
-            <div class="widget-header">
-                <h2>
-                    <span class="widget-icon">📰</span>
-                    Your Feed
-                </h2>
-            </div>
-            <div class="loading-state">
-                <div class="loading-spinner"></div>
-                <p>Loading feed...</p>
+            <div class="quick-stats">
+                <div class="stat-item">
+                    <span class="stat-label">New Messages</span>
+                    <span class="stat-value" id="stat-messages">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Upcoming Events</span>
+                    <span class="stat-value" id="stat-events">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Clubs Joined</span>
+                    <span class="stat-value" id="stat-clubs">0</span>
+                </div>
             </div>
         </section>
 
-        <aside class="sidebar-widgets">
-            <section id="events-calendar-widget" class="dashboard-widget calendar-widget">
-                <div class="widget-header">
-                    <h2>
-                        <span class="widget-icon">📅</span>
-                        Upcoming Events
-                    </h2>
+        <section class="dashboard-widget profile-widget">
+            <div class="widget-header">
+                <h2><span class="widget-icon">🧑‍🎓</span>My Profile</h2>
+                <a href="edit-student-profile.html" class="action-button profile-edit-btn">Edit Profile</a>
+            </div>
+            <div class="profile-summary">
+                <img src="images/default-profile.png" alt="Profile Picture" class="profile-avatar-header" style="width:80px;height:80px;border-radius:50%;box-shadow:0 2px 8px #cd853f33;">
+                <div class="profile-info">
+                    <div class="profile-name" id="profile-name">Student Name</div>
+                    <div class="profile-meta" id="profile-major">Major: Computer Science</div>
+                    <div class="profile-meta" id="profile-year">Graduation: 2025</div>
                 </div>
-                <div id="calendar-placeholder">
-                    <div class="loading-state">
-                        <div class="loading-spinner"></div>
-                        <p>Loading calendar...</p>
+            </div>
+        </section>
+
+        <section id="motivation-widget" class="dashboard-widget motivation-widget">
+            <div class="widget-header">
+                <h2><span class="widget-icon">🌟</span>Motivational Quote</h2>
+            </div>
+            <blockquote class="motivation-quote">“Success is not the key to happiness. Happiness is the key to success.”<br><span class="quote-author">– Albert Schweitzer</span></blockquote>
+        </section>
+
+        <section id="recommended-clubs-widget" class="dashboard-widget clubs-widget">
+            <div class="widget-header">
+                <h2><span class="widget-icon">🎯</span>Recommended Clubs</h2>
+            </div>
+            <div class="recommended-list">
+                <div class="recommended-card club-card">
+                    <span class="club-icon">🎨</span>
+                    <div>
+                        <div class="club-title">Art Society</div>
+                        <div class="club-desc">Unleash your creativity with fellow artists.</div>
                     </div>
+                    <a href="clubs-directory.html" class="action-button recommended-btn">Join</a>
                 </div>
-            </section>
-
-            <section id="recent-announcements" class="dashboard-widget announcements-widget">
-                <div class="widget-header">
-                    <h2>
-                        <span class="widget-icon">📢</span>
-                        Announcements
-                    </h2>
+                <div class="recommended-card club-card">
+                    <span class="club-icon">💻</span>
+                    <div>
+                        <div class="club-title">Coding Club</div>
+                        <div class="club-desc">Collaborate on projects and hackathons.</div>
+                    </div>
+                    <a href="clubs-directory.html" class="action-button recommended-btn">Join</a>
                 </div>
-                <div class="loading-state">
-                    <div class="loading-spinner"></div>
-                    <p>Loading announcements...</p>
-                </div>
-            </section>
-        </aside>
-
-        <section id="project-showcase-quick-access" class="dashboard-widget projects-widget">
-            <div class="widget-header">
-                <h2>
-                    <span class="widget-icon">🚀</span>
-                    Project Showcase
-                </h2>
             </div>
-            <p class="widget-description">Discover amazing student projects and showcase your own work.</p>
-            <p class="widget-action">
-                <a href="projects_directory.html" class="action-link">
-                    View All Projects
-                    <span class="arrow">→</span>
-                </a>
-            </p>
         </section>
 
-        <section id="discover-clubs-widget" class="dashboard-widget clubs-widget">
+        <section id="trending-events-widget" class="dashboard-widget events-widget">
             <div class="widget-header">
-                <h2>
-                    <span class="widget-icon">🎭</span>
-                    Discover Clubs
-                </h2>
+                <h2><span class="widget-icon">🔥</span>Trending Events</h2>
             </div>
-            <p class="widget-description">Explore a wide range of student clubs and organizations. Find your community!</p>
-            <a href="clubs-directory.html" class="action-button">
-                <span>View All Clubs</span>
-                <span class="button-arrow">→</span>
-            </a>
+            <ul class="trending-events-list">
+                <li class="event-card">
+                    <span class="event-icon">🎤</span>
+                    <div>
+                        <div class="event-title">Open Mic Night</div>
+                        <div class="event-date">July 5, 2025</div>
+                    </div>
+                    <a href="events_directory.html" class="action-button">View</a>
+                </li>
+                <li class="event-card">
+                    <span class="event-icon">🏆</span>
+                    <div>
+                        <div class="event-title">Campus Hackathon</div>
+                        <div class="event-date">July 10, 2025</div>
+                    </div>
+                    <a href="events_directory.html" class="action-button">View</a>
+                </li>
+            </ul>
         </section>
 
-        <section id="explore-departments-widget" class="dashboard-widget departments-widget">
-            <div class="widget-header">
-                <h2>
-                    <span class="widget-icon">🏛️</span>
-                    Departments
-                </h2>
-            </div>
-            <p class="widget-description">Explore the academic departments and their offerings.</p>
-            <a href="departments_directory.html" class="action-button">
-                <span>View All Departments</span>
-                <span class="button-arrow">→</span>
-            </a>
-        </section>
-
-        <div id="notification-center-panel" class="notification-panel">
+        <div id="notification-center-panel" class="notification-panel" style="display:none;">
             <div class="notification-header">
                 <h3>Notifications</h3>
                 <button class="close-notifications">✕</button>
@@ -295,18 +620,25 @@
 
         // Notification bell opens the notification panel
         const notificationIcon = document.getElementById('notification-icon');
+        const notificationPanel = document.getElementById('notification-center-panel');
         if (notificationIcon) {
             notificationIcon.addEventListener('click', function() {
-                document.getElementById('notification-center-panel').style.display = 'block';
+                notificationPanel.style.display = 'block';
             });
         }
         // Close notification panel
         const closeNotifBtn = document.querySelector('.close-notifications');
         if (closeNotifBtn) {
             closeNotifBtn.addEventListener('click', function() {
-                document.getElementById('notification-center-panel').style.display = 'none';
+                notificationPanel.style.display = 'none';
             });
         }
+        // Hide panel if clicked outside
+        document.addEventListener('mousedown', function(event) {
+            if (notificationPanel.style.display === 'block' && !notificationPanel.contains(event.target) && event.target !== notificationIcon) {
+                notificationPanel.style.display = 'none';
+            }
+        });
     </script>
 </body>
 </html>

@@ -258,22 +258,23 @@
                 document.getElementById('studentEmail').textContent = currentUser.email || 'N/A';
                 document.getElementById('studentBio').textContent = currentUser.bio || 'No biography provided yet. You can add one by editing your profile.';
 
-                // Get major and graduation year from main user object if present
-                document.getElementById('studentMajor').textContent = currentUser.major || (currentUser.studentDetails && currentUser.studentDetails.major) || 'N/A';
-                document.getElementById('studentGradYear').textContent = currentUser.graduation_year || (currentUser.studentDetails && currentUser.studentDetails.graduationYear) || 'N/A';
+                // Always use studentDetails for major and graduation year, fallback to main user fields
+                const details = currentUser.studentDetails || {};
+                document.getElementById('studentMajor').textContent = details.major || currentUser.major || 'N/A';
+                document.getElementById('studentGradYear').textContent = details.graduationYear || currentUser.graduationYear || 'N/A';
 
-                // LinkedIn and GitHub from user_profiles (if available)
-                if (currentUser.userProfile) {
-                    document.getElementById('studentLinkedIn').innerHTML = currentUser.userProfile.linkedin_url
-                        ? `<a href="${currentUser.userProfile.linkedin_url}" target="_blank">${currentUser.userProfile.linkedin_url}</a>`
-                        : 'N/A';
-                    document.getElementById('studentGithub').innerHTML = currentUser.userProfile.github_url
-                        ? `<a href="${currentUser.userProfile.github_url}" target="_blank">${currentUser.userProfile.github_url}</a>`
-                        : 'N/A';
-                } else {
-                    document.getElementById('studentLinkedIn').textContent = 'N/A';
-                    document.getElementById('studentGithub').textContent = 'N/A';
-                }
+                // LinkedIn and GitHub from studentDetails (fallback to userProfile)
+                const linkedInUrl = details.linkedin || (currentUser.userProfile && currentUser.userProfile.linkedin_url);
+                const githubUrl = details.github || (currentUser.userProfile && currentUser.userProfile.github_url);
+                document.getElementById('studentLinkedIn').innerHTML = linkedInUrl
+                    ? `<a href="${linkedInUrl}" target="_blank">${linkedInUrl}</a>`
+                    : 'N/A';
+                document.getElementById('studentGithub').innerHTML = githubUrl
+                    ? `<a href="${githubUrl}" target="_blank">${githubUrl}</a>`
+                    : 'N/A';
+                // Optionally show portfolio/website if you want:
+                // const portfolioUrl = details.portfolio;
+                // ...
 
                 populateRegisteredEvents(currentUser);
                 populateJoinedClubs(currentUser);

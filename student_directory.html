@@ -27,4 +27,22 @@
             <h2>Find Your Peers</h2>
             <p>Connect with other students across campus.</p>
 
-            <div class="search-filter-bara
+            <div class="search-filter-bar">
+                <form id="searchForm">
+                    <input type="text" name="q" placeholder="Search by name...">
+                    <input type="text" name="major" placeholder="Major">
+                    <input type="text" name="graduationYear" placeholder="Graduation Year">
+                    <input type="text" name="department" placeholder="Department">
+                    <input type="text" name="skills" placeholder="Skills (comma separated)">
+                    <button type="submit">Search</button>
+                </form>
+            </div>
+
+            <div id="student-directory-container" class="students-list">
+                <!-- Student cards will be rendered here by JS -->
+            </div>
+        </section>
+    </main>
+    <script src="student_directory.js"></script>
+</body>
+</html>

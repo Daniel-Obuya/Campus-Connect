@@ -1,4 +1,22 @@
 document.addEventListener('DOMContentLoaded', () => {
+    const authToken = localStorage.getItem('authToken');
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+
+    if (!authToken || !currentUser) {
+        window.location.href = '/login-student';
+    }
+
+    // --- Personalized Welcome and Quick Stats ---
+    const welcomeMessage = document.getElementById('welcome-message');
+    // Use the already-declared currentUser from above
+    if (currentUser && currentUser.role === 'student' && currentUser.firstName) {
+        welcomeMessage.textContent = `Welcome, ${currentUser.firstName}! 👋`;
+    }
+    // Dummy stats for prototype
+    document.getElementById('stat-messages').textContent = '2';
+    document.getElementById('stat-events').textContent = '3';
+    document.getElementById('stat-clubs').textContent = '1';
+
     // Set current year in footer
     const currentYearSpan = document.getElementById('current-year');
     if (currentYearSpan) {

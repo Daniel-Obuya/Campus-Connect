@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Departments Directory - Campus Connect</title>
     <link rel="stylesheet" href="department_admin.css"> <!-- Linking your existing stylesheet -->
+    <link rel="stylesheet" href="departments_directory.css"> <!-- New stylesheet for departments directory -->
     <!-- IDEA: Consider adding an icon library like Font Awesome -->
      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> 
     <style>
@@ -71,29 +72,54 @@
 
 
         /* Search and Filter Bar Styling */
-        .search-filter-bar {
+        .search-filter-section {
             margin-bottom: var(--spacing-lg);
-            padding: var(--spacing-md);
-            background: var(--color-bg-glass-primary);
-            backdrop-filter: blur(var(--backdrop-blur-strong));
-            -webkit-backdrop-filter: blur(var(--backdrop-blur-strong));
-            border-radius: var(--border-radius-lg);
-            border: var(--border-width) solid var(--color-border-glass);
-            box-shadow: var(--box-shadow-soft);
-            display: flex; /* Align items in a row */
-            align-items: center; /* Vertically align items */
+            display: flex;
+            align-items: center;
             gap: var(--spacing-sm);
         }
 
-        .search-filter-bar input[type="text"] {
-            flex-grow: 1; /* Allow input to take available space */
-            /* width: calc(100% - 280px); /* Adjusted for two buttons */
-            /* margin-right: var(--spacing-sm); */ /* Replaced by gap */
+        .search-bar {
+            flex-grow: 1;
+            position: relative;
         }
 
-        .search-filter-bar button {
-            width: auto; /* Override form button full width */
-            flex-shrink: 0; /* Prevent buttons from shrinking */
+        .search-bar input[type="text"] {
+            width: 100%;
+            padding: var(--spacing-sm) var(--spacing-md);
+            border: var(--border-width) solid var(--color-border-glass);
+            border-radius: var(--border-radius-md);
+            background: var(--color-bg-glass-primary);
+            backdrop-filter: blur(var(--backdrop-blur-strong));
+            -webkit-backdrop-filter: blur(var(--backdrop-blur-strong));
+            font-size: var(--font-size-base);
+            color: var(--color-text-primary);
+        }
+
+        .search-bar .search-btn {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--theme-color-primary);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius-md);
+            padding: var(--spacing-sm) var(--spacing-md);
+            cursor: pointer;
+            font-size: var(--font-size-base);
+        }
+
+        .search-filter-section select {
+            padding: var(--spacing-sm) var(--spacing-md);
+            border: var(--border-width) solid var(--color-border-glass);
+            border-radius: var(--border-radius-md);
+            background: var(--color-bg-glass-primary);
+            backdrop-filter: blur(var(--backdrop-blur-strong));
+            -webkit-backdrop-filter: blur(var(--backdrop-blur-strong));
+            font-size: var(--font-size-base);
+            color: var(--color-text-primary);
+            /* margin-left: var(--spacing-sm); */ /* Replaced by gap in flex container */
         }
 
         /* New styles for department list items */
@@ -142,7 +168,7 @@
         }
         .department-info h3 {
             margin: 0 0 var(--spacing-xs) 0;
-            color: var(--color-text-base);
+            color: var(--color-text-base;
         }
         .department-info p {
             font-size: var(--font-size-small);
@@ -222,18 +248,17 @@
             <p class="section-description">Find information about departments, faculty, courses, research, and more.</p>
 
             <!-- IDEA: Search and Filter Bar -->
-            <div class="search-filter-bar">
-                <div class="search-input-wrapper">
-                    <i class="fas fa-search search-icon"></i>
+            <div class="search-filter-section">
+                <div class="search-bar">
                     <input type="text" id="departmentSearch" placeholder="Search departments (e.g., by name, keyword)...">
+                    <button class="search-btn" onclick="filterDepartments()"><i class="fas fa-search"></i></button>
                 </div>
-                <select id="departmentSort" class="form-select sort-select" onchange="filterDepartments()">
+                <select id="departmentSort" class="filter-select" onchange="filterDepartments()">
                     <option value="name_asc">Sort by Name (A-Z)</option>
                     <option value="name_desc">Sort by Name (Z-A)</option>
                     <option value="programs_desc">Programs (High to Low)</option>
                     <option value="programs_asc">Programs (Low to High)</option>
                 </select>
-                <button class="action-button" onclick="filterDepartments()">Apply Filters</button>
                 <a href="#followedDepartmentsSection" class="action-button action-button-secondary">
                     <i class="fas fa-star"></i> View Followed
                 </a>
@@ -241,86 +266,7 @@
 
             <!-- Department List -->
             <ul id="departmentsList">
-                <!-- Example Department List Item (Repeat this structure) -->
-                <li class="department-list-item" data-department-id="cse">
-                    <div class="department-icon">💻</div> <!-- Placeholder Icon, e.g., <i class="fas fa-laptop-code"></i> -->
-                    <div class="department-content">
-                        <div class="department-header-info">
-                            <h3>Computer Science & Engineering</h3>
-                            <p>Cutting-edge research and education in computing, AI, and software development.</p>
-                        </div>
-                        <div class="department-quick-stats">
-                            <div class="stat-item"><i class="fas fa-book-open"></i> <strong>15+</strong> Programs</div>
-                            <div class="stat-item"><i class="fas fa-user-tie"></i> <strong>50+</strong> Faculty</div>
-                            <div class="stat-item"><i class="fas fa-flask"></i> <strong>Active</strong> Research</div>
-                        </div>
-                        <div class="department-item-actions">
-                            <button class="action-button department-follow-toggle" onclick="toggleFollow('cse', this)">Follow</button>
-                            <a href="department_details.html?id=cse" class="action-button action-button-info">View Details</a>
-                            <a href="events_directory.html?department=cse" class="action-button action-button-secondary">View Events</a>
-                        </div>
-                    </div>
-                </li>
-
-                <li class="department-list-item" data-department-id="business">
-                    <div class="department-icon">📈</div> <!-- Placeholder Icon, e.g., <i class="fas fa-briefcase"></i> -->
-                    <div class="department-content">
-                        <div class="department-header-info">
-                            <h3>Business Administration</h3>
-                            <p>Programs in management, finance, marketing, and entrepreneurship for future leaders.</p>
-                        </div>
-                        <div class="department-quick-stats">
-                            <div class="stat-item"><i class="fas fa-book-open"></i> <strong>10+</strong> Programs</div>
-                            <div class="stat-item"><i class="fas fa-user-tie"></i> <strong>40+</strong> Faculty</div>
-                            <div class="stat-item"><i class="fas fa-flask"></i> <strong>Industry</strong> Partnerships</div>
-                        </div>
-                        <div class="department-item-actions">
-                            <button class="action-button department-follow-toggle" onclick="toggleFollow('business', this)">Follow</button>
-                            <a href="department_details.html?id=business" class="action-button action-button-info">View Details</a>
-                            <a href="events_directory.html?department=business" class="action-button action-button-secondary">View Events</a>
-                        </div>
-                    </div>
-                </li>
-
-                <li class="department-list-item" data-department-id="arts">
-                    <div class="department-icon">🎨</div> <!-- Placeholder Icon, e.g., <i class="fas fa-palette"></i> -->
-                    <div class="department-content">
-                        <div class="department-header-info">
-                            <h3>Fine Arts & Design</h3>
-                            <p>Fostering creativity through visual arts, design, and art history programs.</p>
-                        </div>
-                        <div class="department-quick-stats">
-                            <div class="stat-item"><i class="fas fa-book-open"></i> <strong>8+</strong> Programs</div>
-                            <div class="stat-item"><i class="fas fa-user-tie"></i> <strong>25+</strong> Faculty</div>
-                            <div class="stat-item"><i class="fas fa-palette"></i> <strong>Exhibitions</strong> Annually</div>
-                        </div>
-                        <div class="department-item-actions">
-                            <button class="action-button department-follow-toggle" onclick="toggleFollow('arts', this)">Follow</button>
-                            <a href="department_details.html?id=arts" class="action-button action-button-info">View Details</a>
-                            <a href="events_directory.html?department=arts" class="action-button action-button-secondary">View Events</a>
-                        </div>
-                    </div>
-                </li>
-                 <li class="department-list-item" data-department-id="humanities">
-                    <div class="department-icon">📚</div> <!-- Placeholder Icon e.g. <i class="fas fa-book-open"></i> -->
-                    <div class="department-content">
-                        <div class="department-header-info">
-                            <h3>Humanities & Social Sciences</h3>
-                            <p>Exploring history, literature, philosophy, and social dynamics.</p>
-                        </div>
-                        <div class="department-quick-stats">
-                            <div class="stat-item"><i class="fas fa-book-open"></i> <strong>12+</strong> Programs</div>
-                            <div class="stat-item"><i class="fas fa-user-tie"></i> <strong>35+</strong> Faculty</div>
-                            <div class="stat-item"><i class="fas fa-globe"></i> <strong>Global</strong> Studies</div>
-                        </div>
-                        <div class="department-item-actions">
-                            <button class="action-button department-follow-toggle" onclick="toggleFollow('humanities', this)">Follow</button>
-                            <a href="department_details.html?id=humanities" class="action-button action-button-info">View Details</a>
-                            <a href="events_directory.html?department=humanities" class="action-button action-button-secondary">View Events</a>
-                        </div>
-                    </div>
-                </li>
-                <!-- More department list items will be dynamically loaded or added here by JavaScript -->
+                <!-- Department list items will be dynamically loaded from departments.json by JavaScript -->
             </ul>
             <p id="noDepartmentsMessage" style="display:none; text-align:center; padding: 20px;">No departments found matching your criteria.</p>
 
@@ -424,12 +370,13 @@
                 const departmentName = departmentData.name;
                 const departmentIconHTML = departmentData.icon || '🏛️'; // Default icon
 
+                // Restore original styling for followed department items
                 const listItem = document.createElement('li');
                 listItem.className = 'followed-department-item';
                 listItem.innerHTML = `
                     <div class="department-icon">${departmentIconHTML}</div>
                     <span>${departmentName}</span>
-                    <button class="action-button action-button-secondary" onclick="handleUnfollowFromList('${deptId}')">Unfollow</button>
+                    <button class="action-button" onclick="handleUnfollowFromList('${deptId}')">Unfollow</button>
                 `;
                 listElement.appendChild(listItem);
             });
@@ -467,6 +414,7 @@
                 <div class="department-item-actions">
                     <button class="${followButtonClass}" onclick="toggleFollow('${departmentId}', this)">${followButtonText}</button>
                     <a href="department_details.html?id=${departmentId}" class="action-button action-button-info">Discover More</a>
+                    <button class="action-button action-button-primary message-btn" onclick="alert('Messaging department admin for: ${department.name}')">Message Admin</button>
                 </div>
             `;
             return listItem;
@@ -531,6 +479,7 @@
 
         function filterDepartments() {
             const searchTerm = document.getElementById('departmentSearch').value.toLowerCase().trim();
+            const sortValue = document.getElementById('departmentSort').value;
             const currentDepartmentsList = document.getElementById('departmentsList');
             const currentLoadMoreBtn = document.getElementById('loadMoreBtn');
             const currentNoDepartmentsMessage = document.getElementById('noDepartmentsMessage');
@@ -540,24 +489,25 @@
                 return;
             }
 
-            currentDepartmentsList.innerHTML = ''; // Clear the list (both static and dynamic)
-
-            if (!searchTerm) {
-                // Search is empty, restore initial state (static + initial JSON batch)
-                currentDepartmentsList.innerHTML = staticDepartmentsHTML; // Restore static items
-                
-                currentlyDisplayedCount = 0; // Reset for JSON items
-                // renderDepartments will append to static HTML and manage its own messages/button for the JSON part.
-                renderDepartments(0, departmentsPerLoad); 
-                return;
-            }
-
-            // Search term is present, filter JSON data from allDepartmentsData
-            const filteredDepartments = allDepartmentsData.filter(dept => {
+            // Filter
+            let filteredDepartments = allDepartmentsData.filter(dept => {
                 const deptName = dept.name ? dept.name.toLowerCase() : '';
                 const deptDesc = dept.description ? dept.description.toLowerCase() : '';
                 return deptName.includes(searchTerm) || deptDesc.includes(searchTerm);
             });
+
+            // Sort
+            if (sortValue === 'name_asc') {
+                filteredDepartments.sort((a, b) => a.name.localeCompare(b.name));
+            } else if (sortValue === 'name_desc') {
+                filteredDepartments.sort((a, b) => b.name.localeCompare(a.name));
+            } else if (sortValue === 'programs_desc') {
+                filteredDepartments.sort((a, b) => (b.programs || 0) - (a.programs || 0));
+            } else if (sortValue === 'programs_asc') {
+                filteredDepartments.sort((a, b) => (a.programs || 0) - (b.programs || 0));
+            }
+
+            currentDepartmentsList.innerHTML = '';
 
             if (filteredDepartments.length > 0) {
                 filteredDepartments.forEach(dept => {

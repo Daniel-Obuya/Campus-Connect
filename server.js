@@ -1,4 +1,3 @@
-
 require('dotenv').config();
 const secret = process.env.JWT_SECRET;
 const jwt = require('jsonwebtoken');
@@ -66,7 +65,7 @@ const pool = mysql.createPool({
 })();
 exports.pool = pool; // Export the pool for use in other modules
 
-// Authentication Middleware ---
+// --- Authentication Middleware ---
 const authenticateJWT = (req, res, next) => {
     const authHeader = req.headers.authorization;
     if (authHeader) {
@@ -87,52 +86,6 @@ const authenticateJWT = (req, res, next) => {
     }
 };
 
-
-// --- API Route: Club Admin Dashboard Data (returns admin and club name) ---
-app.get('/api/club/dashboard', authenticateJWT, async (req, res) => {
-    if (!req.user || req.user.role !== 'club_admin') {
-        return res.status(403).json({ success: false, message: 'Forbidden: Only club admins can access this endpoint.' });
-    }
-    try {
-        // Get admin info
-        const [adminRows] = await pool.query('SELECT first_name, last_name, email, user_id FROM users WHERE user_id = ?', [req.user.id]);
-        if (adminRows.length === 0) {
-            return res.status(404).json({ success: false, message: 'Admin user not found.' });
-        }
-        const admin = adminRows[0];
-        // Get club info (where this admin is president)
-        const [clubRows] = await pool.query('SELECT club_id, name, description, category, contact_email, meeting_schedule, logo_url FROM clubs_societies WHERE president_user_id = ?', [req.user.id]);
-        if (clubRows.length === 0) {
-            return res.status(404).json({ success: false, message: 'Club not found for this admin.' });
-        }
-        const club = clubRows[0];
-        // Return both admin and club name (plus more if needed)
-        res.json({
-            success: true,
-            adminName: `${admin.first_name} ${admin.last_name}`.trim(),
-            clubName: club.name,
-            admin: {
-                id: admin.user_id,
-                firstName: admin.first_name,
-                lastName: admin.last_name,
-                email: admin.email
-            },
-            club: {
-                id: club.club_id,
-                name: club.name,
-                description: club.description,
-                category: club.category,
-                contactEmail: club.contact_email,
-                meetingSchedule: club.meeting_schedule,
-                logoUrl: club.logo_url
-            }
-        });
-    } catch (error) {
-        console.error('Error fetching club admin dashboard data:', error);
-        res.status(500).json({ success: false, message: 'Server error fetching club dashboard data.' });
-    }
-});
-
 // --- HTML Serving Routes ---
 
 // Root redirects to welcome
@@ -152,7 +105,7 @@ app.get('/welcome-admin-portals', (req, res) => {
 
 // New specific signup and login pages
 app.get('/signup-student', (req, res) => {
-  res.sendFile(path.join(__dirname, 'signup-student.html'));
+  res.sendFile
 });
 app.get('/login-student', (req, res) => {
   res.sendFile(path.join(__dirname, 'login-student.html'));
@@ -190,10 +143,6 @@ app.get('/clubs-directory', (req, res) => {
 // --- Route for Departments Directory ---
 app.get('/projects', (req, res) => {
   res.sendFile(path.join(__dirname, 'projects_directory.html'));
-});
-
-app.get('/departments-directory', (req, res) => {
-    res.sendFile(path.join(__dirname, 'departments_directory.html'));
 });
 
 // --- Route for Events Directory ---
@@ -335,6 +284,8 @@ app.get('/api/conversations', authenticateJWT, async (req, res) => {
                 IF(c.is_group_chat, c.group_name, CONCAT(other_user.first_name, ' ', other_user.last_name)) AS display_name,
                 -- Determine the avatar: group avatar for groups, other user's avatar for DMs
                 IF(c.is_group_chat, c.group_avatar_url, other_user.profile_picture_url) AS avatar_url,
+                -- For DMs, get the other user's ID as receiver_id, else NULL for group chats
+                IF(c.is_group_chat, NULL, other_user.user_id) AS receiver_id,
                 -- Get the last message content
                 (SELECT content FROM messages WHERE conversation_id = c.conversation_id ORDER BY created_at DESC LIMIT 1) AS last_message,
                 -- Get the last message sender's name
@@ -733,8 +684,6 @@ app.post('/api/reset-password', async (req, res) => {
 });
 
 
-
-
 // Login
 app.post('/api/login', async (req, res) => {
   try {
@@ -750,14 +699,6 @@ app.post('/api/login', async (req, res) => {
     }
 
     const [users] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
-    let userProfile = null;
-    if (users.length > 0 && users[0].user_id) {
-      // Fetch user_profile row for this user
-      const [profiles] = await pool.query('SELECT linkedin_url, github_url FROM user_profiles WHERE user_id = ?', [users[0].user_id]);
-      if (profiles.length > 0) {
-        userProfile = profiles[0];
-      }
-    }
 
     if (users.length === 0) {
       return res.status(401).json({ 
@@ -821,16 +762,15 @@ app.post('/api/login', async (req, res) => {
         res.json({
             success: true,
             message: 'Login successful. Redirecting...',
-            redirectTo: '/department-dashboard',
-            token,
+            redirectTo: '/department-dashboard', // Instruction for the client
+            token, // Send the token
             user: {
                 id: user.user_id,
                 firstName: user.first_name,
                 lastName: user.last_name,
                 email: user.email,
                 role: user.role,
-                department_id: userDepartmentId,
-                userProfile
+                department_id: userDepartmentId // Also include in user object
             }
         });
     } else {
@@ -840,10 +780,7 @@ app.post('/api/login', async (req, res) => {
             email: user.email,
             role: user.role,
             firstName: user.first_name,
-    lastName: user.last_name,
-    profilePictureUrl: user.profile_picture_url,
-    bio: user.bio,
-    studentDetails: user.role === 'student' ? { studentId: user.student_id, major: user.major, graduationYear: user.graduation_year, department: user.department } : null
+            lastName: user.last_name
         }, secret, { expiresIn: '2h' });
 
         console.log(`User ${user.email} (role: ${user.role}) logged in, sending token.`);
@@ -856,8 +793,7 @@ app.post('/api/login', async (req, res) => {
                 firstName: user.first_name,
                 lastName: user.last_name,
                 email: user.email,
-                role: user.role,
-                userProfile
+                role: user.role
             }
         });
     }
@@ -871,119 +807,77 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
+// --- API Route: Get Logged-in User's Profile ---
+app.get('/api/user/profile', authenticateJWT, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const sql = `
+            SELECT 
+                u.user_id, u.first_name, u.last_name, u.email, u.role, u.student_id, u.major, u.graduation_year, u.profile_picture_url,
+                up.linkedin_url, up.github_url, up.personal_website, up.bio, up.skills
+            FROM users u
+            LEFT JOIN user_profiles up ON u.user_id = up.user_id
+            WHERE u.user_id = ?
+        `;
+        const [users] = await pool.query(sql, [userId]);
+
+        if (users.length === 0) {
+            return res.status(404).json({ success: false, message: 'User profile not found.' });
+        }
+        res.json({ success: true, profile: users[0] });
+    } catch (error) {
+        console.error('Error fetching user profile:', error);
+        res.status(500).json({ success: false, message: 'Server error while fetching profile.' });
+    }
+});
+
 // --- API Route for Updating Student Profile ---
-// This route handles updates for all student-related profile fields.
-// It expects a flat payload from the frontend (e.g., edit-student-profile.html).
-app.put('/api/student/profile', authenticateJWT, async (req, res) => {
-    // Ensure the user is a student
+app.put('/api/user/profile', authenticateJWT, async (req, res) => {
     if (req.user.role !== 'student') {
         return res.status(403).json({ success: false, message: 'Forbidden: Only students can update their profile.' });
     }
+    const userId = req.user.id;
+    const { firstName, lastName, studentId, major, graduationYear, linkedin, github, portfolio, bio, skills } = req.body;
 
-const userId = req.user.id; // From your authentication middleware
-    const {
-     first_name, last_name, bio, phone_number, // Basic user details
-        major, graduation_year, // Fields to move to 'users' table
-        academic_achievements, // Fields for 'user_profiles' table
-        skills, interests, extracurricular_activities,
-        linkedin_url, github_url, personal_website,
-        portfolio_visibility
-    } = req.body; 
-
-    if (!first_name || !last_name) { // Ensure essential fields are present
+    if (!firstName || !lastName) {
         return res.status(400).json({ success: false, message: 'First name and last name are required.' });
     }
 
-     try {
-        const connection = await pool.getConnection();
+    const connection = await pool.getConnection();
+    try {
         await connection.beginTransaction();
 
-        try {
-          // 1. Update users table for basic info, major, and graduation_year
-            await connection.query(`
-                UPDATE users SET
-                    first_name = ?,
-                    last_name = ?,
-                    bio = ?,
-                     phone_number = ?,
-                    major = ?,
-                    graduation_year = ?
-                WHERE user_id = ?
+        // Update users table
+        await connection.query(
+            `UPDATE users SET first_name = ?, last_name = ?, student_id = ?, major = ?, graduation_year = ? WHERE user_id = ?`,
+            [firstName, lastName, studentId || null, major || null, graduationYear || null, userId]
+        );
 
-`, [
-                first_name,
-                last_name,
-                bio || null,
-                phone_number || null,
-                major || null, // Add major
-                graduation_year || null, // Add graduation_year
-                userId
-            ]);
+        // Upsert user_profiles table
+        const skillsString = Array.isArray(skills) ? skills.join(', ') : (skills || null);
+        await connection.query(
+            `INSERT INTO user_profiles (user_id, linkedin_url, github_url, personal_website, bio, skills)
+             VALUES (?, ?, ?, ?, ?, ?)
+             ON DUPLICATE KEY UPDATE
+                linkedin_url = VALUES(linkedin_url),
+                github_url = VALUES(github_url),
+                personal_website = VALUES(personal_website),
+                bio = VALUES(bio),
+                skills = VALUES(skills)`,
+            [userId, linkedin || null, github || null, portfolio || null, bio || null, skillsString]
+        );
 
-     // 2. Update or Insert into 'user_profiles' table for student-specific information
-            const userProfileSql = `
-                INSERT INTO user_profiles (
-                    user_id, skills, interests, portfolio_visibility, linkedin_url, github_url, personal_website, academic_achievements, extracurricular_activities
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                     ON DUPLICATE KEY UPDATE
-                 skills = VALUES(skills),
-                    interests = VALUES(interests),
-                    portfolio_visibility = VALUES(portfolio_visibility),
-                    linkedin_url = VALUES(linkedin_url),
-                    github_url = VALUES(github_url),
-                    personal_website = VALUES(personal_website),
-                    academic_achievements = VALUES(academic_achievements),
-                    skills = VALUES(skills), interests = VALUES(interests), extracurricular_activities = VALUES(extracurricular_activities),
-                  extracurricular_activities = VALUES(extracurricular_activities)
-            `;
-            const userProfileValues = [
-                userId,
-                (skills && Array.isArray(skills)) ? skills.join(',') : null,
-                (interests && Array.isArray(interests)) ? interests.join(',') : null,
-                portfolio_visibility || 'public',
-                linkedin_url || null,
-                github_url || null,
-                personal_website || null,
-                academic_achievements || null,
-                extracurricular_activities || null
-            ];
-            
-            await connection.query(userProfileSql, userProfileValues);
-
-            await connection.commit();
-            // Fetch the latest user and user_profile data to return
-            const [[updatedUser]] = await connection.query('SELECT * FROM users WHERE user_id = ?', [userId]);
-            const [updatedProfiles] = await connection.query('SELECT linkedin_url, github_url FROM user_profiles WHERE user_id = ?', [userId]);
-            let updatedUserProfile = null;
-            if (updatedProfiles.length > 0) {
-                updatedUserProfile = updatedProfiles[0];
-            }
-
-            // Compose the updated user object (similar to /api/login response)
-            const userResponse = {
-                id: updatedUser.user_id,
-                firstName: updatedUser.first_name,
-                lastName: updatedUser.last_name,
-                email: updatedUser.email,
-                role: updatedUser.role,
-                userProfile: updatedUserProfile
-            };
-            res.json({ success: true, message: 'Profile updated successfully!', user: userResponse });    
-        } catch (error) {
-            await connection.rollback();
-            connection.release();
-            console.error('Error updating student profile:', error);
-            // Always return a consistent response structure
-            return res.status(500).json({ success: false, message: 'Internal server error during profile update.', user: null });
-        } finally {
-            connection.release();
-        }
+        await connection.commit();
+        res.json({ success: true, message: 'Profile updated successfully.' });
     } catch (error) {
+        await connection.rollback();
         console.error('Error updating student profile:', error);
-        // Always return a consistent response structure
-        return res.status(500).json({ success: false, message: 'Internal server error during profile update.', user: null });
+        res.status(500).json({ success: false, message: 'Failed to update profile.' });
+    } finally {
+        connection.release();
     }
 });
+
 // API Endpoint to Create a New Event
 app.post('/api/events', authenticateJWT, async (req, res) => { // Protected route
     // Log the raw request body as received by the server
@@ -1202,8 +1096,11 @@ app.put('/api/events/:eventId', authenticateJWT, async (req, res) => {
         if (typeof end_datetime !== 'string' || !end_datetime.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/)) {
             errors.push('End date and time is required and must be in YYYY-MM-DDTHH:MM format.');
         }
-        if ((typeof location !== 'string' || location.trim() === '') && (typeof virtual_link !== 'string' || virtual_link.trim() === '')) {
-            errors.push('Either a physical location or a virtual link must be provided.');
+        if (typeof location !== 'string' || location.trim() === '') {
+            errors.push('Location is required.');
+        }
+        if (typeof virtual_link !== 'string' || virtual_link.trim() === '') {
+            errors.push('Virtual link is required.');
         }
         // Note: organizer_id and organizer_type are not part of eventData for update, they are for authorization.
 
@@ -1360,19 +1257,28 @@ app.post('/api/announcements', authenticateJWT, async (req, res) => {
         res.status(500).json({ success: false, message: 'Failed to create announcement.' });
     } // This closes the try-catch block
 }); // This correctly closes the app.post('/api/announcements', ...) route handler
-// --- API Route: Get All Clubs for Clubs Directory ---
-app.get('/api/clubs', async (req, res) => {
+
+// --- API Route to get all clubs for the clubs directory ---
+app.get('/api/club', async (req, res) => {
     try {
-        const [clubs] = await pool.query(
-            'SELECT club_id, name, description, category, contact_email, meeting_schedule, logo_url FROM clubs_societies WHERE is_active = 1'
-        );
+        const [clubs] = await pool.query(`
+            SELECT 
+                club_id,
+                name,
+                description,
+                category,
+                logo_url,
+                member_count,
+                meeting_schedule
+            FROM clubs_societies
+            WHERE is_active = 1
+        `);
         res.json({ success: true, clubs });
     } catch (error) {
-        console.error('Error fetching clubs for directory:', error);
+        console.error('Error fetching clubs:', error);
         res.status(500).json({ success: false, message: 'Failed to fetch clubs.' });
     }
 });
-<<<<<<< HEAD
  // Get pending join requests for clubs managed by the current club admin
 app.get('/api/club/requests', authenticateJWT, async (req, res) => {
     if (req.user.role !== 'club_admin') {
@@ -1455,9 +1361,6 @@ app.post('/api/club/requests/handle', authenticateJWT, async (req, res) => {
 // --- Club Admin Dashboard Data Endpoint ---
 // --- Club Admin Dashboard Data Endpoint ---
 app.get('/api/club/dashboard', authenticateJWT, async (req, res) => {
-    if (req.user.role !== 'club_admin') {
-        return res.status(403).json({ success: false, message: 'Only club admins can access this dashboard.' });
-    }
     try {
         // Get the club managed by this admin
         const [clubs] = await pool.query(
@@ -1559,95 +1462,53 @@ app.get('/api/club/dashboard', authenticateJWT, async (req, res) => {
     }
 });
 
-// --- Socket.IO Real-time Logic ---
-
-const userSockets = {}; // Map userId to socketId
-
-io.on('connection', (socket) => {
-    console.log('A user connected:', socket.id);
-
-    // Store user's socket ID when they connect
-    socket.on('register', (userId) => {
-        console.log(`User ${userId} registered with socket ${socket.id}`);
-        userSockets[userId] = socket.id;
-    });
-
-    // Handle sending a message
-    socket.on('sendMessage', async (data) => {
-        const { conversationId, senderId, content } = data;
-        
-        if (!content || !senderId || !conversationId) {
-            socket.emit('messageError', { message: 'Missing message data.' });
-            return;
+// --- API Route: Student Directory (students only, basic info) ---
+app.get('/api/students', authenticateJWT, async (req, res) => {
+    try {
+        // Optional: add search/filter by name or graduation year
+        const { q, graduationYear } = req.query;
+        let sql = `
+            SELECT user_id, first_name, last_name, email, graduation_year
+            FROM users
+            WHERE u.role = 'student' AND u.is_active = 1
+        `;
+        const params = [];
+        if (q) {
+            sql += ' AND (first_name LIKE ? OR last_name LIKE ? OR CONCAT(first_name, " ", last_name) LIKE ?)';
+            params.push(`%${q}%`, `%${q}%`, `%${q}%`);
         }
-
-        try {
-            // 1. Insert the new message
-            const [result] = await pool.query(
-                'INSERT INTO messages (conversation_id, sender_id, content) VALUES (?, ?, ?)',
-                [conversationId, senderId, content]
-            );
-            const messageId = result.insertId;
-
-            // 2. Update the conversation's last_message_at timestamp
-            await pool.query(
-                'UPDATE conversations SET last_message_at = CURRENT_TIMESTAMP WHERE conversation_id = ?',
-                [conversationId]
-            );
-
-            const newMessage = {
-                message_id: messageId,
-                conversation_id: conversationId,
-                sender_id: senderId,
-                content: content,
-                created_at: new Date().toISOString()
-            };
-
-            // 3. Get all participants of the conversation to notify them
-            const [participants] = await pool.query(
-                'SELECT user_id FROM conversation_participants WHERE conversation_id = ?',
-                [conversationId]
-            );
-
-            // 4. Emit the new message to all connected participants in the conversation
-            participants.forEach(participant => {
-                const receiverSocketId = userSockets[participant.user_id];
-                if (receiverSocketId) {
-                    io.to(receiverSocketId).emit('newMessage', newMessage);
-                }
-            });
-        } catch (error) {
-            console.error('Error saving or sending message:', error);
-            socket.emit('messageError', { message: 'Could not send message.' });
+        if (graduationYear) {
+            sql += ' AND graduation_year = ?';
+            params.push(graduationYear);
         }
-    });
-
-    socket.on('disconnect', () => {
-        console.log('User disconnected:', socket.id);
-        for (const userId in userSockets) {
-            if (userSockets[userId] === socket.id) {
-                delete userSockets[userId];
-                break;
-            }
-        }
-    });
+        sql += ' ORDER BY first_name, last_name';
+        const [students] = await pool.query(sql, params);
+        res.json({ success: true, students });
+    } catch (error) {
+        console.error('Error fetching students:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch students.' });
+    }
 });
-
 // Start server using the http server instance
 server.listen(PORT, () => {
-=======
-// Start server
-app.listen(PORT, () => {
->>>>>>> 0d0ac204333486fae73184ecc036ac3eb528efa1
   console.log(`Server running on http://localhost:${PORT}`);
-  console.log(`Welcome page: http://localhost:${PORT}/welcome`);
-  console.log(`Admin Portals Welcome: http://localhost:${PORT}/welcome-admin-portals`);
-  console.log(`Student Signup: http://localhost:${PORT}/signup-student`);
-  console.log(`Student Login: http://localhost:${PORT}/login-student`);
-  console.log(`Admin Signup: http://localhost:${PORT}/signup-admin`);
-  console.log(`Admin Login: http://localhost:${PORT}/login-admin`);
-  console.log(`Departments Directory: http://localhost:${PORT}/departments-directory`);
-  console.log(`Events Directory: http://localhost:${PORT}/events-directory`);
-  console.log(`Interactive Calendar: http://localhost:${PORT}/interactive-calendar`);
-  console.log(`API for External Events (test): http://localhost:${PORT}/api/external-events?page=1&location=Nairobi&q=tech`);
+  console.log('Main Pages:');
+  console.log(`- Welcome: http://localhost:${PORT}/welcome`);
+  console.log(`- Admin Portals Welcome: http://localhost:${PORT}/welcome-admin-portals`);
+  console.log(`- Student Signup: http://localhost:${PORT}/signup-student`);
+  console.log(`- Student Login: http://localhost:${PORT}/login-student`);
+  console.log(`- Admin Signup: http://localhost:${PORT}/signup-admin`);
+  console.log(`- Admin Login: http://localhost:${PORT}/login-admin`);
+  console.log(`- Events Management: http://localhost:${PORT}/events-management`);
+  console.log(`- Department Dashboard: http://localhost:${PORT}/department-dashboard`);
+  console.log(`- Student Dashboard: http://localhost:${PORT}/student-dashboard`);
+  console.log(`- Club Admin Dashboard: http://localhost:${PORT}/club-admin-dashboard`);
+  console.log(`- Departments Directory: http://localhost:${PORT}/departments-directory`);
+  console.log(`- Clubs Directory: http://localhost:${PORT}/clubs-directory`);
+  console.log(`- Projects Directory: http://localhost:${PORT}/projects`);
+  console.log(`- Events Directory: http://localhost:${PORT}/events-directory`);
+  console.log(`- Interactive Calendar: http://localhost:${PORT}/interactive-calendar`);
+  console.log(`- Edit Student Profile: http://localhost:${PORT}/edit-student-profile`);
+  console.log(`- Reset Password: http://localhost:${PORT}/reset-password`);
+  console.log(`- Messaging: http://localhost:${PORT}/messaging`);
 });
