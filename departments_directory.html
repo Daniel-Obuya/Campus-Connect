@@ -227,6 +227,42 @@
             margin-top: var(--spacing-lg);
             margin-bottom: var(--spacing-lg);
         }
+
+        /* Modal styles */
+        #followModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #followModal > div {
+            background: #fff;
+            padding: 2em;
+            border-radius: 10px;
+            max-width: 350px;
+            margin: auto;
+            box-shadow: 0 2px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        #followModal h3 {
+            margin-top: 0;
+        }
+
+        #followModal textarea {
+            width: 100%;
+            margin-bottom: 1em;
+        }
+
+        #followModal .action-button {
+            margin-right: 10px;
+        }
     </style>
 </head>
 <body>
@@ -299,184 +335,182 @@
     </div>
 
 
-    <script>
-        // Placeholder for JavaScript functionalities
-        const followedDepartments = new Set(JSON.parse(localStorage.getItem('followedDepartments')) || []);
+    <div id="followModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4); z-index:1000; align-items:center; justify-content:center;">
+        <div style="background:#fff; padding:2em; border-radius:10px; max-width:350px; margin:auto; box-shadow:0 2px 16px rgba(0,0,0,0.2);">
+            <h3 id="followModalTitle">Follow Department</h3>
+            <p id="followModalText">Would you like to follow this department? You can also send a message to the department admin (optional):</p>
+            <textarea id="followMessageInput" rows="3" style="width:100%; margin-bottom:1em;"></textarea>
+            <div style="text-align:right;">
+                <button id="followModalCancel" class="action-button" style="margin-right:10px;">Cancel</button>
+                <button id="followModalConfirm" class="action-button action-button-primary">Confirm</button>
+            </div>
+        </div>
+    </div>
 
+    <script>
+        // --- State and Utility Functions ---
+        // Use real department IDs for following
+        const followedDepartments = new Set(JSON.parse(localStorage.getItem('followedDepartmentIds')) || []);
         let allDepartmentsData = [];
         let currentlyDisplayedCount = 0;
-        const departmentsPerLoad = 3;
+        // --- PAGINATION STATE ---
+        let departmentsOffset = 0;
+        let departmentsTotal = null;
+        const departmentsPerLoad = 10; // You can adjust this as needed
         const departmentsListElement = document.getElementById('departmentsList');
         const loadMoreBtn = document.getElementById('loadMoreBtn');
         const noDepartmentsMessage = document.getElementById('noDepartmentsMessage');
-        let initialFetchHasError = false; 
-        let staticDepartmentsHTML = ''; // To store the initial static HTML content
+        let initialFetchHasError = false;
+        let staticDepartmentsHTML = '';
+        let loadedJsonDepartments = false; // Track if JSON departments have been loaded
 
         function sanitizeDepartmentId(name) {
             return name.toLowerCase().replace(/\s+/g, '-').replace(/&/g, 'and');
         }
 
+        function getJWT() {
+            // Try to get JWT from localStorage (adjust if you store it elsewhere)
+            return localStorage.getItem('jwtToken') || sessionStorage.getItem('jwtToken') || '';
+        }
+
+        let pendingFollowAction = null;
+
         function toggleFollow(departmentId, buttonElement) {
-            if (followedDepartments.has(departmentId)) {
-                followedDepartments.delete(departmentId);
-                if (buttonElement) { // buttonElement might not exist if unfollowing from followed list
-                buttonElement.textContent = 'Follow';
-                buttonElement.classList.remove('action-button-secondary'); 
-                // Ensure .action-button is present (it should be, as it's the base)
-                if (!buttonElement.classList.contains('action-button')) {
-                    buttonElement.classList.add('action-button');
-                }
-                console.log(`Unfollowed ${departmentId}`);
-                }
+            const isCurrentlyFollowed = followedDepartments.has(departmentId);
+            if (!isCurrentlyFollowed) {
+                // Show popup/modal for confirmation and message
+                pendingFollowAction = { departmentId, buttonElement };
+                document.getElementById('followModal').style.display = 'flex';
+                document.getElementById('followMessageInput').value = '';
+                document.getElementById('followModalTitle').textContent = 'Follow Department';
+                document.getElementById('followModalText').textContent = 'Would you like to follow this department? You can also send a message to the department admin (optional):';
             } else {
-                followedDepartments.add(departmentId);
-                if (buttonElement) {
-                buttonElement.textContent = 'Unfollow';
-                buttonElement.classList.add('action-button-secondary'); // Change style to indicate "unfollow"
+                // Unfollow directly with API call
+                followOrUnfollowDepartment(departmentId, '', buttonElement, false);
+            }
+        }
+
+        document.getElementById('followModalCancel').onclick = function() {
+            document.getElementById('followModal').style.display = 'none';
+            pendingFollowAction = null;
+        };
+        document.getElementById('followModalConfirm').onclick = function() {
+            if (pendingFollowAction) {
+                const { departmentId, buttonElement } = pendingFollowAction;
+                const message = document.getElementById('followMessageInput').value;
+                followOrUnfollowDepartment(departmentId, message, buttonElement, true);
+                document.getElementById('followModal').style.display = 'none';
+                pendingFollowAction = null;
+            }
+        };
+
+        async function followOrUnfollowDepartment(departmentId, message, buttonElement, isFollow) {
+            const jwt = getJWT();
+            try {
+                const response = await fetch(`/api/departments/${departmentId}/follow`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + jwt
+                    },
+                    body: JSON.stringify({ message: isFollow ? message : undefined })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    if (data.followed) {
+                        followedDepartments.add(departmentId);
+                        if (buttonElement) {
+                            buttonElement.textContent = 'Unfollow';
+                            buttonElement.classList.add('action-button-secondary');
+                        }
+                    } else {
+                        followedDepartments.delete(departmentId);
+                        if (buttonElement) {
+                            buttonElement.textContent = 'Follow';
+                            buttonElement.classList.remove('action-button-secondary');
+                            if (!buttonElement.classList.contains('action-button')) {
+                                buttonElement.classList.add('action-button');
+                            }
+                        }
+                    }
+                    localStorage.setItem('followedDepartmentIds', JSON.stringify(Array.from(followedDepartments)));
+                    updateFollowedList();
+                    updateFollowButtonsState();
+                    alert(data.message || (data.followed ? 'Followed successfully!' : 'Unfollowed successfully!'));
+                } else {
+                    alert(data.message || 'Failed to update follow status.');
                 }
-                console.log(`Followed ${departmentId}`);
-            }
-            localStorage.setItem('followedDepartments', JSON.stringify(Array.from(followedDepartments)));
-            updateFollowedList();
-            // Example:
-            // fetch(`/api/departments/${departmentId}/subscribe`, { method: 'POST' })
-            //   .then(response => response.json())
-            //   .then(data => {
-            //     if (data.success) {
-            //        // Update UI based on actual subscription status
-            //     } else {
-            //        alert('Action failed.');
-            //     }
-            //   });
-        }
-
-        function updateFollowedList() {
-            const listElement = document.getElementById('followedDepartmentsList');
-            listElement.innerHTML = ''; // Clear current list
-
-            if (followedDepartments.size === 0) {
-                listElement.innerHTML = '<li class="no-followed-message" style="text-align: center; color: var(--color-text-muted);">You are not following any departments yet.</li>';
-                return;
-            }
-
-            followedDepartments.forEach(deptId => {
-                // Find the department details from the master list
-                const departmentData = allDepartmentsData.find(d => sanitizeDepartmentId(d.name) === deptId);
-                if (!departmentData) {
-                    console.warn(`Followed department ID "${deptId}" not found in allDepartmentsData.`);
-                    return; 
-                }
-
-                const departmentName = departmentData.name;
-                const departmentIconHTML = departmentData.icon || '🏛️'; // Default icon
-
-                // Restore original styling for followed department items
-                const listItem = document.createElement('li');
-                listItem.className = 'followed-department-item';
-                listItem.innerHTML = `
-                    <div class="department-icon">${departmentIconHTML}</div>
-                    <span>${departmentName}</span>
-                    <button class="action-button" onclick="handleUnfollowFromList('${deptId}')">Unfollow</button>
-                `;
-                listElement.appendChild(listItem);
-            });
-        }
-
-        function handleUnfollowFromList(departmentId) {
-            // Find the corresponding follow/unfollow button in the main list and click it programmatically
-            // or directly call toggleFollow and update its button's appearance.
-            const mainListButton = document.querySelector(`.department-list-item[data-department-id='${departmentId}'] .department-follow-toggle`);
-            if (mainListButton) {
-                toggleFollow(departmentId, mainListButton);
-            } else {
-                // If the item is not currently rendered in the main list, just update the state
-                toggleFollow(departmentId, null);
+            } catch (err) {
+                alert('Network or server error. Please try again.');
             }
         }
 
-
-        function createDepartmentListItem(department) {
-            const listItem = document.createElement('li');
-            listItem.className = 'department-list-item';
-            const departmentId = sanitizeDepartmentId(department.name);
-            listItem.setAttribute('data-department-id', departmentId);
-
-            const isFollowed = followedDepartments.has(departmentId);
-            const followButtonText = isFollowed ? 'Unfollow' : 'Follow';
-            const followButtonClass = isFollowed ? 'action-button department-follow-toggle action-button-secondary' : 'action-button department-follow-toggle';
-
-            listItem.innerHTML = `
-                <div class="department-icon">${department.icon || '🏛️'}</div>
-                <div class="department-info">
-                    <h3>${department.name}</h3>
-                    <p>${department.description}</p>
-                </div>
-                <div class="department-item-actions">
-                    <button class="${followButtonClass}" onclick="toggleFollow('${departmentId}', this)">${followButtonText}</button>
-                    <a href="department_details.html?id=${departmentId}" class="action-button action-button-info">Discover More</a>
-                    <button class="action-button action-button-primary message-btn" onclick="alert('Messaging department admin for: ${department.name}')">Message Admin</button>
-                </div>
-            `;
-            return listItem;
-        }
-
-        function renderDepartments(startIndex, count) {
-            const departmentsToRender = allDepartmentsData.slice(startIndex, startIndex + count);
-            const isInitialRender = startIndex === 0;
-
-            if (departmentsToRender.length === 0 && isInitialRender) {
+        // --- RENDERING ---
+        function renderDepartments(departments) {
+            if (departments.length === 0 && departmentsOffset === 0) {
                 if (initialFetchHasError) {
                     noDepartmentsMessage.textContent = 'Failed to load initial departments. Please check the console or try refreshing.';
                 } else {
                     noDepartmentsMessage.textContent = 'No departments available at the moment.';
                 }
                 noDepartmentsMessage.style.display = 'block';
-                // loadMoreBtn.style.display = 'none'; // Button remains visible
                 return;
             }
-            noDepartmentsMessage.style.display = 'none'; // Hide if previously shown
+            noDepartmentsMessage.style.display = 'none';
 
-            departmentsToRender.forEach(dept => {
+            departments.forEach(dept => {
                 const listItem = createDepartmentListItem(dept);
                 departmentsListElement.appendChild(listItem);
             });
+        }
 
-            currentlyDisplayedCount += departmentsToRender.length;
+        // --- FETCHING ---
+        async function fetchDepartmentsBatch(offset, limit) {
+            try {
+                const response = await fetch(`/api/departments?offset=${offset}&limit=${limit}`);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status} ${response.statusText}`);
+                const data = await response.json();
+                if (!Array.isArray(data.departments)) throw new Error('Fetched data is not an array.');
+                departmentsTotal = data.total;
+                return data.departments;
+            } catch (error) {
+                initialFetchHasError = true;
+                console.error('Could not load departments from DB:', error);
+                return [];
+            }
+        }
 
-            if (currentlyDisplayedCount >= allDepartmentsData.length) {
+        async function fetchInitialDepartments() {
+            initialFetchHasError = false;
+            departmentsOffset = 0;
+            departmentsListElement.innerHTML = '';
+            const departments = await fetchDepartmentsBatch(departmentsOffset, departmentsPerLoad);
+            renderDepartments(departments);
+            departmentsOffset += departments.length;
+            updateLoadMoreButton();
+            updateFollowedList();
+        }
+
+        async function loadMoreDepartments() {
+            loadMoreBtn.textContent = 'Loading...';
+            loadMoreBtn.disabled = true;
+            const departments = await fetchDepartmentsBatch(departmentsOffset, departmentsPerLoad);
+            renderDepartments(departments);
+            departmentsOffset += departments.length;
+            updateLoadMoreButton();
+        }
+
+        function updateLoadMoreButton() {
+            if (departmentsTotal !== null && departmentsOffset >= departmentsTotal) {
                 loadMoreBtn.textContent = 'All Departments Loaded';
                 loadMoreBtn.disabled = true;
             } else {
                 loadMoreBtn.textContent = 'Load More Departments';
                 loadMoreBtn.disabled = false;
-                // loadMoreBtn.style.display = 'block'; // Already visible by default
             }
         }
 
-        function loadMoreDepartments() {
-            loadMoreBtn.textContent = 'Loading...';
-            loadMoreBtn.disabled = true;
-
-            if (initialFetchHasError || !allDepartmentsData || allDepartmentsData.length === 0) {
-                alert("Could not load more departments. There might have been an issue loading the initial department data. Please try refreshing the page or check the console for errors.");
-                loadMoreBtn.textContent = 'Load More Departments';
-                // Re-enable the button to allow another attempt, though a refresh is often better for initial load issues.
-                loadMoreBtn.disabled = false; 
-                return;
-            }
-
-            if (currentlyDisplayedCount >= allDepartmentsData.length) {
-                // This case is mostly handled by the button being disabled by renderDepartments,
-                // but it's a good safeguard.
-                alert("All available departments have already been loaded.");
-                loadMoreBtn.textContent = 'All Departments Loaded';
-                loadMoreBtn.disabled = true; // Ensure it stays disabled
-                return;
-            }
-
-            renderDepartments(currentlyDisplayedCount, departmentsPerLoad);
-        }
-
+        // --- FILTERING (unchanged, but hide Load More on search) ---
         function filterDepartments() {
             const searchTerm = document.getElementById('departmentSearch').value.toLowerCase().trim();
             const sortValue = document.getElementById('departmentSort').value;
@@ -522,33 +556,7 @@
             currentLoadMoreBtn.style.display = 'none'; // Hide "Load More" when displaying search results
         }
 
-        async function fetchAndInitializeDepartments() {
-            console.log("fetchAndInitializeDepartments called");
-            initialFetchHasError = false; // Reset flag on each attempt
-            try {
-                const response = await fetch('departments.json'); // Assuming departments.json is in the same directory
-                if (!response.ok) {
-                    initialFetchHasError = true;
-                    throw new Error(`HTTP error! status: ${response.status} ${response.statusText}`);
-                }
-                allDepartmentsData = await response.json();
-                if (!Array.isArray(allDepartmentsData)) {
-                    initialFetchHasError = true;
-                    allDepartmentsData = []; // Ensure it's an array to prevent other errors
-                    throw new Error("Fetched data is not in the expected format (array).");
-                }
-                renderDepartments(0, departmentsPerLoad); // Load initial batch
-                updateFollowedList(); // Update followed list based on newly loaded master data
-            } catch (error) {
-                initialFetchHasError = true;
-                console.error("Could not load departments:", error);
-                // Display error message and ensure button is correctly stateful
-                allDepartmentsData = []; // Ensure it's empty on error
-                renderDepartments(0, 0); // Call render to update messages and button state
-                updateFollowedList(); // Still update followed list (it will be empty or from localStorage)
-            }
-        }
-
+        // --- EVENT LISTENERS ---
         document.addEventListener('DOMContentLoaded', () => {
             const listElement = document.getElementById('departmentsList');
             if (listElement) {
@@ -556,8 +564,9 @@
             } else {
                 console.error("Critical element #departmentsList not found on DOMContentLoaded!");
             }
-            fetchAndInitializeDepartments();
+            fetchInitialDepartments();
         });
+        loadMoreBtn.addEventListener('click', loadMoreDepartments);
     </script>
 </body>
 </html>
