@@ -88,47 +88,91 @@
         <form id="editDeptProfileForm">
             <div class="form-group">
                 <label class="form-label" for="deptName">Department Name</label>
-                <input class="form-input" type="text" id="deptName" name="deptName" required value="Computer Science Department">
+                <input class="form-input" type="text" id="deptName" name="deptName" required>
             </div>
             <div class="form-group">
                 <label class="form-label" for="deptEmail">Email</label>
-                <input class="form-input" type="email" id="deptEmail" name="deptEmail" required value="admin@csdept.edu">
+                <input class="form-input" type="email" id="deptEmail" name="deptEmail" required>
             </div>
             <div class="form-group">
                 <label class="form-label" for="deptLocation">Location</label>
-                <input class="form-input" type="text" id="deptLocation" name="deptLocation" required value="Main Campus, Block B">
+                <input class="form-input" type="text" id="deptLocation" name="deptLocation">
             </div>
             <div class="form-group">
                 <label class="form-label" for="deptPhone">Phone</label>
-                <input class="form-input" type="text" id="deptPhone" name="deptPhone" required value="+254 700 123456">
+                <input class="form-input" type="text" id="deptPhone" name="deptPhone">
             </div>
             <div class="form-group">
-                <label class="form-label" for="deptHead">Department Head</label>
-                <input class="form-input" type="text" id="deptHead" name="deptHead" required value="Jane Doe">
+                <label class="form-label" for="about">About</label>
+                <textarea class="form-input" id="about" name="about" rows="3" placeholder="Describe your department..."></textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="vision">Vision</label>
+                <textarea class="form-input" id="vision" name="vision" rows="2" placeholder="Department vision..."></textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="mission">Mission</label>
+                <textarea class="form-input" id="mission" name="mission" rows="2" placeholder="Department mission..."></textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="achievements">Achievements</label>
+                <textarea class="form-input" id="achievements" name="achievements" rows="2" placeholder="Key achievements..."></textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="logo_url">Logo URL</label>
+                <input class="form-input" type="text" id="logo_url" name="logo_url" placeholder="https://...">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="cover_image_url">Cover Image URL</label>
+                <input class="form-input" type="text" id="cover_image_url" name="cover_image_url" placeholder="https://...">
             </div>
             <button type="submit" class="form-button">Save Changes</button>
             <div id="formMessage"></div>
         </form>
     </div>
     <script>
-    // Prefill logic (simulate fetching from DB)
-    document.addEventListener('DOMContentLoaded', function() {
-        // In real app, fetch department data here and set values
-    });
+    // Prefill logic: fetch department and profile data
+    async function fetchAndFillProfile() {
+        // You should get departmentId from session/localStorage/JWT
+        const departmentId = localStorage.getItem('department_id');
+        if (!departmentId) return;
+        // Fetch department main info
+        const deptRes = await fetch(`/api/departments/${departmentId}`);
+        const deptData = await deptRes.json();
+        if (deptData.success && deptData.department) {
+            document.getElementById('deptName').value = deptData.department.name || '';
+            document.getElementById('deptEmail').value = deptData.department.contact_email || '';
+            document.getElementById('deptLocation').value = deptData.department.location || '';
+            document.getElementById('deptPhone').value = deptData.department.contact_phone || '';
+        }
+        // Fetch department profile info
+        const profileRes = await fetch(`/api/department-profile/${departmentId}`);
+        const profileData = await profileRes.json();
+        if (profileData.success && profileData.profile) {
+            document.getElementById('about').value = profileData.profile.about || '';
+            document.getElementById('vision').value = profileData.profile.vision || '';
+            document.getElementById('mission').value = profileData.profile.mission || '';
+            document.getElementById('achievements').value = profileData.profile.achievements || '';
+            document.getElementById('logo_url').value = profileData.profile.logo_url || '';
+            document.getElementById('cover_image_url').value = profileData.profile.cover_image_url || '';
+        }
+    }
+    document.addEventListener('DOMContentLoaded', fetchAndFillProfile);
 
     document.getElementById('editDeptProfileForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         const form = e.target;
+        const departmentId = localStorage.getItem('department_id');
         const data = {
-            deptName: form.deptName.value,
-            deptEmail: form.deptEmail.value,
-            deptLocation: form.deptLocation.value,
-            deptPhone: form.deptPhone.value,
-            deptHead: form.deptHead.value
+            about: form.about.value,
+            vision: form.vision.value,
+            mission: form.mission.value,
+            achievements: form.achievements.value,
+            logo_url: form.logo_url.value,
+            cover_image_url: form.cover_image_url.value
         };
         try {
-            // Simulate API call to update department profile
-            const response = await fetch('/api/department/profile', {
+            const response = await fetch(`/api/department-profile/${departmentId}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)

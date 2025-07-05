@@ -184,7 +184,7 @@
              <img src="images/logo 1.png" alt="Campus Connect Logo" class="logo" style="height: 60px; width: 60px;">
             <div class="brand-name">Campus Connect</div>
         </div> 
-        <div class="page-title" id="dashboardTitle">Department Admin Dashboard</div>
+        <div class="page-title" id="dashboardTitle">Department Name</div>
         <div class="header-actions">
             <button class="btn-header btn-header-primary" onclick="openNotifications()">🔔 Notifications</button>
             <button class="btn-header btn-header-primary" onclick="window.location.href='messaging.html'">💬 Messaging</button>
@@ -476,12 +476,27 @@
             const tabIndex = ['dashboard','members','events','announcements','analytics','profile'].indexOf(tabId);
             if(tabIndex >= 0) document.querySelectorAll('.nav-tab')[tabIndex].classList.add('active');
         }
-        // Example: populate dashboard metrics (replace with real data logic as needed)
-        document.getElementById('studentsCount').textContent = 120;
-        document.getElementById('eventsCount').textContent = 3;
-        document.getElementById('announcementsCount').textContent = 2;
-        document.getElementById('welcomeMessage').textContent = 'Welcome back, Department Admin!';
-        document.getElementById('adminAndDeptInfo').textContent = 'Admin: Jane Doe | Department: Computer Science';
+        // Display admin name and department name on dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            if (user && user.role === 'department_admin') {
+                // Set department name in nav bar
+                const dashboardTitle = document.getElementById('dashboardTitle');
+                if (dashboardTitle) {
+                    dashboardTitle.textContent = user.department_name || 'Department';
+                }
+                // Set admin name and department name below nav bar
+                const adminAndDeptInfo = document.getElementById('adminAndDeptInfo');
+                if (adminAndDeptInfo) {
+                    adminAndDeptInfo.textContent = `Admin: ${user.firstName} ${user.lastName} | Department: ${user.department_name || 'Department'}`;
+                }
+                // Set welcome message to "Welcome back, [Admin Name]!"
+                const welcomeMessage = document.getElementById('welcomeMessage');
+                if (welcomeMessage) {
+                    welcomeMessage.textContent = `Welcome back, ${user.firstName} ${user.lastName}!`;
+                }
+            }
+        });
         // Logout logic
         document.getElementById('logoutButton').addEventListener('click', function() {
             localStorage.removeItem('authToken');

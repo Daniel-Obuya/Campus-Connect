@@ -336,6 +336,57 @@ app.get('/api/conversations/:id/messages', authenticateJWT, async (req, res) => 
 
 // --- End of Messaging API Routes ---
 
+// --- API Route: Start or Get Conversation between Student and Department Admin ---
+app.post('/api/conversations/department', authenticateJWT, async (req, res) => {
+    try {
+        // Only students can start a conversation with a department admin
+        if (req.user.role !== 'student') {
+            return res.status(403).json({ success: false, message: 'Only students can start a conversation with a department admin.' });
+        }
+        const { departmentId } = req.body;
+        if (!departmentId) {
+            return res.status(400).json({ success: false, message: 'Department ID is required.' });
+        }
+        // Find the department admin for this department
+        const [admins] = await pool.query(
+            'SELECT user_id FROM users WHERE department_id = ? AND role = ? AND is_active = 1',
+            [departmentId, 'department_admin']
+        );
+        if (admins.length === 0) {
+            return res.status(404).json({ success: false, message: 'No active department admin found for this department.' });
+        }
+        const adminUserId = admins[0].user_id;
+        const studentUserId = req.user.id;
+        // Check if a conversation already exists between this student and department admin
+        const [existing] = await pool.query(
+            `SELECT c.conversation_id FROM conversations c
+             JOIN conversation_participants cp1 ON c.conversation_id = cp1.conversation_id AND cp1.user_id = ?
+             JOIN conversation_participants cp2 ON c.conversation_id = cp2.conversation_id AND cp2.user_id = ?
+             WHERE c.is_group_chat = 0
+             LIMIT 1`,
+            [studentUserId, adminUserId]
+        );
+        let conversationId;
+        if (existing.length > 0) {
+            conversationId = existing[0].conversation_id;
+        } else {
+            // Create a new conversation
+            const [result] = await pool.query(
+                'INSERT INTO conversations (is_group_chat, last_message_at) VALUES (0, NOW())'
+            );
+            conversationId = result.insertId;
+            // Add both participants
+            await pool.query(
+                'INSERT INTO conversation_participants (conversation_id, user_id) VALUES (?, ?), (?, ?)',
+                [conversationId, studentUserId, conversationId, adminUserId]
+            );
+        }
+        res.json({ success: true, conversationId });
+    } catch (error) {
+        console.error('Error starting/getting department conversation:', error);
+        res.status(500).json({ success: false, message: 'Failed to start or get conversation.' });
+    }
+});
 
 
 
@@ -667,13 +718,40 @@ app.post('/api/login', async (req, res) => {
       });
     }
 
-    const token = jwt.sign({
-      id: user.user_id,
-      email: user.email,
-      role: user.role,
-      firstName: user.first_name,
-      lastName: user.last_name
-    }, secret, { expiresIn: '2h' });
+    // Fetch department_id if the user is a department_admin
+    let userDepartmentId = user.department_id || null; // Assuming users table has department_id
+
+    if (user.role === 'department_admin') {
+        console.log(`Department admin ${user.email} logged in, sending redirect instruction to client.`);
+        const token = jwt.sign({
+            id: user.user_id, email: user.email, role: user.role,
+            firstName: user.first_name, lastName: user.last_name,
+            department_id: userDepartmentId // Include department_id in token
+        }, secret, { expiresIn: '2h' });
+
+        res.json({
+            success: true,
+            message: 'Login successful. Redirecting...',
+            redirectTo: '/department-dashboard', // Instruction for the client
+            token, // Send the token
+            user: {
+                id: user.user_id,
+                firstName: user.first_name,
+                lastName: user.last_name,
+                email: user.email,
+                role: user.role,
+                department_id: userDepartmentId // Also include in user object
+            }
+        });
+    } else {
+        // For other roles (student, club_admin), generate and send a JWT token.
+        const token = jwt.sign({
+            id: user.user_id,
+            email: user.email,
+            role: user.role,
+            firstName: user.first_name,
+            lastName: user.last_name
+        }, secret, { expiresIn: '2h' });
 
     const [rows] = await pool.query(
       `SELECT 
@@ -1256,6 +1334,70 @@ app.get('/api/club', async (req, res) => {
         res.status(500).json({ success: false, message: 'Failed to fetch clubs.' });
     }
 });
+
+// GET all clubs and societies
+app.get('/api/clubs', async (req, res) => {
+    try {
+        const [clubs] = await pool.query('SELECT * FROM clubs_societies');
+        res.json({ success: true, clubs });
+    } catch (error) {
+        console.error('Error fetching clubs:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch clubs.' });
+    }
+});
+
+// --- API Route to get all departments for the departments directory ---
+app.get('/api/departments', async (req, res) => {
+    try {
+        // Parse offset and limit from query params, with defaults
+        const offset = parseInt(req.query.offset, 10) || 0;
+        const limit = parseInt(req.query.limit, 10) || 10;
+
+        // Get total count for frontend
+        const [countRows] = await pool.query('SELECT COUNT(*) as total FROM departments WHERE is_active = 1');
+        const total = countRows[0].total;
+
+        // Fetch paginated departments
+        const [departments] = await pool.query(`
+            SELECT 
+                department_id,
+                name,
+                code,
+                description,
+                contact_email,
+                contact_phone,
+                website_url,
+                is_active
+            FROM departments
+            WHERE is_active = 1
+            ORDER BY name ASC
+            LIMIT ? OFFSET ?
+        `, [limit, offset]);
+        res.json({ success: true, departments, total });
+    } catch (error) {
+        console.error('Error fetching departments:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch departments.' });
+    }
+});
+
+// --- API Route to get departments from JSON file (for Load More) ---
+app.get('/api/departments/json', async (req, res) => {
+    const fs = require('fs');
+    const path = require('path');
+    const jsonPath = path.join(__dirname, 'departments.json');
+    try {
+        if (!fs.existsSync(jsonPath)) {
+            return res.status(404).json({ success: false, message: 'departments.json file not found.' });
+        }
+        const data = fs.readFileSync(jsonPath, 'utf-8');
+        const departments = JSON.parse(data);
+        res.json({ success: true, departments });
+    } catch (error) {
+        console.error('Error reading departments.json:', error);
+        res.status(500).json({ success: false, message: 'Failed to load departments from JSON.' });
+    }
+});
+
  // Get pending join requests for clubs managed by the current club admin
 app.get('/api/club/requests', authenticateJWT, async (req, res) => {
     if (req.user.role !== 'club_admin') {
@@ -1443,39 +1585,89 @@ app.get('/api/club/dashboard', authenticateJWT, async (req, res) => {
 
 
 
-// --- API Route: Student Directory (students only, basic info) ---
-app.get('/api/students', authenticateJWT, async (req, res) => {
+// --- API Route: Follow/Unfollow a Department ---
+app.post('/api/departments/:id/follow', authenticateJWT, async (req, res) => {
+    if (req.user.role !== 'student') {
+        return res.status(403).json({ success: false, message: 'Only students can follow departments.' });
+    }
+
+    const studentId = req.user.id;
+    const departmentId = req.params.id;
+    const { message } = req.body; // Accept optional message
+
     try {
-        // Optional: add search/filter by name or graduation year
-        const { q, graduationYear } = req.query;
-        let sql = `
-            SELECT user_id, first_name, last_name, email, graduation_year
-            FROM users
-            WHERE u.role = 'student' AND u.is_active = 1
-        `;
-        const params = [];
-        if (q) {
-            sql += ' AND (first_name LIKE ? OR last_name LIKE ? OR CONCAT(first_name, " ", last_name) LIKE ?)';
-            params.push(`%${q}%`, `%${q}%`, `%${q}%`);
+        const [isFollowing] = await pool.query(
+            'SELECT * FROM department_followers WHERE follower_user_id = ? AND department_id = ?',
+            [studentId, departmentId]
+        );
+
+        if (isFollowing.length > 0) {
+            // User is already following, so unfollow
+            await pool.query(
+                'DELETE FROM department_followers WHERE follower_user_id = ? AND department_id = ?',
+                [studentId, departmentId]
+            );
+            return res.json({ success: true, message: 'Unfollowed successfully.', followed: false });
+        } else {
+            // User is not following, so follow
+            await pool.query(
+                'INSERT INTO department_followers (follower_user_id, department_id) VALUES (?, ?)',
+                [studentId, departmentId]
+            );
+            // If a message is provided, start a conversation and send the message
+            if (message && typeof message === 'string' && message.trim() !== '') {
+                // Find the department admin for this department
+                const [admins] = await pool.query(
+                    'SELECT user_id FROM users WHERE department_id = ? AND role = ? AND is_active = 1',
+                    [departmentId, 'department_admin']
+                );
+                if (admins.length > 0) {
+                    const adminUserId = admins[0].user_id;
+                    // Check if a conversation already exists between this student and department admin
+                    const [existing] = await pool.query(
+                        `SELECT c.conversation_id FROM conversations c
+                         JOIN conversation_participants cp1 ON c.conversation_id = cp1.conversation_id AND cp1.user_id = ?
+                         JOIN conversation_participants cp2 ON c.conversation_id = cp2.conversation_id AND cp2.user_id = ?
+                         WHERE c.is_group_chat = 0
+                         LIMIT 1`,
+                        [studentId, adminUserId]
+                    );
+                    let conversationId;
+                    if (existing.length > 0) {
+                        conversationId = existing[0].conversation_id;
+                    } else {
+                        // Create a new conversation
+                        const [convResult] = await pool.query(
+                            'INSERT INTO conversations (is_group_chat) VALUES (0)'
+                        );
+                        conversationId = convResult.insertId;
+                        // Add both participants
+                        await pool.query(
+                            'INSERT INTO conversation_participants (conversation_id, user_id) VALUES (?, ?), (?, ?)',
+                            [conversationId, studentId, conversationId, adminUserId]
+                        );
+                    }
+                    // Insert the message
+                    await pool.query(
+                        'INSERT INTO messages (conversation_id, sender_id, content, created_at) VALUES (?, ?, ?, NOW())',
+                        [conversationId, studentId, message.trim()]
+                    );
+                }
+            }
+            return res.json({ success: true, message: 'Followed successfully.', followed: true });
         }
-        if (graduationYear) {
-            sql += ' AND graduation_year = ?';
-            params.push(graduationYear);
-        }
-        sql += ' ORDER BY first_name, last_name';
-        const [students] = await pool.query(sql, params);
-        res.json({ success: true, students });
     } catch (error) {
-        console.error('Error fetching students:', error);
-        res.status(500).json({ success: false, message: 'Failed to fetch students.' });
+        console.error('Error following/unfollowing department:', error);
+        res.status(500).json({ success: false, message: 'Failed to update follow status.' });
     }
 });
+
 // Start server using the http server instance
 server.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
   console.log('Main Pages:');
   console.log(`- Welcome: http://localhost:${PORT}/welcome`);
-  console.log(`- Admin Portals Welcome: http://localhost:${PORT}/welcome-admin-portals`);
+  console.log(`-x Admin Portals Welcome: http://localhost:${PORT}/welcome-admin-portals`);
   console.log(`- Student Signup: http://localhost:${PORT}/signup-student`);
   console.log(`- Student Login: http://localhost:${PORT}/login-student`);
   console.log(`- Admin Signup: http://localhost:${PORT}/signup-admin`);

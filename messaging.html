@@ -70,10 +70,18 @@
         <div class="floating-icon icon3"></div>
     </div>
 
-    <!-- Add Socket.IO client library -->
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="/public/js/utils.js"></script>
-    <script src="/public/js/messaging.js"></script>
+    <!-- New Message Modal -->
+    <div id="newMessageModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4); z-index:2000; align-items:center; justify-content:center;">
+        <div style="background:#fff; padding:2em; border-radius:10px; max-width:350px; margin:auto; box-shadow:0 2px 16px rgba(0,0,0,0.2);">
+            <h3>Start New Conversation</h3>
+            <input type="text" id="newMessageUserInput" placeholder="Enter email or name..." style="width:100%; margin-bottom:1em;">
+            <div id="newMessageUserResults" style="max-height:120px; overflow-y:auto; margin-bottom:1em;"></div>
+            <div style="text-align:right;">
+                <button id="newMessageCancel" class="action-button" style="margin-right:10px;">Cancel</button>
+                <button id="newMessageStart" class="action-button action-button-primary" disabled>Start</button>
+            </div>
+        </div>
+    </div>
     <script>
     // --- Messaging: Start conversation if userId is in query or localStorage ---
     document.addEventListener('DOMContentLoaded', function() {
@@ -103,6 +111,82 @@
             setTimeout(tryStartConversation, 1200); // Wait for conversations to load
         }
     });
+
+    // --- New Message Modal Logic ---
+    const newMessageBtn = document.querySelector('.panel-header .action-button');
+    const newMessageModal = document.getElementById('newMessageModal');
+    const newMessageUserInput = document.getElementById('newMessageUserInput');
+    const newMessageUserResults = document.getElementById('newMessageUserResults');
+    const newMessageCancel = document.getElementById('newMessageCancel');
+    const newMessageStart = document.getElementById('newMessageStart');
+    let selectedNewUser = null;
+
+    newMessageBtn.onclick = function() {
+        newMessageModal.style.display = 'flex';
+        newMessageUserInput.value = '';
+        newMessageUserResults.innerHTML = '';
+        newMessageStart.disabled = true;
+        selectedNewUser = null;
+    };
+    newMessageCancel.onclick = function() {
+        newMessageModal.style.display = 'none';
+    };
+    newMessageUserInput.oninput = async function() {
+        const query = newMessageUserInput.value.trim();
+        if (!query) {
+            newMessageUserResults.innerHTML = '';
+            newMessageStart.disabled = true;
+            selectedNewUser = null;
+            return;
+        }
+        // Fetch users (students/admins) matching query
+        const jwt = localStorage.getItem('authToken') || '';
+        const res = await fetch(`/api/user/search?q=${encodeURIComponent(query)}`, {
+            headers: { 'Authorization': 'Bearer ' + jwt }
+        });
+        const data = await res.json();
+        if (data.success && Array.isArray(data.users)) {
+            newMessageUserResults.innerHTML = '';
+            data.users.forEach(user => {
+                const div = document.createElement('div');
+                div.textContent = `${user.first_name} ${user.last_name} (${user.email})`;
+                div.style.cursor = 'pointer';
+                div.onclick = function() {
+                    selectedNewUser = user;
+                    Array.from(newMessageUserResults.children).forEach(c => c.style.background = '');
+                    div.style.background = '#e0e0e0';
+                    newMessageStart.disabled = false;
+                };
+                newMessageUserResults.appendChild(div);
+            });
+        } else {
+            newMessageUserResults.innerHTML = '<div>No users found.</div>';
+            newMessageStart.disabled = true;
+            selectedNewUser = null;
+        }
+    };
+    newMessageStart.onclick = async function() {
+        if (!selectedNewUser) return;
+        // Start or get conversation with selected user
+        const jwt = localStorage.getItem('authToken') || '';
+        const res = await fetch('/api/conversations/department', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + jwt },
+            body: JSON.stringify({ departmentId: selectedNewUser.department_id })
+        });
+        const data = await res.json();
+        if (data.success && data.conversationId) {
+            // Reload conversations and select the new one
+            window.location.reload();
+        } else {
+            alert(data.message || 'Failed to start conversation.');
+        }
+        newMessageModal.style.display = 'none';
+    };
     </script>
+    <!-- Add Socket.IO client library -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/public/js/utils.js"></script>
+    <script src="/public/js/messaging.js"></script>
 </body>
 </html>

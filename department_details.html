@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Department Details - Campus Connect</title>
+    <link rel="stylesheet" href="department_admin.css">
+    <link rel="stylesheet" href="departments_directory.css">
+    <style>
+        .department-details-container {
+            max-width: 700px;
+            margin: 40px auto;
+            background: var(--color-bg-glass-primary, #fff);
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+            padding: 2rem 2.5rem;
+        }
+        .department-details-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .department-details-header h1 {
+            margin-bottom: 0.5rem;
+        }
+        .department-details-list {
+            list-style: none;
+            padding: 0;
+        }
+        .department-details-list li {
+            margin-bottom: 1rem;
+            font-size: 1.1em;
+        }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 1.5rem;
+            color: var(--theme-color-primary, #007bff);
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <a href="departments_directory.html" class="back-link">&larr; Back to Departments Directory</a>
+    <div class="department-details-container">
+        <div class="department-details-header">
+            <h1 id="deptName">Department Name</h1>
+            <h3 id="deptCode">Code: </h3>
+        </div>
+        <ul class="department-details-list">
+            <li><strong>Description:</strong> <span id="deptDescription"></span></li>
+            <li><strong>Contact Email:</strong> <a id="deptEmail" href="#"></a></li>
+            <li><strong>Contact Phone:</strong> <span id="deptPhone"></span></li>
+            <li><strong>Website:</strong> <a id="deptWebsite" href="#" target="_blank"></a></li>
+        </ul>
+    </div>
+    <script>
+        function getQueryParam(name) {
+            const url = new URL(window.location.href);
+            return url.searchParams.get(name);
+        }
+        async function loadDepartmentDetails() {
+            const deptId = getQueryParam('id');
+            if (!deptId) {
+                document.getElementById('deptName').textContent = 'Department Not Found';
+                return;
+            }
+            try {
+                const res = await fetch(`/api/departments/${deptId}`);
+                const data = await res.json();
+                if (!data.success) throw new Error(data.message || 'Not found');
+                const dept = data.department;
+                document.getElementById('deptName').textContent = dept.name;
+                document.getElementById('deptCode').textContent = 'Code: ' + (dept.code || 'N/A');
+                document.getElementById('deptDescription').textContent = dept.description || 'N/A';
+                document.getElementById('deptEmail').textContent = dept.contact_email || 'N/A';
+                document.getElementById('deptEmail').href = dept.contact_email ? `mailto:${dept.contact_email}` : '#';
+                document.getElementById('deptPhone').textContent = dept.contact_phone || 'N/A';
+                document.getElementById('deptWebsite').textContent = dept.website_url || 'N/A';
+                document.getElementById('deptWebsite').href = dept.website_url || '#';
+            } catch (e) {
+                document.getElementById('deptName').textContent = 'Department Not Found';
+                document.getElementById('deptCode').textContent = '';
+                document.querySelector('.department-details-list').innerHTML = '<li>Could not load department details.</li>';
+            }
+        }
+        document.addEventListener('DOMContentLoaded', loadDepartmentDetails);
+    </script>
+</body>
+</html>
