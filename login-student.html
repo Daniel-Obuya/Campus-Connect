@@ -189,8 +189,12 @@
 
                 if (data.success) {
                     showAlert(data.message, 'success');
+                    // Ensure authToken and currentUser are properly stored
                     localStorage.setItem('authToken', data.token);
-                    localStorage.setItem('currentUser', JSON.stringify(data.user));
+                    localStorage.setItem('currentUser', JSON.stringify({
+                        ...data.user,
+                        profile_picture_url: data.user.profile_picture_url // Ensure profile picture URL is included
+                    }));
                     setTimeout(() => { redirectToDashboard(data.user); }, 1500);
                 } else {
                     showAlert(data.message || 'Login failed. Please check your credentials.');
@@ -208,15 +212,16 @@
         function redirectToDashboard(user) {
             // Assuming student dashboard is at '/student-dashboard'
             if (user.role === 'student') {
-                alert(`Welcome ${user.firstName}! Redirecting to Student Dashboard...`);
-                 console.log("Redirecting to student dashboard page");
-                 window.location.href = '/student-dashboard';
+                alert(`Welcome ${user.first_name}! Redirecting to Student Dashboard...`);
+                console.log("Redirecting to student dashboard page");
+                // Update redirection path to absolute
+                window.location.href = '/student-dashboard';
             } else if (user.role === 'club_admin') {
-                alert(`Welcome Club Admin ${user.firstName}! Redirecting to your dashboard...`);
+                alert(`Welcome Club Admin ${user.first_name}! Redirecting to your dashboard...`);
                 console.log("Redirecting to Club Admin dashboard");
                 window.location.href = '/club-admin-dashboard';
             } else {
-                showAlert(`Login successful for ${user.firstName} (Role: ${user.role}), but dashboard redirection is not configured for this role on this page.`);
+                showAlert(`Login successful for ${user.first_name} (Role: ${user.role}), but dashboard redirection is not configured for this role on this page.`);
             }
         }
 

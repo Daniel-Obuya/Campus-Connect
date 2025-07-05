@@ -118,6 +118,36 @@
         /* Loading and Error States */
         .info-state { text-align: center; font-size: 18px; color: #555; padding: 50px; }
 
+        /* Popup Styles */
+        .club-details-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            z-index: 1000;
+            width: 90%;
+            max-width: 500px;
+        }
+        .popup-content {
+            text-align: left;
+        }
+        .popup-close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        .popup-close-btn:hover {
+            color: red;
+        }
+
         /* Responsive Design */
         @media (max-width: 768px) {
             .header { flex-direction: column; gap: 10px; padding: 20px; }
@@ -136,7 +166,7 @@
         </div>
         <h1 class="page-title">Clubs & Societies Directory</h1>
         <div class="header-actions">
-            <a href="/login-student.html" class="btn-header btn-header-primary">Student Login</a>
+            <a href="student_dashboard.html" class="btn-header btn-header-primary">Back to Dashboard</a>
         </div>
     </header>
 
@@ -250,28 +280,11 @@
                 allClubs.forEach(club => {
                     const clubCard = document.createElement('article');
                     clubCard.className = 'club-card';
-                    clubCard.setAttribute('data-club-id', club.id); // Add data-club-id for easy access
+                    clubCard.setAttribute('data-club-id', club.club_id);
 
-                    const adminName = (club.adminFirstName && club.adminLastName) ? `${club.adminFirstName} ${club.adminLastName}` : 'N/A';
-                    const isStudent = currentUser && currentUser.role === 'student';
-                    const membershipStatus = userMemberships[club.id] ? userMemberships[club.id].status : null;
-
-                    let joinButtonHTML = '';
-                    if (isStudent) {
-                        if (membershipStatus === 'active') {
-                            joinButtonHTML = `<button class="club-btn club-btn-secondary" disabled>Joined</button>`;
-                        } else if (membershipStatus === 'pending') {
-                            joinButtonHTML = `<button class="club-btn club-btn-secondary" disabled>Pending Request</button>`;
-                        } else {
-                            joinButtonHTML = `<button class="club-btn club-btn-primary join-club-btn" data-club-id="${club.id}">Join Club</button>`;
-                        }
-                    } else {
-                        // If not a student, or not logged in, show a disabled join button or hide it
-                        joinButtonHTML = `<button class="club-btn club-btn-secondary" disabled title="Login as student to join">Join Club</button>`;
-                    }
-
-                    // Fallback for missing logo_url
-                    const logoUrl = club.logo_url && club.logo_url.startsWith('http') ? club.logo_url : 'https://via.placeholder.com/60/deb887/FFFFFF?text=Logo';
+                    const logoUrl = club.logo_url ? club.logo_url : '/images/default-club.jpeg';
+                    const joinButtonHTML = `<button class="club-btn club-btn-primary join-club-btn" data-club-id="${club.club_id}">Join Club</button>`;
+                    const viewDetailsButtonHTML = `<button class="club-btn club-btn-secondary view-details-btn" data-club-id="${club.club_id}">View Details</button>`;
 
                     clubCard.innerHTML = `
                         <div class="club-header">
@@ -283,9 +296,8 @@
                         </div>
                         <div class="club-body">
                             <p class="club-description">${club.description || 'No description available.'}</p>
-                            <p class="club-meta"><strong>President:</strong> ${adminName}</p>
+                            <p class="club-meta"><strong>President:</strong> ${club.advisor_name || 'N/A'}</p>
                             <p class="club-meta"><strong>Meeting:</strong> ${club.meeting_schedule || 'N/A'}</p>
-                            <p class="club-meta"><strong>Location:</strong> ${club.meeting_location || 'N/A'}</p>
                             <p class="club-meta"><strong>Contact:</strong> ${club.contact_email || 'N/A'}</p>
                         </div>
                         <div class="club-stats">
@@ -293,25 +305,26 @@
                                 <div class="stat-value">${club.member_count || 0}</div>
                                 <div class="stat-label">Members</div>
                             </div>
-                            <div class="stat">
-                                <div class="stat-value">${club.upcoming_events_count || 0}</div>
-                                <div class="stat-label">Upcoming Events</div>
-                            </div>
                         </div>
                         <div class="club-footer">
                             ${joinButtonHTML}
-                            <button class="club-btn club-btn-primary">View Details</button>
-                            <button class="club-btn club-btn-message message-btn" onclick="alert('Messaging club admin: ${adminName}')">Message Admin</button>
-                        </div>
-                    `;
+                            ${viewDetailsButtonHTML}
+                        </div>`;
                     clubsGrid.appendChild(clubCard);
                 });
 
-                // Add event listeners for join buttons after rendering
+                // Add event listeners for join and view details buttons
                 document.querySelectorAll('.join-club-btn').forEach(button => {
                     button.addEventListener('click', async (e) => {
                         const clubId = e.target.dataset.clubId;
                         await sendJoinRequest(clubId, e.target);
+                    });
+                });
+                document.querySelectorAll('.view-details-btn').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const clubId = e.target.dataset.clubId;
+                        const club = allClubs.find(c => c.club_id == clubId);
+                        showClubDetailsPopup(club);
                     });
                 });
             }
@@ -361,18 +374,111 @@
                 }
             }
 
+            function showClubDetailsPopup(club) {
+                const popup = document.createElement('div');
+                popup.className = 'club-details-popup';
+                popup.innerHTML = `
+                    <div class="popup-content">
+                        <button class="popup-close-btn">&times;</button>
+                        <h2>${club.name}</h2>
+                        <p><strong>Category:</strong> ${club.category}</p>
+                        <p><strong>Description:</strong> ${club.description || 'No description available.'}</p>
+                        <p><strong>President:</strong> ${club.advisor_name || 'N/A'}</p>
+                        <p><strong>Meeting Schedule:</strong> ${club.meeting_schedule || 'N/A'}</p>
+                        <p><strong>Contact Email:</strong> ${club.contact_email || 'N/A'}</p>
+                        <p><strong>Members:</strong> ${club.member_count || 0}</p>
+                    </div>`;
+
+                document.body.appendChild(popup);
+
+                const closeButton = popup.querySelector('.popup-close-btn');
+                closeButton.addEventListener('click', () => {
+                    document.body.removeChild(popup);
+                });
+            }
+
+            function filterClubs() {
+                const searchInput = document.getElementById('searchInput').value.toLowerCase();
+                const categoryFilter = document.getElementById('categoryFilter').value;
+
+                const filteredClubs = allClubs.filter(club => {
+                    const matchesSearch = club.name.toLowerCase().includes(searchInput) || club.description.toLowerCase().includes(searchInput);
+                    const matchesCategory = categoryFilter === 'all' || club.category === categoryFilter;
+                    return matchesSearch && matchesCategory;
+                });
+
+                renderFilteredClubs(filteredClubs);
+            }
+
+            function renderFilteredClubs(filteredClubs) {
+                clubsGrid.innerHTML = ''; // Clear existing cards
+
+                if (filteredClubs.length === 0) {
+                    clubsGrid.innerHTML = `<div class="info-state">No clubs match your search criteria.</div>`;
+                    return;
+                }
+
+                filteredClubs.forEach(club => {
+                    const clubCard = document.createElement('article');
+                    clubCard.className = 'club-card';
+                    clubCard.setAttribute('data-club-id', club.club_id);
+
+                    const logoUrl = club.logo_url ? club.logo_url : '/images/default-club.jpeg';
+                    const joinButtonHTML = `<button class="club-btn club-btn-primary join-club-btn" data-club-id="${club.club_id}">Join Club</button>`;
+                    const viewDetailsButtonHTML = `<button class="club-btn club-btn-secondary view-details-btn" data-club-id="${club.club_id}">View Details</button>`;
+
+                    clubCard.innerHTML = `
+                        <div class="club-header">
+                            <img src="${logoUrl}" alt="${club.name} Logo" class="club-logo">
+                            <div class="club-title-section">
+                                <h3 class="club-name">${club.name}</h3>
+                                <span class="club-category">${club.category}</span>
+                            </div>
+                        </div>
+                        <div class="club-body">
+                            <p class="club-description">${club.description || 'No description available.'}</p>
+                            <p class="club-meta"><strong>President:</strong> ${club.advisor_name || 'N/A'}</p>
+                            <p class="club-meta"><strong>Meeting:</strong> ${club.meeting_schedule || 'N/A'}</p>
+                            <p class="club-meta"><strong>Contact:</strong> ${club.contact_email || 'N/A'}</p>
+                        </div>
+                        <div class="club-stats">
+                            <div class="stat">
+                                <div class="stat-value">${club.member_count || 0}</div>
+                                <div class="stat-label">Members</div>
+                            </div>
+                        </div>
+                        <div class="club-footer">
+                            ${joinButtonHTML}
+                            ${viewDetailsButtonHTML}
+                        </div>`;
+                    clubsGrid.appendChild(clubCard);
+                });
+
+                // Add event listeners for join and view details buttons
+                document.querySelectorAll('.join-club-btn').forEach(button => {
+                    button.addEventListener('click', async (e) => {
+                        const clubId = e.target.dataset.clubId;
+                        await sendJoinRequest(clubId, e.target);
+                    });
+                });
+                document.querySelectorAll('.view-details-btn').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const clubId = e.target.dataset.clubId;
+                        const club = allClubs.find(c => c.club_id == clubId);
+                        showClubDetailsPopup(club);
+                    });
+                });
+            }
+
             // Initial fetch
             fetchAndRenderClubs();
 
-            // Placeholder for search/filter functionality
-            document.getElementById('searchInput').addEventListener('input', (e) => {
-                console.log('Searching for:', e.target.value);
-                // Add search logic here
-            });
-            document.getElementById('categoryFilter').addEventListener('change', (e) => {
-                console.log('Filtering by category:', e.target.value);
-                // Add filter logic here
-            });
+            // Add event listeners for search and filter functionality
+            const searchInput = document.getElementById('searchInput');
+            const categoryFilter = document.getElementById('categoryFilter');
+
+            searchInput.addEventListener('input', filterClubs);
+            categoryFilter.addEventListener('change', filterClubs);
         });
     </script>
 </body>

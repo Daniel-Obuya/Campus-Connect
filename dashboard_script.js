@@ -6,10 +6,16 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = '/login-student';
     }
 
+    // Debugging logs
+    console.log('Debugging currentUser:', currentUser);
+    console.log('AuthToken:', authToken);
+
     // --- Personalized Welcome and Quick Stats ---
     const welcomeMessage = document.getElementById('welcome-message');
     // Use the already-declared currentUser from above
-    if (currentUser && currentUser.role === 'student' && currentUser.firstName) {
+    if (currentUser && currentUser.role === 'club-admin' && currentUser.firstName && currentUser.lastName) {
+        welcomeMessage.textContent = `Welcome, ${currentUser.firstName} ${currentUser.lastName}! 👋`;
+    } else if (currentUser && currentUser.role === 'student' && currentUser.firstName) {
         welcomeMessage.textContent = `Welcome, ${currentUser.firstName}! 👋`;
     }
     // Dummy stats for prototype

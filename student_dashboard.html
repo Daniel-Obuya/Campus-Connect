@@ -45,6 +45,7 @@
         <a href="departments_directory.html" class="btn-header" title="Departments"><span class="button-icon">🏛️</span><span class="quick-link-label">Departments</span></a>
         <a href="student_directory.html" class="btn-header" title="Student Directory"><span class="button-icon">🧑‍🎓</span><span class="quick-link-label">Students</span></a>
         <a href="interactive_calendar.html" class="btn-header" title="Calendar"><span class="button-icon">🗓️</span><span class="quick-link-label">Calendar</span></a>
+        <a href="announcements-dashboard.html" class="btn-header" title="Announcements"><span class="button-icon">📢</span><span class="quick-link-label">Announcements</span></a>
     </div>
     <style>
     /* Glassy, color-scheme-adhering welcome and card styles */
@@ -205,9 +206,6 @@
         margin-bottom: 0;
     }
     /* Button styling to match student directory */
-    .action-button, .profile-edit-btn, .recommended-btn {
-        /* Remove custom button overrides, revert to previous or default styles */
-    }
     .quick-stats .stat-item {
         background: rgba(255,255,255,0.18);
         border-radius: 8px;
@@ -494,7 +492,7 @@
                 <a href="edit-student-profile.html" class="action-button profile-edit-btn">Edit Profile</a>
             </div>
             <div class="profile-summary">
-                <img src="images/default-profile.png" alt="Profile Picture" class="profile-avatar-header" style="width:80px;height:80px;border-radius:50%;box-shadow:0 2px 8px #cd853f33;">
+                <img src="images/default-profile.jpeg" alt="Profile Picture" class="profile-avatar-header" id="profile-avatar-header" style="width:80px;height:80px;border-radius:50%;box-shadow:0 2px 8px #cd853f33;">
                 <div class="profile-info">
                     <div class="profile-name" id="profile-name">Student Name</div>
                     <div class="profile-meta" id="profile-major">Major: Computer Science</div>
@@ -573,71 +571,88 @@
 
     <script src="dashboard_script.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const welcomeMessage = document.getElementById('welcome-message');
-            let currentUser = null;
+        document.addEventListener('DOMContentLoaded', async () => {
+            const authToken = localStorage.getItem('authToken');
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+
+            if (!authToken || !currentUser) {
+                window.location.href = '/login-student.html';
+                return;
+            }
+
 
             try {
-                // Attempt to get user data from localStorage
-                currentUser = JSON.parse(localStorage.getItem('currentUser'));
-            } catch (e) {
-                console.error('Could not parse user data from localStorage:', e);
-                // If data is corrupted, treat as not logged in
-            }
+                const response = await fetch('/api/user/profile', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
 
-            // Check if a valid student user is logged in
-            if (currentUser && currentUser.role === 'student' && currentUser.firstName) {
-                welcomeMessage.textContent = `Welcome, ${currentUser.firstName}! 👋`;
-        // Display profile picture
-        const avatar = document.querySelector('.profile-avatar-header');
-        if (avatar && currentUser.profilePictureUrl) {
-            avatar.src = currentUser.profilePictureUrl;
-        }
-            } else {
-                // If not logged in or not a student, redirect to the login page
-                console.warn('No valid student user found. Redirecting to login.');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch user profile');
+                }
+
+                const profileResponse = await response.json();
+                // Support both { success, userProfile } and direct userProfile
+                const userProfile = profileResponse.userProfile || profileResponse;
+
+                // Normalize the profile picture URL
+                let profilePicUrl = userProfile.profile_picture_url || userProfile.profilePictureUrl || '';
+                // If it's a base64 string, use it directly; if it's a file path, ensure it starts with '/images/'
+                if (profilePicUrl && !profilePicUrl.startsWith('data:image') && !profilePicUrl.startsWith('/images/')) {
+                    profilePicUrl = '/images/' + profilePicUrl.replace(/^images[\\\/]/, '');
+                }
+
+                // Update UI with user profile data
+                const studentDetails = userProfile.studentDetails || {};
+                document.getElementById('welcome-message').textContent = `Welcome, ${userProfile.first_name || userProfile.firstName || 'Student'} ${userProfile.last_name || userProfile.lastName || ''}`;
+                const avatar = document.getElementById('welcome-profile-pic');
+                avatar.src = profilePicUrl || 'images/default-profile.jpeg';
+
+                // Update profile widget
+                const profileAvatar = document.getElementById('profile-avatar-header');
+                profileAvatar.src = profilePicUrl || 'images/default-profile.jpeg';
+                document.getElementById('profile-name').textContent = `${userProfile.first_name || userProfile.firstName || 'Student'} ${userProfile.last_name || userProfile.lastName || ''}`;
+                document.getElementById('profile-major').textContent = `Major: ${userProfile.major || (studentDetails.major) || 'Undeclared'}`;
+                document.getElementById('profile-year').textContent = `Graduation: ${userProfile.graduation_year || (studentDetails.graduationYear) || 'N/A'}`;
+
+                // Debugging logs for verification
+                console.log('User Profile:', userProfile);
+                console.log('Profile Picture URL used:', profilePicUrl);
+            } catch (error) {
+                console.error('Error fetching user profile:', error);
                 window.location.href = '/login-student.html';
-                return; // Stop script execution
             }
-
-            // Add entrance animation
-            welcomeMessage.style.opacity = '0';
-            welcomeMessage.style.transform = 'translateY(-20px)';
-            setTimeout(() => { // Using a timeout to apply transition after initial render
-                welcomeMessage.style.transition = 'all 0.6s ease';
-                welcomeMessage.style.opacity = '1';
-                welcomeMessage.style.transform = 'translateY(0)';
-            }, 100);
 
             // Logout functionality
-            document.getElementById('logoutButton').addEventListener('click', function(e) {
+            document.getElementById('logoutButton').addEventListener('click', (e) => {
                 e.preventDefault();
                 localStorage.removeItem('authToken');
                 localStorage.removeItem('currentUser');
-                window.location.href = '/welcome.html'; // Redirect to a neutral welcome page
+                window.location.href = '/welcome.html';
             });
-        });
 
-        // Notification bell opens the notification panel
-        const notificationIcon = document.getElementById('notification-icon');
-        const notificationPanel = document.getElementById('notification-center-panel');
-        if (notificationIcon) {
-            notificationIcon.addEventListener('click', function() {
+            // Notification panel logic
+            const notificationIcon = document.getElementById('notification-icon');
+            const notificationPanel = document.getElementById('notification-center-panel');
+            notificationIcon.addEventListener('click', () => {
                 notificationPanel.style.display = 'block';
             });
-        }
-        // Close notification panel
-        const closeNotifBtn = document.querySelector('.close-notifications');
-        if (closeNotifBtn) {
-            closeNotifBtn.addEventListener('click', function() {
+
+            document.querySelector('.close-notifications').addEventListener('click', () => {
                 notificationPanel.style.display = 'none';
             });
-        }
-        // Hide panel if clicked outside
-        document.addEventListener('mousedown', function(event) {
-            if (notificationPanel.style.display === 'block' && !notificationPanel.contains(event.target) && event.target !== notificationIcon) {
-                notificationPanel.style.display = 'none';
-            }
+
+            document.addEventListener('mousedown', (event) => {
+                if (notificationPanel.style.display === 'block' && !notificationPanel.contains(event.target) && event.target !== notificationIcon) {
+                    notificationPanel.style.display = 'none';
+                }
+            });
+
+            // Redirect to Announcements Dashboard
+            document.getElementById('announcements-button').addEventListener('click', () => {
+                window.location.href = '/announcements-dashboard.html';
+            });
         });
     </script>
 </body>
