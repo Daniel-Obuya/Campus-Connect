@@ -18,6 +18,7 @@ async function fetchClubs() {
         const response = await fetch('/api/clubs');
         if (!response.ok) throw new Error('Failed to fetch clubs');
         const data = await response.json();
+        console.log('Fetched clubs data:', data); // Log the response data
         if (!data.success && !Array.isArray(data.clubs)) throw new Error(data.message || 'No clubs found');
         clubs = data.clubs || data; // Support both { clubs: [...] } and [...]
         renderCategoryFilter();
@@ -57,7 +58,7 @@ function renderClubs() {
         <div class="club-card" data-club-id="${club.id}">
             <div class="club-category-badge">${club.category || ''}</div>
             <div class="club-logo">
-                <img src="${club.logo_url || 'https://via.placeholder.com/60/deb887/FFFFFF?text=Logo'}" alt="${club.name} Logo">
+                <img src="${club.logo_url || '/images/default-club.jpeg'}" alt="${club.name} Logo">
             </div>
             <div class="club-info">
                 <h3 class="club-name">${club.name}</h3>
@@ -123,7 +124,7 @@ function openModal(clubId) {
 
     modalBody.innerHTML = `
         <div class="modal-logo">
-            <img src="${selectedClub.logo_url || 'images/logo 1.png'}" alt="${selectedClub.name} Logo" style="width:64px;height:64px;object-fit:cover;border-radius:50%;background:#f4f4f4;">
+            <img src="${selectedClub.logo_url || '/images/default-club.jpeg'}" alt="${selectedClub.name} Logo" style="width:64px;height:64px;object-fit:cover;border-radius:50%;background:#f4f4f4;">
         </div>
         <h3 class="modal-title">${selectedClub.name}</h3>
         <div class="modal-category">${selectedClub.category || ''}</div>

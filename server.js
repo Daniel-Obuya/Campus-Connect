@@ -32,6 +32,8 @@ const oauth2Client = new google.auth.OAuth2(
 
 // Serve static files
 app.use(express.static(__dirname));
+// Explicitly serve the images directory at /images
+app.use('/images', express.static(path.join(__dirname, 'images')));
 
 // Nodemailer transporter setup
 const nodemailer = require('nodemailer');
@@ -40,7 +42,7 @@ const transporter = nodemailer.createTransport({
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASSWORD,
-    },
+    }
 });
 
 // Database connection pool (reuse connections efficiently)
@@ -69,22 +71,21 @@ exports.pool = pool; // Export the pool for use in other modules
 const authenticateJWT = (req, res, next) => {
     const authHeader = req.headers.authorization;
     if (authHeader) {
-        const token = authHeader.split(' ')[1]; // Bearer TOKEN
+        const token = authHeader.split(' ')[1];
         jwt.verify(token, secret, (err, userPayload) => {
             if (err) {
                 console.error('JWT verification failed:', err.message);
-                // Send JSON response for 403 Forbidden
                 return res.status(403).json({ success: false, message: 'Forbidden: Invalid or expired token.' });
             }
-            req.user = userPayload; // Attach user payload (including role, id, email, department_id etc.)
+            req.user = userPayload;
             next();
         });
     } else {
-        // Send JSON response for 401 Unauthorized
-        console.warn('JWT Authentication: No token provided.');
-        res.status(401).json({ success: false, message: 'Unauthorized: No token provided.' });
+        console.warn(`JWT Authentication: No token provided for ${req.method} ${req.originalUrl}`);
+        return res.status(401).json({ success: false, message: 'Unauthorized: No token provided.' });
     }
 };
+
 
 // --- HTML Serving Routes ---
 
@@ -105,7 +106,7 @@ app.get('/welcome-admin-portals', (req, res) => {
 
 // New specific signup and login pages
 app.get('/signup-student', (req, res) => {
-  res.sendFile
+  res.sendFile(path.join(__dirname, 'signup-student.html'));
 });
 app.get('/login-student', (req, res) => {
   res.sendFile(path.join(__dirname, 'login-student.html'));
@@ -405,9 +406,8 @@ app.get('/api/test-events-route-unique-name', (req, res) => {
 // Signup
 app.post('/api/signup', async (req, res) => {
   try {
-    const { firstName, lastName, email, password, role, studentDetails, clubDetails, departmentDetails } = req.body;
-
-    console.log('Signup request received:', { firstName, lastName, email, role });
+    const { firstName, lastName, email, password, role, studentDetails, clubDetails, departmentDetails, profilePicture } = req.body;
+    console.log('Signup request received:', { firstName, lastName, email, role, profilePicture: profilePicture ? '[image data]' : null });
 
     // Basic validation
     if (!firstName || !lastName || !email || !password || !role) {
@@ -416,14 +416,12 @@ app.post('/api/signup', async (req, res) => {
         message: 'Missing required fields (firstName, lastName, email, password, role).' 
       });
     }
-
     if (password.length < 8) {
       return res.status(400).json({ 
         success: false, 
         message: 'Password must be at least 8 characters long.' 
       });
     }
-
     // Check if email already exists
     const [existingUsers] = await pool.query('SELECT user_id FROM users WHERE email = ?', [email]);
     if (existingUsers.length > 0) {
@@ -432,14 +430,40 @@ app.post('/api/signup', async (req, res) => {
         message: 'Email already registered.' 
       });
     }
-
     const hashedPassword = await bcrypt.hash(password, 10);
-
     let userId;
     const connection = await pool.getConnection();
     await connection.beginTransaction();
-
     try {
+      let profilePictureUrl = null;
+      // Handle profile picture upload (Base64 to file)
+      if (profilePicture && profilePicture.startsWith('data:image/')) {
+        // Parse the file extension
+        const matches = profilePicture.match(/^data:image\/(png|jpeg|jpg|gif);base64,(.+)$/);
+        if (matches) {
+          const ext = matches[1] === 'jpeg' ? 'jpg' : matches[1];
+          const base64Data = matches[2];
+          const fileName = `student_${Date.now()}_${Math.floor(Math.random()*10000)}.${ext}`;
+          const filePath = path.join(__dirname, 'images', fileName);
+          const fs = require('fs');
+          // Ensure images directory exists
+          if (!fs.existsSync(path.join(__dirname, 'images'))) {
+            fs.mkdirSync(path.join(__dirname, 'images'));
+          }
+          fs.writeFileSync(filePath, Buffer.from(base64Data, 'base64'));
+          // Save only the file path in the database (not the base64 string)
+          profilePictureUrl = `/images/${fileName}`;
+        } else {
+          // If base64 is malformed, fallback to default
+          profilePictureUrl = null;
+        }
+      } else if (profilePicture && profilePicture.startsWith('/images/')) {
+        // If already a file path, use as is
+        profilePictureUrl = profilePicture;
+      } else {
+        // If no image provided, set to null
+        profilePictureUrl = null;
+      }
       let userInsertData = {
         email,
         password_hash: hashedPassword,
@@ -447,9 +471,9 @@ app.post('/api/signup', async (req, res) => {
         last_name: lastName,
         role,
         email_verified: false, // Set to false initially
-        is_active: false // Set to false until email is verified
+        is_active: false, // Set to false until email is verified
+        profile_picture_url: profilePictureUrl // Save file path or null
       };
-
       if (role === 'student') {
         // Student specific details
         if (!studentDetails || !studentDetails.studentId || !studentDetails.major || !studentDetails.graduationYear) {
@@ -464,84 +488,14 @@ app.post('/api/signup', async (req, res) => {
         userInsertData.major = studentDetails.major;
         userInsertData.graduation_year = studentDetails.graduationYear;
       }
-
       const [result] = await connection.query('INSERT INTO users SET ?', userInsertData);
-      // The user ID of the newly inserted user
       userId = result.insertId;
-
       // Generate and store verification token
       const verificationToken = generateVerificationToken();
       const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
       await connection.query('UPDATE users SET email_verification_token = ?, email_verification_expires = ? WHERE user_id = ?', [verificationToken, expires, userId]);
-
-      if (role === 'club_admin') {
-        if (!clubDetails || !clubDetails.name || !clubDetails.category || !clubDetails.advisorName) {
-          await connection.rollback();
-          connection.release();
-          return res.status(400).json({ 
-            success: false, 
-            message: 'Missing club-specific data (name, category, advisorName).' 
-          });
-        }
-        const [existingClubs] = await connection.query('SELECT club_id FROM clubs_societies WHERE name = ?', [clubDetails.name]);
-        if (existingClubs.length > 0) {
-          await connection.rollback();
-          connection.release();
-          return res.status(409).json({ success: false, message: 'Club name already exists.' });
-        }
-        await connection.query(
-          'INSERT INTO clubs_societies (name, description, category, president_user_id, advisor_name, contact_email, is_active) VALUES (?, ?, ?, ?, ?, ?, ?)',
-          [clubDetails.name, clubDetails.description || null, clubDetails.category, userId, clubDetails.advisorName, email, true]
-        );
-      } else if (role === 'department_admin') {
-        if (!departmentDetails || !departmentDetails.name || !departmentDetails.code) {
-          await connection.rollback();
-          connection.release();
-          return res.status(400).json({ 
-            success: false, 
-            message: 'Missing department-specific data (Department Name and Department Code are required).' 
-          });
-        }
-
-        let newDepartmentId; // To store the ID of the department
-        // Check if department code already exists
-        const [existingDepts] = await connection.query('SELECT department_id, name FROM departments WHERE code = ?', [departmentDetails.code]);
-
-        if (existingDepts.length > 0) {
-          // Department already exists. Associate this new admin with the existing department.
-          newDepartmentId = existingDepts[0].department_id;
-          console.log(`Department with code ${departmentDetails.code} (Name: ${existingDepts[0].name}, ID: ${newDepartmentId}) already exists. New admin (User ID: ${userId}) will be associated with it.`);
-          // We do not update the department's details (like name or head_of_department_user_id) here.
-          // The head_of_department_user_id remains the ID of the first admin who created it.
-        } else {
-          // Department does not exist, create it.
-          const [deptInsertResult] = await connection.query(
-            'INSERT INTO departments (name, code, description, head_of_department_user_id, contact_email, contact_phone, website_url, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-            [ 
-              departmentDetails.name,
-              departmentDetails.code,
-              departmentDetails.description || null,
-              userId, // Assign the current user (department_admin) as head_of_department_user_id
-              email, 
-              departmentDetails.contact_phone || null,
-              departmentDetails.website_url || null,
-              true 
-            ]
-          );
-          newDepartmentId = deptInsertResult.insertId;
-          console.log(`New department "${departmentDetails.name}" (Code: ${departmentDetails.code}) created with ID: ${newDepartmentId}. Head admin ID set to: ${userId}`);
-        }
-
-        // IMPORTANT: Update the users table to link this admin to this new department
-        await connection.query(
-          'UPDATE users SET department_id = ? WHERE user_id = ?',
-          [newDepartmentId, userId]
-        );
-      }
-
       await connection.commit();
       connection.release();
-
       // Send verification email
       const verificationLink = `http://localhost:${PORT}/api/verify-email?token=${verificationToken}`;
       const mailOptions = {
@@ -554,57 +508,29 @@ app.post('/api/signup', async (req, res) => {
                <a href="${verificationLink}">${verificationLink}</a>
                <p>This link will expire in 24 hours.</p>
                <p>If you did not sign up for Campus Connect, please ignore this email.</p>
-               <p>Best regards,<br>The Campus Connect Team</p>`,
+               <p>Best regards,<br>The Campus Connect Team</p>`
       };
       await transporter.sendMail(mailOptions);
       console.log(`Verification email sent to ${email}`);
-
-      // Fetch department_id for the department_admin to include in token and response
-      let associatedDepartmentId = null;
-      if (role === 'department_admin') {
-        // If a new department was created, its ID isn't directly available here without another query
-        // However, we've now updated the user record with newDepartmentId.
-        // So, we can query it back or directly use newDepartmentId if it was scoped correctly.
-        // For clarity and robustness, let's re-fetch from the (now updated) user record.
-        const [deptUserRows] = await pool.query('SELECT department_id FROM users WHERE user_id = ?', [userId]);
-        if (deptUserRows.length > 0) associatedDepartmentId = deptUserRows[0].department_id;
-      }
-
-      if (role === 'department_admin') {
-        console.log(`Department admin ${email} registered, sending redirect instruction to client.`);
-        const token = jwt.sign({
-            id: userId, email, role, firstName, lastName,
-            department_id: associatedDepartmentId // Include department_id
-        }, secret, { expiresIn: '2h' });
-        res.status(201).json({
-          success: true, message: `Department admin ${email} registered successfully. Please check your email to verify your account.`,
-          user: { id: userId, firstName, lastName, email, role, department_id: associatedDepartmentId }
-        });
-      } else {
-        // For other roles (student, club_admin), generate and send a JWT token.
-        const token = jwt.sign({
+      const token = jwt.sign({
+        id: userId,
+        email,
+        role,
+        firstName,
+        lastName
+      }, secret, { expiresIn: '2h' });
+      res.status(201).json({
+        success: true,
+        message: `User ${email} registered successfully as ${role}. Please check your email to verify your account.`,
+        user: {
           id: userId,
+          firstName,
+          lastName,
           email,
           role,
-          firstName,
-          lastName
-        }, secret, { expiresIn: '2h' });
-
-        console.log(`User ${email} (role: ${role}) registered, sending token.`);
-        res.status(201).json({
-          success: true,
-          message: `User ${email} registered successfully as ${role}. Please check your email to verify your account.`,
-          // token, // Optionally withhold token until email is verified
-          user: {
-            id: userId,
-            firstName,
-            lastName,
-            email,
-            role
-          }
-        });
-      }
-
+          profilePicture: profilePictureUrl
+        }
+      });
     } catch (error) {
       await connection.rollback();
       connection.release();
@@ -614,15 +540,8 @@ app.post('/api/signup', async (req, res) => {
         message: 'Internal server error during signup.' 
       });
     }
-
   } catch (error) {
     console.error('Signup error:', error);
-    if (error.code === 'ER_DUP_ENTRY') {
-      return res.status(409).json({ 
-        success: false, 
-        message: 'Email already registered.' 
-      });
-    }
     res.status(500).json({ 
       success: false, 
       message: 'Internal server error' 
@@ -802,13 +721,6 @@ app.post('/api/login', async (req, res) => {
     // Fetch department_id if the user is a department_admin
     let userDepartmentId = user.department_id || null; // Assuming users table has department_id
 
-    // --- NEW: Fetch department name if department_admin ---
-    let departmentName = null;
-    if (user.role === 'department_admin' && userDepartmentId) {
-      const [deptRows] = await pool.query('SELECT name FROM departments WHERE department_id = ?', [userDepartmentId]);
-      if (deptRows.length > 0) { departmentName = deptRows[0].name; }
-    }
-
     if (user.role === 'department_admin') {
         console.log(`Department admin ${user.email} logged in, sending redirect instruction to client.`);
         const token = jwt.sign({
@@ -828,8 +740,7 @@ app.post('/api/login', async (req, res) => {
                 lastName: user.last_name,
                 email: user.email,
                 role: user.role,
-                department_id: userDepartmentId, // Also include in user object
-                department_name: departmentName   // <-- Add department name here
+                department_id: userDepartmentId // Also include in user object
             }
         });
     } else {
@@ -842,21 +753,28 @@ app.post('/api/login', async (req, res) => {
             lastName: user.last_name
         }, secret, { expiresIn: '2h' });
 
-        console.log(`User ${user.email} (role: ${user.role}) logged in, sending token.`);
-        res.json({
-            success: true,
-            message: 'Login successful.',
-            token,
-            user: {
-                id: user.user_id,
-                firstName: user.first_name,
-                lastName: user.last_name,
-                email: user.email,
-                role: user.role
-            }
-        });
+    const [rows] = await pool.query(
+      `SELECT 
+          u.user_id, u.first_name, u.last_name, u.email, u.major, u.graduation_year, u.bio, u.role,
+          up.linkedin_url, up.github_url
+       FROM users u
+       LEFT JOIN user_profiles up ON u.user_id = up.user_id
+       WHERE u.user_id = ?`,
+      [user.user_id]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'User profile not found.' });
     }
 
+    const userProfile = rows[0];
+
+    res.json({
+      success: true,
+      message: 'Login successful.',
+      token,
+      user: userProfile
+    });
   } catch (err) {
     console.error('Login Error:', err);
     res.status(500).json({ 
@@ -870,23 +788,21 @@ app.post('/api/login', async (req, res) => {
 app.get('/api/user/profile', authenticateJWT, async (req, res) => {
     try {
         const userId = req.user.id;
-        const sql = `
-            SELECT 
-                u.user_id, u.first_name, u.last_name, u.email, u.role, u.student_id, u.major, u.graduation_year, u.profile_picture_url,
-                up.linkedin_url, up.github_url, up.personal_website, up.bio, up.skills
-            FROM users u
-            LEFT JOIN user_profiles up ON u.user_id = up.user_id
-            WHERE u.user_id = ?
-        `;
-        const [users] = await pool.query(sql, [userId]);
+        const [rows] = await pool.query(
+            `SELECT user_id, student_id, email, first_name, last_name, phone_number, profile_picture_url, bio, graduation_year, major, role, department_id 
+             FROM users WHERE user_id = ?`,
+            [userId]
+        );
 
-        if (users.length === 0) {
-            return res.status(404).json({ success: false, message: 'User profile not found.' });
+        if (rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'User not found.' });
         }
-        res.json({ success: true, profile: users[0] });
+
+        const userProfile = rows[0];
+        res.json({ success: true, userProfile });
     } catch (error) {
         console.error('Error fetching user profile:', error);
-        res.status(500).json({ success: false, message: 'Server error while fetching profile.' });
+        res.status(500).json({ success: false, message: 'Failed to fetch user profile.' });
     }
 });
 
@@ -898,32 +814,35 @@ app.put('/api/user/profile', authenticateJWT, async (req, res) => {
     const userId = req.user.id;
     const { firstName, lastName, studentId, major, graduationYear, linkedin, github, portfolio, bio, skills } = req.body;
 
-    if (!firstName || !lastName) {
-        return res.status(400).json({ success: false, message: 'First name and last name are required.' });
-    }
+    // No longer require firstName and lastName for profile updates
 
+    // Remove first_name and last_name requirement for profile updates
     const connection = await pool.getConnection();
     try {
         await connection.beginTransaction();
-
-        // Update users table
+        // Update users table without first_name and last_name
         await connection.query(
-            `UPDATE users SET first_name = ?, last_name = ?, student_id = ?, major = ?, graduation_year = ? WHERE user_id = ?`,
-            [firstName, lastName, studentId || null, major || null, graduationYear || null, userId]
+            `UPDATE users SET student_id = ?, major = ?, graduation_year = ? WHERE user_id = ?`,
+            [studentId || null, major || null, graduationYear || null, userId]
         );
 
-        // Upsert user_profiles table
+        // Upsert user_profiles table (without bio)
         const skillsString = Array.isArray(skills) ? skills.join(', ') : (skills || null);
         await connection.query(
-            `INSERT INTO user_profiles (user_id, linkedin_url, github_url, personal_website, bio, skills)
-             VALUES (?, ?, ?, ?, ?, ?)
+            `INSERT INTO user_profiles (user_id, linkedin_url, github_url, personal_website, skills)
+             VALUES (?, ?, ?, ?, ?)
              ON DUPLICATE KEY UPDATE
                 linkedin_url = VALUES(linkedin_url),
                 github_url = VALUES(github_url),
                 personal_website = VALUES(personal_website),
-                bio = VALUES(bio),
                 skills = VALUES(skills)`,
-            [userId, linkedin || null, github || null, portfolio || null, bio || null, skillsString]
+            [userId, linkedin || null, github || null, portfolio || null, skillsString]
+        );
+
+        // Update bio in users table
+        await connection.query(
+            `UPDATE users SET bio = ? WHERE user_id = ?`,
+            [bio || null, userId]
         );
 
         await connection.commit();
@@ -935,7 +854,8 @@ app.put('/api/user/profile', authenticateJWT, async (req, res) => {
     } finally {
         connection.release();
     }
-});
+}
+);
 
 // API Endpoint to Create a New Event
 app.post('/api/events', authenticateJWT, async (req, res) => { // Protected route
@@ -969,17 +889,21 @@ app.post('/api/events', authenticateJWT, async (req, res) => { // Protected rout
 
     if (req.user.role === 'department_admin') {
         organizer_type = 'department';
-        // Explicitly check department_id from token before assigning
         if (req.user.department_id && typeof req.user.department_id === 'number' && req.user.department_id > 0) {
             organizer_id = req.user.department_id;
         } else {
-            console.error(`SERVER_LOG: Department Admin (User ID: ${req.user.id}, Email: ${req.user.email}) has an invalid or missing department_id in JWT/session. Found: '${req.user.department_id}'. This will likely cause event creation to fail validation for organizer_id.`);
-            organizer_id = req.user.department_id; // Assign it (e.g., null, undefined, 0) - the validation block below will catch it and form the client error message.
+            console.error(`SERVER_LOG: Department Admin (User ID: ${req.user.id}, Email: ${req.user.email}) has an invalid or missing department_id in JWT/session. Found: '${req.user.department_id}'.`);
+            organizer_id = req.user.department_id;
         }
+    } else if (req.user.role === 'club_admin') {
+        // Find the club managed by this admin
+        const [clubs] = await pool.query('SELECT club_id FROM clubs_societies WHERE president_user_id = ?', [req.user.id]);
+        if (clubs.length === 0) {
+            return res.status(403).json({ success: false, message: 'No club associated with this admin account.' });
+        }
+        organizer_type = 'club';
+        organizer_id = clubs[0].club_id;
     } else {
-        // Handle other roles if they can create events (e.g., club_admin)
-        // For now, only department_admin is configured.
-        console.warn(`User ${req.user.email} (role: ${req.user.role}) attempted to create event, but role not configured for event creation.`);
         return res.status(403).json({ success: false, message: 'Your role is not authorized to create events of this type.' });
     }
 
@@ -1004,11 +928,15 @@ app.post('/api/events', authenticateJWT, async (req, res) => { // Protected rout
         if (typeof organizer_id !== 'number' || isNaN(organizer_id) || organizer_id <= 0) {
             errors.push('Department Admin is not associated with a valid Department ID. Please check the admin\'s user profile or contact support.');
         }
-    } else if (organizer_type === 'user') { // Example if you add user-created events
+    } else if (organizer_type === 'club') {
+        if (typeof organizer_id !== 'number' || isNaN(organizer_id) || organizer_id <= 0) {
+            errors.push('Club Admin is not associated with a valid Club ID. Please check the admin\'s club profile or contact support.');
+        }
+    } else if (organizer_type === 'user') {
         if (typeof organizer_id !== 'number' || isNaN(organizer_id) || organizer_id <= 0) {
             errors.push('User Organizer ID is invalid or missing.');
         }
-    } // Add similar for 'club' if that becomes a possibility
+    }
 
     if (!['user', 'department', 'club'].includes(organizer_type)) { 
         errors.push('Organizer type is invalid.');
@@ -1260,23 +1188,40 @@ app.post('/api/announcements', authenticateJWT, async (req, res) => {
         const { title, content, priority, target_audience, tags, attachment_urls, scheduled_publish_at, expires_at, is_pinned, is_published } = req.body;
         console.log('Received /api/announcements POST request body:', req.body);
 
-        // Authorization: Ensure user is department_admin
-        if (req.user.role !== 'department_admin' || !req.user.department_id) {
-            return res.status(403).json({ success: false, message: 'Access denied. User is not an authorized department admin or department ID is missing.' });
+        if (!req.user) {
+            console.error('SERVER_LOG: No user found in request. JWT might be missing or invalid.');
+            return res.status(403).json({ success: false, message: 'Forbidden: No user found in request.' });
         }
 
-        const authorType = 'department'; // Since this route is for department admins
-        const authorEntityId = req.user.department_id; // The department_id of the admin
+        console.log('SERVER_LOG: Decoded JWT payload:', req.user);
+
+        let authorType, authorEntityId;
+        if (req.user.role === 'department_admin') {
+            if (!req.user.department_id || typeof req.user.department_id !== 'number' || req.user.department_id <= 0) {
+                console.error(`SERVER_LOG: Department Admin (User ID: ${req.user.id}, Email: ${req.user.email}) has an invalid or missing department_id in JWT/session. Found: '${req.user.department_id}'. Cannot create announcement.`);
+                return res.status(400).json({ success: false, message: 'Department admin is not associated with a valid department ID.' });
+            }
+            authorType = 'department';
+            authorEntityId = req.user.department_id;
+        } else if (req.user.role === 'club_admin') {
+            // Find the club managed by this admin
+            const [clubs] = await pool.query('SELECT club_id FROM clubs_societies WHERE president_user_id = ?', [req.user.id]);
+            if (clubs.length === 0) {
+                console.error(`SERVER_LOG: Club Admin (User ID: ${req.user.id}, Email: ${req.user.email}) is not associated with any club. Cannot create announcement.`);
+                return res.status(400).json({ success: false, message: 'Club admin is not associated with any club.' });
+            }
+            authorType = 'club';
+            authorEntityId = clubs[0].club_id;
+        } else {
+            console.error(`SERVER_LOG: Unauthorized role attempting to create announcement. Role: ${req.user.role}, User ID: ${req.user.id}, Email: ${req.user.email}`);
+            return res.status(403).json({ success: false, message: 'Access denied. User is not an authorized department or club admin.' });
+        }
+
         const authorId = req.user.id; // The user_id of the admin creating it
 
-        // Validate that authorEntityId (department_id for admin) is valid
-        if (!authorEntityId || typeof authorEntityId !== 'number' || authorEntityId <= 0) {
-            console.error(`SERVER_LOG: Department Admin (User ID: ${req.user.id}, Email: ${req.user.email}) has an invalid or missing department_id in JWT/session. Found: '${req.user.department_id}'. Cannot create announcement.`);
-            return res.status(400).json({ success: false, message: 'Department admin is not associated with a valid department ID.' });
-        }
         // Validate authorId (user_id for admin)
         if (!authorId || typeof authorId !== 'number' || authorId <= 0) {
-            console.error(`SERVER_LOG: Department Admin (User ID: ${req.user.id}, Email: ${req.user.email}) has an invalid or missing user ID in JWT/session. Found: '${req.user.id}'. Cannot create announcement.`);
+            console.error(`SERVER_LOG: Admin (User ID: ${req.user.id}, Email: ${req.user.email}) has an invalid or missing user ID in JWT/session. Found: '${req.user.id}'. Cannot create announcement.`);
             return res.status(400).json({ success: false, message: 'Admin user ID is invalid.' });
         }
 
@@ -1290,7 +1235,7 @@ app.post('/api/announcements', authenticateJWT, async (req, res) => {
                         priority, target_audience, tags, attachment_urls, 
                         is_pinned, scheduled_publish_at, expires_at, is_published
                      ) 
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
         
         const values = [
             title,
@@ -1308,16 +1253,67 @@ app.post('/api/announcements', authenticateJWT, async (req, res) => {
             is_published === undefined ? true : !!is_published // Ensure this value is correctly added
         ];
 
+
         const [result] = await pool.query(sql, values);
+
+        // If club admin, also create an event in the events table for the events directory
+        if (authorType === 'club') {
+            // Insert a minimal event using announcement data
+            const eventSql = `INSERT INTO events (
+                title, description, organizer_type, organizer_id, event_type, start_datetime, end_datetime, location, virtual_link, max_attendees, registration_required, tags, image_url, is_published
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+            // Use announcement title/content, set event_type as 'announcement', and fill other fields as null/default
+            const now = new Date();
+            const startDate = now.toISOString().slice(0, 16); // 'YYYY-MM-DDTHH:MM'
+            await pool.query(eventSql, [
+                title,
+                content,
+                'club',
+                authorEntityId,
+                'announcement',
+                startDate,
+                startDate,
+                null,
+                null,
+                null,
+                false,
+                tags || JSON.stringify([]),
+                null,
+                true
+            ]);
+        }
         res.status(201).json({ success: true, message: 'Announcement created successfully!', announcementId: result.insertId });
 
     } catch (error) {
         console.error('Error creating announcement:', error);
         res.status(500).json({ success: false, message: 'Failed to create announcement.' });
-    } // This closes the try-catch block
+    }
 }); // This correctly closes the app.post('/api/announcements', ...) route handler
 
 // --- API Route to get all clubs for the clubs directory ---
+// --- Route to get all clubs for the clubs directory (plural, for frontend compatibility) ---
+app.get('/api/clubs', async (req, res) => {
+    try {
+        const [clubs] = await pool.query(`
+            SELECT 
+                club_id,
+                name,
+                description,
+                category,
+                logo_url,
+                member_count,
+                meeting_schedule
+            FROM clubs_societies
+            WHERE is_active = 1
+        `);
+        res.json({ success: true, clubs });
+    } catch (error) {
+        console.error('Error fetching clubs:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch clubs.' });
+    }
+});
+
+// Legacy alias for backwards compatibility (optional)
 app.get('/api/club', async (req, res) => {
     try {
         const [clubs] = await pool.query(`
@@ -1494,6 +1490,7 @@ app.get('/api/club/dashboard', authenticateJWT, async (req, res) => {
             return res.status(404).json({ success: false, message: 'No club associated with this admin account.' });
         }
         const club = clubs[0];
+
         // Get pending join requests
         const [pendingRequests] = await pool.query(
             `SELECT cm.membership_id, u.first_name, u.last_name, u.major, u.graduation_year, u.email
@@ -1502,7 +1499,7 @@ app.get('/api/club/dashboard', authenticateJWT, async (req, res) => {
              WHERE cm.club_id = ? AND cm.status = 'pending'`,
             [club.club_id]
         );
-        // Get current members
+
         const [currentMembers] = await pool.query(
             `SELECT cm.membership_id, u.first_name, u.last_name, u.email, cm.role
              FROM club_memberships cm
@@ -1510,25 +1507,25 @@ app.get('/api/club/dashboard', authenticateJWT, async (req, res) => {
              WHERE cm.club_id = ? AND cm.status = 'active'`,
             [club.club_id]
         );
-        // Get events
+
         const [events] = await pool.query(
             `SELECT event_id, title, description, DATE_FORMAT(start_datetime, '%b %d, %Y') as date
              FROM events WHERE organizer_type = 'club' AND organizer_id = ? ORDER BY start_datetime DESC LIMIT 5`,
             [club.club_id]
         );
-        // Get announcements
+
         const [announcements] = await pool.query(
             `SELECT announcement_id, title, content, created_at FROM announcements WHERE author_type = 'club' AND author_entity_id = ? ORDER BY created_at DESC LIMIT 5`,
             [club.club_id]
         );
-        // Overview metrics (only real counts)
+
         const overview = {
             totalMembers: club.member_count || currentMembers.length,
             activeMembers: currentMembers.length,
             pendingRequests: pendingRequests.length,
             upcomingEvents: events.length
         };
-        // Members tab data
+
         const members = {
             pending: pendingRequests.map(m => ({
                 id: m.membership_id,
@@ -1544,13 +1541,13 @@ app.get('/api/club/dashboard', authenticateJWT, async (req, res) => {
                 email: m.email
             }))
         };
-        // Events tab data
+
         const eventsData = events.map(e => ({
             id: e.event_id,
             title: e.title,
             date: e.date,
             description: e.description
-        })); // <-- Properly closed
+        }));
         // Announcements tab data
         const announcementsData = announcements.map(a => ({
             id: a.announcement_id,
@@ -1558,7 +1555,7 @@ app.get('/api/club/dashboard', authenticateJWT, async (req, res) => {
             time: a.created_at ? new Date(a.created_at).toLocaleString() : '',
             content: a.content
         }));
-        // Club profile data
+
         const profile = {
             name: club.name,
             description: club.description,
@@ -1568,7 +1565,7 @@ app.get('/api/club/dashboard', authenticateJWT, async (req, res) => {
             category: club.category,
             logoUrl: club.logo_url
         };
-        // Admin name
+
         const adminName = req.user.firstName || req.user.first_name || 'Admin';
         res.json({
             success: true,
@@ -1577,13 +1574,16 @@ app.get('/api/club/dashboard', authenticateJWT, async (req, res) => {
             events: eventsData,
             announcements: announcementsData,
             profile,
-            adminName
+            adminName,
+            clubName: club.name
         });
     } catch (err) {
         console.error('Error fetching club admin dashboard data:', err);
         res.status(500).json({ success: false, message: 'Failed to fetch dashboard data.' });
     }
 });
+
+
 
 // --- API Route: Follow/Unfollow a Department ---
 app.post('/api/departments/:id/follow', authenticateJWT, async (req, res) => {

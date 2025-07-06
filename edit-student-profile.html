@@ -97,36 +97,12 @@
 
 
             <div class="form-group">
-                <label for="firstName">First Name</label>
-                <input type="text" id="firstName" name="firstName" required>
-            </div>
-            <div class="form-group">
-                <label for="lastName">Last Name</label>
-                <input type="text" id="lastName" name="lastName" required>
-            </div>
-            <div class="form-group">
-                <label for="bio">About Me / Biography</label>
-                <textarea id="bio" name="bio" rows="4"></textarea>
-            </div>
-            <div class="form-group">
-                <label for="major">Major</label>
-                <input type="text" id="major" name="major">
-            </div>
-            <div class="form-group">
-                <label for="graduationYear">Expected Graduation Year</label>
-                <input type="text" id="graduationYear" name="graduationYear" placeholder="YYYY">
-            </div>
-             <div class="form-group">
                 <label for="linkedin">LinkedIn</label>
                 <input type="text" id="linkedin" name="linkedin">
             </div>
-             <div class="form-group">
+            <div class="form-group">
                 <label for="github">GitHub</label>
                 <input type="text" id="github" name="github">
-            </div>
-            <div class="form-group">
-                <label for="portfolio">Portfolio/Website</label>
-                <input type="url" id="portfolio" name="portfolio" placeholder="https://">
             </div>
             <div class="form-actions">
                 <button type="button" class="btn btn-cancel" onclick="window.location.href='student-profile.html'">Cancel</button>
@@ -147,19 +123,9 @@
                 return;
             }
 
-            // Populate form with existing data
-            form.firstName.value = currentUser.firstName || '';
-            form.lastName.value = currentUser.lastName || '';
-            form.bio.value = currentUser.bio || '';
-            if (currentUser.studentDetails) {
-                form.major.value = currentUser.studentDetails.major || '';
-                form.graduationYear.value = currentUser.studentDetails.graduationYear || '';
-                form.linkedin.value = currentUser.studentDetails.linkedin || '';
-                form.github.value = currentUser.studentDetails.github || '';
-                form.portfolio.value = currentUser.studentDetails.portfolio || '';
-            }
-
-
+            // Populate form with existing data, safely handling undefined studentDetails
+            form.linkedin.value = (currentUser.studentDetails && currentUser.studentDetails.linkedin) || '';
+            form.github.value = (currentUser.studentDetails && currentUser.studentDetails.github) || '';
 
 
             form.addEventListener('submit', async function(event) {
@@ -167,35 +133,27 @@
                 event.preventDefault();
 
                 // Update currentUser object from form fields
-                currentUser.firstName = form.firstName.value;
-                currentUser.lastName = form.lastName.value;
-                currentUser.bio = form.bio.value;
+                currentUser.firstName = form.firstName ? form.firstName.value : '';
+                currentUser.lastName = form.lastName ? form.lastName.value : '';
+                currentUser.bio = form.bio ? form.bio.value : '';
 
 
+                // Only update LinkedIn and GitHub
                 if (!currentUser.studentDetails) {
                     currentUser.studentDetails = {}; // Initialize if not present
                 }
-                currentUser.studentDetails.major = form.major.value;
-                currentUser.studentDetails.graduationYear = form.graduationYear.value;
                 currentUser.studentDetails.linkedin = form.linkedin.value;
                 currentUser.studentDetails.github = form.github.value;
-                currentUser.studentDetails.portfolio = form.portfolio.value;
 
                 const saveButton = document.querySelector('.btn-save');
                 saveButton.textContent = 'Saving...'; // Change button text to indicate loading
                 saveButton.disabled = true; // Disable button to prevent multiple clicks
 
-                // Prepare data for the API (match backend expectations)
+                // Only send LinkedIn and GitHub to backend
                 const profileData = {
-                    firstName: currentUser.firstName,
-                    lastName: currentUser.lastName,
                     studentDetails: {
-                        studentId: form.studentId ? form.studentId.value : (currentUser.studentDetails.studentId || ''),
-                        major: form.major.value || '',
-                        graduationYear: form.graduationYear.value || '',
                         linkedin: form.linkedin.value || '',
-                        github: form.github.value || '',
-                        portfolio: form.portfolio.value || ''
+                        github: form.github.value || ''
                     }
                 };
 

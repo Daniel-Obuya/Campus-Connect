@@ -181,20 +181,77 @@
             transform: translateY(-2px) scale(1.03);
             box-shadow: 0 4px 14px rgba(255,193,7,0.18);
         }
+
+        /* Header styles */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #f5deb3 0%;
+            padding: 10px 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+        }
+        .logo {
+            height: 60px;
+            width: 60px;
+            margin-right: 10px;
+        }
+        .brand-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+        }
+        .page-title {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: white;
+        }
+        .header-actions {
+            display: flex;
+            gap: 15px;
+        }
+        .btn-header {
+            text-decoration: none;
+            font-size: 1rem;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .btn-header-primary {
+            background-color: #4caf50;
+        }
+        .btn-header-primary:hover {
+            background-color: #45a049;
+        }
+        .btn-header-danger {
+            background-color: #f44336;
+        }
+        .btn-header-danger:hover {
+            background-color: #e53935;
+        }
     </style>
 </head>
 <body>
     <header class="header">
-        <span class="app-name">Campus Connect</span>
-        <div>
-            <a href="student_dashboard.html" class="btn-header btn-header-secondary">Back to Dashboard</a>
-            <a href="/welcome" class="btn-header btn-header-danger" id="logoutButton">Logout</a>
+        <div class="header-left">
+            <img src="images/logo 1.png" alt="Campus Connect Logo" class="logo" style="height: 60px; width: 60px;">
+            <div class="brand-name">Campus Connect</div>
+        </div>
+        <h1 class="page-title">Student Profile</h1>
+        <div class="header-actions">
+            <a href="student_dashboard.html" class="btn-header btn-header-primary">Back to Dashboard</a>
+            <a href="welcome.html" class="btn-header btn-header-danger" id="logoutButton">🚪 Logout</a>
         </div>
     </header>
 
     <div class="profile-container">
         <div class="profile-header">
-            <!-- Profile picture removed for UI consistency -->
+            <img id="profile-picture" src="default-profile.png" alt="Profile Picture" style="width: 80px; height: 80px; border-radius: 50%; margin-right: 20px; object-fit: cover;">
             <div class="profile-header-info">
                 <h1 id="studentName">[Student Name]</h1>
                 <p id="welcomeMessage">Student at Campus Connect</p>
@@ -250,39 +307,79 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-
+        document.addEventListener('DOMContentLoaded', async () => {
+            const authToken = localStorage.getItem('authToken');
             const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-            if (currentUser && currentUser.role === 'student') {
-                document.getElementById('studentName').textContent = `${currentUser.firstName || 'Student'} ${currentUser.lastName || ''}`;
-                document.getElementById('studentEmail').textContent = currentUser.email || 'N/A';
-                document.getElementById('studentBio').textContent = currentUser.bio || 'No biography provided yet. You can add one by editing your profile.';
 
-                // Always use studentDetails for major and graduation year, fallback to main user fields
-                const details = currentUser.studentDetails || {};
-                document.getElementById('studentMajor').textContent = details.major || currentUser.major || 'N/A';
-                document.getElementById('studentGradYear').textContent = details.graduationYear || currentUser.graduationYear || 'N/A';
+            if (!authToken || !currentUser) {
+                window.location.href = '/login-student.html';
+                return;
+            }
 
-                // LinkedIn and GitHub from studentDetails (fallback to userProfile)
-                const linkedInUrl = details.linkedin || (currentUser.userProfile && currentUser.userProfile.linkedin_url);
-                const githubUrl = details.github || (currentUser.userProfile && currentUser.userProfile.github_url);
+            try {
+                const response = await fetch('/api/user/profile', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch user profile');
+                }
+
+                const profileResponse = await response.json();
+                // Support both { success, userProfile } and direct userProfile
+                const userProfile = profileResponse.userProfile || profileResponse;
+
+                // Normalize the profile picture URL
+                let profilePicUrl = userProfile.profile_picture_url || userProfile.profilePictureUrl || '';
+                if (profilePicUrl && !profilePicUrl.startsWith('data:image') && !profilePicUrl.startsWith('/images/')) {
+                    profilePicUrl = '/images/' + profilePicUrl.replace(/^images[\\\/]/, '');
+                }
+                document.getElementById('profile-picture').src = profilePicUrl || 'images/default-profile.jpeg';
+                document.getElementById('studentName').textContent = `${userProfile.first_name || userProfile.firstName || 'Student'} ${userProfile.last_name || userProfile.lastName || ''}`;
+                document.getElementById('studentEmail').textContent = userProfile.email;
+                document.getElementById('studentBio').textContent = userProfile.bio || 'No biography provided yet. You can add one by editing your profile.';
+
+                const studentDetails = userProfile.studentDetails || {};
+                document.getElementById('studentMajor').textContent = userProfile.major || studentDetails.major || 'N/A';
+                document.getElementById('studentGradYear').textContent = userProfile.graduation_year || studentDetails.graduationYear || 'N/A';
+
+                // LinkedIn and GitHub
+                const linkedInUrl = userProfile.linkedin_url || studentDetails.linkedin || '';
+                const githubUrl = userProfile.github_url || studentDetails.github || '';
                 document.getElementById('studentLinkedIn').innerHTML = linkedInUrl
                     ? `<a href="${linkedInUrl}" target="_blank">${linkedInUrl}</a>`
                     : 'N/A';
                 document.getElementById('studentGithub').innerHTML = githubUrl
                     ? `<a href="${githubUrl}" target="_blank">${githubUrl}</a>`
                     : 'N/A';
-                // Optionally show portfolio/website if you want:
-                // const portfolioUrl = details.portfolio;
-                // ...
+            } catch (error) {
+                console.error('Error fetching user profile:', error);
+                window.location.href = '/login-student.html';
+            }
+        });
 
-                populateRegisteredEvents(currentUser);
-                populateJoinedClubs(currentUser);
-                populateMyActiveProjects(currentUser);
-                // TODO: Fetch and populate "Collaborative Projects" (projectsList) if it's for discovery
-                // fetchProjectsToCollaborate(); 
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            if (currentUser && currentUser.role === 'student') {
+                document.getElementById('studentName').textContent = `${currentUser.firstName || 'Student'} ${currentUser.lastName || ''}`;
+                document.getElementById('studentEmail').textContent = currentUser.email || 'N/A';
+                document.getElementById('studentBio').textContent = currentUser.bio || 'No biography provided yet. You can add one by editing your profile.';
+
+                const details = currentUser.studentDetails || {};
+                document.getElementById('studentMajor').textContent = details.major || 'N/A';
+                document.getElementById('studentGradYear').textContent = details.graduationYear || 'N/A';
+
+                const linkedInUrl = details.linkedin || '';
+                const githubUrl = details.github || '';
+                document.getElementById('studentLinkedIn').innerHTML = linkedInUrl
+                    ? `<a href="${linkedInUrl}" target="_blank">${linkedInUrl}</a>`
+                    : 'N/A';
+                document.getElementById('studentGithub').innerHTML = githubUrl
+                    ? `<a href="${githubUrl}" target="_blank">${githubUrl}</a>`
+                    : 'N/A';
             } else {
-                // If no user data, or not a student, redirect to login
                 window.location.href = '/login-student';
             }
 
@@ -357,7 +454,7 @@
             }
         }
 
-        // Placeholder for fetching projects available for collaboration
+        // Placeholder for fetching projects to collaborate
         // async function fetchProjectsToCollaborate() { /* ... populate #projectsList ... */ }
 
 
