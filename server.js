@@ -753,33 +753,42 @@ app.post('/api/login', async (req, res) => {
             lastName: user.last_name
         }, secret, { expiresIn: '2h' });
 
-    const [rows] = await pool.query(
-      `SELECT 
-          u.user_id, u.first_name, u.last_name, u.email, u.major, u.graduation_year, u.bio, u.role,
-          up.linkedin_url, up.github_url
-       FROM users u
-       LEFT JOIN user_profiles up ON u.user_id = up.user_id
-       WHERE u.user_id = ?`,
-      [user.user_id]
-    );
+    try {
+      const [rows] = await pool.query(
+        `SELECT 
+            u.user_id, u.first_name, u.last_name, u.email, u.major, u.graduation_year, u.bio, u.role,
+            up.linkedin_url, up.github_url
+         FROM users u
+         LEFT JOIN user_profiles up ON u.user_id = up.user_id
+         WHERE u.user_id = ?`,
+        [user.user_id]
+      );
 
-    if (rows.length === 0) {
-      return res.status(404).json({ success: false, message: 'User profile not found.' });
+      if (rows.length === 0) {
+        return res.status(404).json({ success: false, message: 'User profile not found.' });
+      }
+
+      const userProfile = rows[0];
+
+      res.json({
+        success: true,
+        message: 'Login successful.',
+        token,
+        user: userProfile
+      });
+    } catch (err) {
+      console.error('Login Error:', err);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Server error during login.' 
+      });
     }
-
-    const userProfile = rows[0];
-
-    res.json({
-      success: true,
-      message: 'Login successful.',
-      token,
-      user: userProfile
-    });
-  } catch (err) {
-    console.error('Login Error:', err);
+  }
+  } catch (error) {
+    console.error('Login error:', error);
     res.status(500).json({ 
       success: false, 
-      message: 'Server error during login.' 
+      message: 'Internal server error during login.' 
     });
   }
 });
@@ -789,8 +798,12 @@ app.get('/api/user/profile', authenticateJWT, async (req, res) => {
     try {
         const userId = req.user.id;
         const [rows] = await pool.query(
-            `SELECT user_id, student_id, email, first_name, last_name, phone_number, profile_picture_url, bio, graduation_year, major, role, department_id 
-             FROM users WHERE user_id = ?`,
+            `SELECT 
+                u.user_id, u.student_id, u.email, u.first_name, u.last_name, u.phone_number, u.profile_picture_url, u.bio, u.graduation_year, u.major, u.role, u.department_id,
+                up.linkedin_url, up.github_url
+             FROM users u
+             LEFT JOIN user_profiles up ON u.user_id = up.user_id
+             WHERE u.user_id = ?`,
             [userId]
         );
 
@@ -812,34 +825,22 @@ app.put('/api/user/profile', authenticateJWT, async (req, res) => {
         return res.status(403).json({ success: false, message: 'Forbidden: Only students can update their profile.' });
     }
     const userId = req.user.id;
-    const { firstName, lastName, studentId, major, graduationYear, linkedin, github, portfolio, bio, skills } = req.body;
+    const { linkedin, github, bio } = req.body;
 
-    // No longer require firstName and lastName for profile updates
-
-    // Remove first_name and last_name requirement for profile updates
     const connection = await pool.getConnection();
     try {
         await connection.beginTransaction();
-        // Update users table without first_name and last_name
-        await connection.query(
-            `UPDATE users SET student_id = ?, major = ?, graduation_year = ? WHERE user_id = ?`,
-            [studentId || null, major || null, graduationYear || null, userId]
-        );
 
-        // Upsert user_profiles table (without bio)
-        const skillsString = Array.isArray(skills) ? skills.join(', ') : (skills || null);
+        // Only allow editing linkedin, github, and bio
         await connection.query(
-            `INSERT INTO user_profiles (user_id, linkedin_url, github_url, personal_website, skills)
-             VALUES (?, ?, ?, ?, ?)
+            `INSERT INTO user_profiles (user_id, linkedin_url, github_url)
+             VALUES (?, ?, ?)
              ON DUPLICATE KEY UPDATE
                 linkedin_url = VALUES(linkedin_url),
-                github_url = VALUES(github_url),
-                personal_website = VALUES(personal_website),
-                skills = VALUES(skills)`,
-            [userId, linkedin || null, github || null, portfolio || null, skillsString]
+                github_url = VALUES(github_url)`,
+            [userId, linkedin || null, github || null]
         );
 
-        // Update bio in users table
         await connection.query(
             `UPDATE users SET bio = ? WHERE user_id = ?`,
             [bio || null, userId]
@@ -854,8 +855,7 @@ app.put('/api/user/profile', authenticateJWT, async (req, res) => {
     } finally {
         connection.release();
     }
-}
-);
+});
 
 // API Endpoint to Create a New Event
 app.post('/api/events', authenticateJWT, async (req, res) => { // Protected route

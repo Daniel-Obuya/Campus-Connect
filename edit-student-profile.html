@@ -6,78 +6,168 @@
     <title>Edit Profile - Campus Connect</title>
     <link rel="stylesheet" href="common-header.css">
     <style>
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             background: linear-gradient(135deg, #f5deb3 0%, #deb887 50%, #cd853f 100%);
-            min-height: 100vh; display: flex; flex-direction: column; align-items: center;
-            padding: 20px; position: relative; overflow-x: hidden;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0;
+            position: relative;
+            overflow-x: hidden;
         }
         body::before {
-            content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            content: '';
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
             background: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.1) 0%, transparent 50%),
                         radial-gradient(circle at 80% 80%, rgba(255,255,255,0.05) 0%, transparent 50%);
             pointer-events: none; z-index: -1;
         }
+        .header {
+            position: fixed;
+            top: 0; left: 0; width: 100%;
+            z-index: 100;
+            background: #f5deb3;
+            box-shadow: 0 2px 12px rgba(205,133,63,0.10);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            height: 70px;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+        }
+        .logo {
+            height: 48px;
+            width: 48px;
+            margin-right: 12px;
+        }
+        .brand-name {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #a05a00;
+        }
+        .btn-header-secondary {
+            background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+            color: #fff;
+            padding: 10px 22px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            border: none;
+            margin-left: 10px;
+            transition: background 0.3s, color 0.3s;
+        }
+        .btn-header-secondary:hover {
+            background: #ff9800;
+            color: #fff8e1;
+        }
         .edit-profile-container {
-            background: rgba(255,255,255,0.15); backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.2); border-radius: 24px; padding: 18px 10px;
-            width: 100%; max-width: 480px; box-shadow: 0 10px 24px rgba(0,0,0,0.10);
+            background: rgba(255,255,255,0.18);
+            backdrop-filter: blur(24px);
+            border: 1px solid rgba(255,255,255,0.25);
+            border-radius: 28px;
+            padding: 40px 32px 32px 32px;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 12px 32px rgba(205,133,63,0.13);
+            margin-top: 110px;
+            margin-bottom: 40px;
+            position: relative;
         }
         .edit-profile-container h1 {
-            font-size: 22px; color: #333; margin-bottom: 18px; text-align: center;
-            border-bottom: 1px solid rgba(0,0,0,0.08); padding-bottom: 10px;
+            font-size: 1.7rem;
+            color: #7c4a03;
+            margin-bottom: 22px;
+            text-align: center;
+            border-bottom: 1px solid rgba(205,133,63,0.10);
+            padding-bottom: 12px;
         }
-        .form-group { margin-bottom: 20px; }
+        .form-group { margin-bottom: 22px; }
         .form-group label {
-            display: block; font-size: 16px; color: #444; margin-bottom: 8px; font-weight: 500;
+            display: block;
+            font-size: 1.08rem;
+            color: #a05a00;
+            margin-bottom: 8px;
+            font-weight: 600;
         }
         .form-group input[type="text"],
         .form-group input[type="email"],
         .form-group input[type="url"],
         .form-group textarea {
-            width: 100%; padding: 12px;
-            border: 1px solid rgba(0,0,0,0.1); border-radius: 8px;
-            background: rgba(255,255,255,0.5); font-size: 15px; color: #333;
-            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            width: 100%;
+            padding: 13px 14px;
+            border: 1px solid #ffe0b2;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.7);
+            font-size: 1rem;
+            color: #333;
+            transition: border-color 0.3s, box-shadow 0.3s;
         }
         .form-group input[type="text"]:focus,
         .form-group input[type="email"]:focus,
         .form-group input[type="url"]:focus,
         .form-group textarea:focus {
-            outline: none; border-color: #ff9800;
-            box-shadow: 0 0 0 2px rgba(255, 152, 0, 0.2);
+            outline: none;
+            border-color: #ff9800;
+            box-shadow: 0 0 0 2px rgba(255, 152, 0, 0.13);
         }
-        .form-group textarea { min-height: 100px; resize: vertical; }
-
-        .form-actions { text-align: right; margin-top: 30px; }
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        .form-actions {
+            text-align: right;
+            margin-top: 32px;
+        }
         .form-actions .btn {
-            padding: 12px 25px; border: none; border-radius: 10px;
-            font-size: 15px; font-weight: 600; cursor: pointer;
-            text-decoration: none; transition: all 0.3s ease; margin-left: 10px;
+            padding: 13px 28px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.08rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s;
+            margin-left: 10px;
         }
         .form-actions .btn-save {
-            background: linear-gradient(135deg, #4CAF50 0%, #8BC34A 100%); color: white;
+            background: linear-gradient(135deg, #4CAF50 0%, #8BC34A 100%);
+            color: white;
         }
-        .form-actions .btn-save:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(76,175,80,0.3); }
+        .form-actions .btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(76,175,80,0.18);
+        }
         .form-actions .btn-cancel {
-            background: linear-gradient(135deg, #f44336 0%, #e57373 100%); color: white;
+            background: linear-gradient(135deg, #f44336 0%, #e57373 100%);
+            color: white;
         }
-        .form-actions .btn-cancel:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(244,67,54,0.3); }
-
-        .profile-picture-section { text-align: center; margin-bottom: 25px; }
-        .profile-picture-preview {
-            width: 120px; height: 120px; border-radius: 50%;
-            background: #e0e0e0 url('https://via.placeholder.com/120') no-repeat center center;
-            background-size: cover; margin: 0 auto 15px auto;
-            border: 3px solid rgba(255,255,255,0.3);
+        .form-actions .btn-cancel:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(244,67,54,0.18);
         }
-        .profile-picture-section input[type="file"] { display: none; }
-        .profile-picture-section .upload-btn {
-            padding: 10px 20px; background: #ffc107; border:none; border-radius:8px;
-            font-size:14px; font-weight:500; color:#333; cursor:pointer;
+        @media (max-width: 600px) {
+            .edit-profile-container {
+                padding: 18px 4vw 18px 4vw;
+                margin-top: 90px;
+            }
+            .header {
+                padding: 0 8px;
+                height: 56px;
+            }
+            .logo {
+                height: 36px;
+                width: 36px;
+            }
         }
-        .profile-picture-section .upload-btn:hover { background: #ff9800; }
 
     </style>
 </head>
@@ -94,15 +184,17 @@
     <div class="edit-profile-container">
         <h1>Edit Your Profile</h1>
         <form id="editProfileForm">
-
-
             <div class="form-group">
                 <label for="linkedin">LinkedIn</label>
-                <input type="text" id="linkedin" name="linkedin">
+                <input type="text" id="linkedin" name="linkedin" placeholder="e.g. https://linkedin.com/in/yourprofile">
             </div>
             <div class="form-group">
                 <label for="github">GitHub</label>
-                <input type="text" id="github" name="github">
+                <input type="text" id="github" name="github" placeholder="e.g. https://github.com/yourusername">
+            </div>
+            <div class="form-group">
+                <label for="bio">Bio</label>
+                <textarea id="bio" name="bio" maxlength="500" placeholder="Tell us about yourself (max 500 characters)"></textarea>
             </div>
             <div class="form-actions">
                 <button type="button" class="btn btn-cancel" onclick="window.location.href='student-profile.html'">Cancel</button>
@@ -116,56 +208,35 @@
             const currentUser = JSON.parse(localStorage.getItem('currentUser'));
             const form = document.getElementById('editProfileForm');
 
-
             if (!currentUser || currentUser.role !== 'student') {
                 alert('User not found or not authorized. Redirecting to login.');
-                window.location.href = '/login-student'; // Adjust as needed
+                window.location.href = '/login-student';
                 return;
             }
 
-            // Populate form with existing data, safely handling undefined studentDetails
-            form.linkedin.value = (currentUser.studentDetails && currentUser.studentDetails.linkedin) || '';
-            form.github.value = (currentUser.studentDetails && currentUser.studentDetails.github) || '';
-
+            // Populate form with existing data
+            form.linkedin.value = currentUser.linkedin_url || '';
+            form.github.value = currentUser.github_url || '';
+            form.bio.value = currentUser.bio || '';
 
             form.addEventListener('submit', async function(event) {
-                console.log('Form submission initiated.');
                 event.preventDefault();
-
-                // Update currentUser object from form fields
-                currentUser.firstName = form.firstName ? form.firstName.value : '';
-                currentUser.lastName = form.lastName ? form.lastName.value : '';
-                currentUser.bio = form.bio ? form.bio.value : '';
-
-
-                // Only update LinkedIn and GitHub
-                if (!currentUser.studentDetails) {
-                    currentUser.studentDetails = {}; // Initialize if not present
-                }
-                currentUser.studentDetails.linkedin = form.linkedin.value;
-                currentUser.studentDetails.github = form.github.value;
-
                 const saveButton = document.querySelector('.btn-save');
-                saveButton.textContent = 'Saving...'; // Change button text to indicate loading
-                saveButton.disabled = true; // Disable button to prevent multiple clicks
+                saveButton.textContent = 'Saving...';
+                saveButton.disabled = true;
 
-                // Only send LinkedIn and GitHub to backend
                 const profileData = {
-                    studentDetails: {
-                        linkedin: form.linkedin.value || '',
-                        github: form.github.value || ''
-                    }
+                    linkedin: form.linkedin.value.trim(),
+                    github: form.github.value.trim(),
+                    bio: form.bio.value.trim()
                 };
 
                 const authToken = localStorage.getItem('authToken');
                 if (!authToken) {
                     alert('You are not logged in. Please log in again.');
-                    console.error('Authentication token missing.');
                     window.location.href = '/login-student';
                     return;
                 }
-
-                console.log('Sending profile data:', profileData);
 
                 try {
                     const response = await fetch('/api/user/profile', {
@@ -176,48 +247,33 @@
                         },
                         body: JSON.stringify(profileData)
                     });
-
-                    console.log('Received response from server.');
                     const result = await response.json();
-                    console.log('Parsed JSON response:', result);
-
                     if (response.ok && result.success) {
-                        // Optionally update localStorage if user object is returned
-                        if (result.user) {
-                            localStorage.setItem('currentUser', JSON.stringify(result.user));
-                            alert('Profile updated successfully!');
-                            console.log('Profile updated successfully. Redirecting...');
-                            window.location.href = 'student-profile.html'; // Redirect back to profile
-                        } else {
-                            // Fetch latest user profile from backend and update localStorage
-                            try {
-                                const authToken = localStorage.getItem('authToken');
-                                const userResp = await fetch('/api/user/profile', {
-                                    method: 'GET',
-                                    headers: {
-                                        'Authorization': `Bearer ${authToken}`
-                                    }
-                                });
-                                if (userResp.ok) {
-                                    const userData = await userResp.json();
-                                    localStorage.setItem('currentUser', JSON.stringify(userData));
+                        // Fetch latest user profile from backend and update localStorage
+                        try {
+                            const userResp = await fetch('/api/user/profile', {
+                                method: 'GET',
+                                headers: {
+                                    'Authorization': `Bearer ${authToken}`
                                 }
-                            } catch (e) {
-                                console.warn('Could not fetch latest user profile:', e);
+                            });
+                            if (userResp.ok) {
+                                const userData = await userResp.json();
+                                localStorage.setItem('currentUser', JSON.stringify(userData.userProfile || userData));
                             }
-                            alert('Profile updated successfully!');
-                            window.location.href = 'student-profile.html';
+                        } catch (e) {
+                            console.warn('Could not fetch latest user profile:', e);
                         }
+                        alert('Profile updated successfully!');
+                        window.location.href = 'student-profile.html';
                     } else {
                         alert(`Failed to update profile: ${result.message || 'An unknown server error occurred.'}`);
-                        console.error('Server reported failure:', result.message || 'Unknown error');
                     }
                 } catch (error) {
-                    console.error('Error updating profile:', error);
                     alert('An error occurred while updating your profile. Please try again.');
                 } finally {
-                    saveButton.textContent = 'Save Changes'; // Restore button text
-                    saveButton.disabled = false; // Re-enable button
+                    saveButton.textContent = 'Save Changes';
+                    saveButton.disabled = false;
                 }
             });
         });
