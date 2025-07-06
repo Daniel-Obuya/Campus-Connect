@@ -263,6 +263,42 @@
         #followModal .action-button {
             margin-right: 10px;
         }
+
+        /* Popup for sending a message after following */
+        #postFollowMessageModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 1100;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #postFollowMessageModal > div {
+            background: #fff;
+            padding: 2em;
+            border-radius: 10px;
+            max-width: 350px;
+            margin: auto;
+            box-shadow: 0 2px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        #postFollowMessageModal h3 {
+            margin-top: 0;
+        }
+
+        #postFollowMessageModal textarea {
+            width: 100%;
+            margin-bottom: 1em;
+        }
+
+        #postFollowMessageModal .action-button {
+            margin-right: 10px;
+        }
     </style>
 </head>
 <body>
@@ -347,6 +383,19 @@
         </div>
     </div>
 
+    <!-- Popup for sending a message after following -->
+    <div id="postFollowMessageModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4); z-index:1100; align-items:center; justify-content:center;">
+        <div style="background:#fff; padding:2em; border-radius:10px; max-width:350px; margin:auto; box-shadow:0 2px 16px rgba(0,0,0,0.2);">
+            <h3>Send a Message to Department Admin</h3>
+            <p>You are now following this department. Would you like to send a message to the department admin?</p>
+            <textarea id="postFollowMessageInput" rows="3" style="width:100%; margin-bottom:1em;"></textarea>
+            <div style="text-align:right;">
+                <button id="postFollowMessageCancel" class="action-button" style="margin-right:10px;">Cancel</button>
+                <button id="postFollowMessageSend" class="action-button action-button-primary">Send</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // --- State and Utility Functions ---
         // Use real department IDs for following
@@ -369,43 +418,24 @@
         }
 
         function getJWT() {
-            // Try to get JWT from localStorage (adjust if you store it elsewhere)
-            return localStorage.getItem('jwtToken') || sessionStorage.getItem('jwtToken') || '';
+            // Use the correct token key for JWT retrieval
+            return localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || '';
         }
 
-        let pendingFollowAction = null;
-
-        function toggleFollow(departmentId, buttonElement) {
-            const isCurrentlyFollowed = followedDepartments.has(departmentId);
-            if (!isCurrentlyFollowed) {
-                // Show popup/modal for confirmation and message
-                pendingFollowAction = { departmentId, buttonElement };
-                document.getElementById('followModal').style.display = 'flex';
-                document.getElementById('followMessageInput').value = '';
-                document.getElementById('followModalTitle').textContent = 'Follow Department';
-                document.getElementById('followModalText').textContent = 'Would you like to follow this department? You can also send a message to the department admin (optional):';
-            } else {
-                // Unfollow directly with API call
-                followOrUnfollowDepartment(departmentId, '', buttonElement, false);
-            }
+        // --- Fix: Define updateFollowedList as a no-op to prevent errors if not needed ---
+        function updateFollowedList() {
+            // Optionally, update the followed departments UI here if needed.
+            // For now, this is a no-op to prevent JS errors.
         }
 
-        document.getElementById('followModalCancel').onclick = function() {
-            document.getElementById('followModal').style.display = 'none';
-            pendingFollowAction = null;
-        };
-        document.getElementById('followModalConfirm').onclick = function() {
-            if (pendingFollowAction) {
-                const { departmentId, buttonElement } = pendingFollowAction;
-                const message = document.getElementById('followMessageInput').value;
-                followOrUnfollowDepartment(departmentId, message, buttonElement, true);
-                document.getElementById('followModal').style.display = 'none';
-                pendingFollowAction = null;
-            }
-        };
-
+        // --- Robust error handling for authentication issues in follow/unfollow ---
         async function followOrUnfollowDepartment(departmentId, message, buttonElement, isFollow) {
             const jwt = getJWT();
+            if (!jwt) {
+                alert('You must be logged in as a student to follow or unfollow departments. Please log in.');
+                window.location.href = 'login-student.html';
+                return;
+            }
             try {
                 const response = await fetch(`/api/departments/${departmentId}/follow`, {
                     method: 'POST',
@@ -415,6 +445,11 @@
                     },
                     body: JSON.stringify({ message: isFollow ? message : undefined })
                 });
+                if (response.status === 401 || response.status === 403) {
+                    alert('Your session has expired or you are not authorized. Please log in again.');
+                    window.location.href = 'login-student.html';
+                    return;
+                }
                 const data = await response.json();
                 if (data.success) {
                     if (data.followed) {
@@ -436,9 +471,46 @@
                     localStorage.setItem('followedDepartmentIds', JSON.stringify(Array.from(followedDepartments)));
                     updateFollowedList();
                     updateFollowButtonsState();
-                    alert(data.message || (data.followed ? 'Followed successfully!' : 'Unfollowed successfully!'));
                 } else {
                     alert(data.message || 'Failed to update follow status.');
+                }
+            } catch (err) {
+                alert('Network or server error. Please try again.');
+            }
+        }
+
+        function showPostFollowMessageModal(departmentId) {
+            document.getElementById('postFollowMessageModal').style.display = 'flex';
+            document.getElementById('postFollowMessageInput').value = '';
+            // Store departmentId for sending
+            document.getElementById('postFollowMessageSend').onclick = function() {
+                const msg = document.getElementById('postFollowMessageInput').value;
+                if (msg.trim() !== '') {
+                    sendFollowUpMessageToDepartment(departmentId, msg);
+                }
+                document.getElementById('postFollowMessageModal').style.display = 'none';
+            };
+            document.getElementById('postFollowMessageCancel').onclick = function() {
+                document.getElementById('postFollowMessageModal').style.display = 'none';
+            };
+        }
+
+        async function sendFollowUpMessageToDepartment(departmentId, message) {
+            const jwt = getJWT();
+            try {
+                const response = await fetch(`/api/departments/${departmentId}/follow`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + jwt
+                    },
+                    body: JSON.stringify({ message })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    alert('Message sent to department admin!');
+                } else {
+                    alert(data.message || 'Failed to send message.');
                 }
             } catch (err) {
                 alert('Network or server error. Please try again.');
@@ -464,6 +536,53 @@
             });
         }
 
+        function createDepartmentListItem(dept) {
+            const departmentId = dept._id || dept.id;
+            const isFollowed = followedDepartments.has(departmentId);
+            const li = document.createElement('li');
+            li.className = 'department-list-item';
+            li.innerHTML = `
+                <div class="department-icon"><i class="fas fa-university"></i></div>
+                <div class="department-info">
+                    <h3>${dept.name || 'Unnamed Department'}</h3>
+                    <p>${dept.description || ''}</p>
+                </div>
+                <div class="department-item-actions">
+                    <button class="action-button" onclick="toggleFollow('${departmentId}', this)">
+                        ${isFollowed ? 'Unfollow' : 'Follow'}
+                    </button>
+                    <button class="action-button action-button-secondary" onclick="if(this.disabled!==true){showPostFollowMessageModal('${departmentId}')}"
+ ${isFollowed ? '' : 'disabled'}>
+                        Message
+                    </button>
+                </div>
+            `;
+            return li;
+        }
+
+        // Update all follow/message buttons after follow/unfollow
+        function updateFollowButtonsState() {
+            document.querySelectorAll('.department-list-item').forEach(li => {
+                const followBtn = li.querySelector('.action-button:not(.action-button-secondary)');
+                const messageBtn = li.querySelector('.action-button-secondary');
+                if (!followBtn || !messageBtn) return;
+                const departmentName = li.querySelector('.department-info h3').textContent;
+                // Find departmentId from the button's onclick attribute
+                const match = /toggleFollow\('([^']+)'/.exec(followBtn.getAttribute('onclick'));
+                const departmentId = match ? match[1] : null;
+                if (!departmentId) return;
+                const isFollowed = followedDepartments.has(departmentId);
+                followBtn.textContent = isFollowed ? 'Unfollow' : 'Follow';
+                if (isFollowed) {
+                    followBtn.classList.add('action-button-secondary');
+                    messageBtn.disabled = false;
+                } else {
+                    followBtn.classList.remove('action-button-secondary');
+                    messageBtn.disabled = true;
+                }
+            });
+        }
+
         // --- FETCHING ---
         async function fetchDepartmentsBatch(offset, limit) {
             try {
@@ -485,6 +604,7 @@
             departmentsOffset = 0;
             departmentsListElement.innerHTML = '';
             const departments = await fetchDepartmentsBatch(departmentsOffset, departmentsPerLoad);
+            allDepartmentsData = [...departments]; // Store for filtering/search
             renderDepartments(departments);
             departmentsOffset += departments.length;
             updateLoadMoreButton();
@@ -495,6 +615,7 @@
             loadMoreBtn.textContent = 'Loading...';
             loadMoreBtn.disabled = true;
             const departments = await fetchDepartmentsBatch(departmentsOffset, departmentsPerLoad);
+            allDepartmentsData = [...allDepartmentsData, ...departments]; // Append new batch
             renderDepartments(departments);
             departmentsOffset += departments.length;
             updateLoadMoreButton();
@@ -567,6 +688,10 @@
             fetchInitialDepartments();
         });
         loadMoreBtn.addEventListener('click', loadMoreDepartments);
+
+        // Make functions available globally for inline event handlers
+        window.toggleFollow = toggleFollow;
+        window.showPostFollowMessageModal = showPostFollowMessageModal;
     </script>
 </body>
 </html>

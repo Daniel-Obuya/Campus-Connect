@@ -101,4 +101,24 @@ router.get('/events/department', authenticateJWT, async (req, res) => {
     }
 });
 
+// PUBLIC API Endpoint to GET all public events (no authentication required)
+router.get('/public', async (req, res) => {
+    try {
+        // Adjust the query as needed to only fetch public events
+        const [events] = await pool.query(
+            `SELECT event_id, title, description, 
+                    DATE_FORMAT(start_datetime, '%Y-%m-%d %H:%i') as start_datetime_formatted, 
+                    DATE_FORMAT(registration_deadline, '%Y-%m-%d %H:%i') as registration_deadline_formatted, 
+                    location, organizer_type, organizer_id
+             FROM events 
+             WHERE is_public = 1
+             ORDER BY start_datetime DESC`
+        );
+        res.json({ success: true, events });
+    } catch (error) {
+        console.error('Error fetching public events:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch public events.' });
+    }
+});
+
 module.exports = router;

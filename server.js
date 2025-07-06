@@ -1548,7 +1548,7 @@ app.get('/api/club/dashboard', authenticateJWT, async (req, res) => {
             date: e.date,
             description: e.description
         }));
-
+        // Announcements tab data
         const announcementsData = announcements.map(a => ({
             id: a.announcement_id,
             title: a.title,
