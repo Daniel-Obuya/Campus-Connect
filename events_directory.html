@@ -312,25 +312,17 @@
             loadMoreDbEventsBtn.textContent = 'Loading Campus Events...';
             loadMoreDbEventsBtn.disabled = true;
             try {
-                // const response = await fetch('/api/events/public'); // Replace with your actual public events API
-                // const data = await response.json();
-                // if (data.success && data.events) {
-                //     allDbEventsData = data.events.map(e => ({...e, source: 'db'})); // Mark source
-                //     currentlyDisplayedDbCount = renderEvents(allDbEventsData, 0, eventsPerLoad, eventsListElement, noEventsMessageElement, loadMoreDbEventsBtn);
-                // } else {
-                //     noEventsMessageElement.textContent = data.message || 'Failed to load campus events.';
-                //     noEventsMessageElement.style.display = 'block';
-                //     loadMoreDbEventsBtn.style.display = 'none'; // Hide if initial load fails
-                // }
-                console.log("Placeholder: fetchInitialDbEvents() - Implement API call to /api/events/public");
-                // Mock data for now:
-                allDbEventsData = [
-                    { event_id: 'db1', title: 'Campus Coding Workshop', description: 'Learn new coding skills.', start_datetime: '2024-09-15T10:00:00', end_datetime: '2024-09-15T14:00:00', location: 'Tech Hall Room 101', organizer_name: 'CS Department', image_url: 'https://via.placeholder.com/300x180/FFD700/000000?Text=Coding+Workshop', registration_required: true, rsvp_link: '#', source: 'db'},
-                    { event_id: 'db2', title: 'University Art Fair', description: 'Explore student art.', start_datetime: '2024-09-20T12:00:00', end_datetime: '2024-09-22T18:00:00', location: 'Main Quad', organizer_name: 'Arts Club', source: 'db'}
-                ];
-                currentlyDisplayedDbCount = renderEvents(allDbEventsData, 0, eventsPerLoad, eventsListElement, noEventsMessageElement, loadMoreDbEventsBtn);
+                const response = await fetch('/api/events/public'); // Use your actual public events API
+                const data = await response.json();
+                if (data.success && data.events) {
+                    allDbEventsData = data.events.map(e => ({...e, source: 'db'})); // Mark source
+                    currentlyDisplayedDbCount = renderEvents(allDbEventsData, 0, eventsPerLoad, eventsListElement, noEventsMessageElement, loadMoreDbEventsBtn);
+                } else {
+                    noEventsMessageElement.textContent = data.message || 'Failed to load campus events.';
+                    noEventsMessageElement.style.display = 'block';
+                    loadMoreDbEventsBtn.style.display = 'none'; // Hide if initial load fails
+                }
                 if (allDbEventsData.length === 0) loadMoreDbEventsBtn.style.display = 'none';
-
             } catch (error) {
                 console.error('Error fetching initial DB events:', error);
                 noEventsMessageElement.textContent = 'Error loading campus events. Please try again later.';
@@ -342,7 +334,7 @@
         function loadMoreDbEvents() {
             loadMoreDbEventsBtn.textContent = 'Loading...';
             loadMoreDbEventsBtn.disabled = true;
-            currentlyDisplayedDbCount = renderEvents(allDbEventsData, currentlyDisplayedDbCount, eventsPerLoad, eventsListElement, noEventsMessageElement, loadMoreDbEventsBtn);
+            currentlyDisplayedDbCount = renderEvents(allDbEventsData, currentlyDisplayedDbEventsCount, eventsPerLoad, eventsListElement, noEventsMessageElement, loadMoreDbEventsBtn);
         }
 
         async function loadMoreApiEvents() {

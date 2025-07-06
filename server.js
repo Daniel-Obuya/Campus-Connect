@@ -1550,7 +1550,7 @@ app.get('/api/club/dashboard', authenticateJWT, async (req, res) => {
             title: e.title,
             date: e.date,
             description: e.description
-        }));
+        })); // <-- Properly closed
         // Announcements tab data
         const announcementsData = announcements.map(a => ({
             id: a.announcement_id,
