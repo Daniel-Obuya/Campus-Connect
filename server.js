@@ -753,7 +753,7 @@ app.post('/api/login', async (req, res) => {
             lastName: user.last_name
         }, secret, { expiresIn: '2h' });
 
-    try {
+      try {
       const [rows] = await pool.query(
         `SELECT 
             u.user_id, u.first_name, u.last_name, u.email, u.major, u.graduation_year, u.bio, u.role,
@@ -770,17 +770,25 @@ app.post('/api/login', async (req, res) => {
 
       const userProfile = rows[0];
 
-    res.json({
-      success: true,
-      message: 'Login successful.',
-      token,
-      user: userProfile
-    });
-  } catch (err) {
-    console.error('Login Error:', err);
+      res.json({
+        success: true,
+        message: 'Login successful.',
+        token,
+        user: userProfile
+      });
+    } catch (err) {
+      console.error('Login Error:', err);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Server error during login.' 
+      });
+    }
+  }
+  } catch (error) {
+    console.error('Login error:', error);
     res.status(500).json({ 
       success: false, 
-      message: 'Server error during login.' 
+      message: 'Internal server error during login.' 
     });
   }
 });
@@ -848,6 +856,7 @@ app.put('/api/user/profile', authenticateJWT, async (req, res) => {
         connection.release();
     }
 });
+
 
 // API Endpoint to Create a New Event
 app.post('/api/events', authenticateJWT, async (req, res) => { // Protected route
@@ -1603,39 +1612,65 @@ app.get('/api/events/department/:id', async (req, res) => {
     }
 });
 // --- API Route: Follow/Unfollow a Department ---
+
 app.post('/api/departments/:id/follow', authenticateJWT, async (req, res) => {
-    const departmentId = parseInt(req.params.id, 10);
-    const userId = req.user.id;
-    if (!departmentId || isNaN(departmentId)) {
-        return res.status(400).json({ success: false, message: 'Invalid department ID.' });
-    }
-    if (req.user.role !== 'student') {
-        return res.status(403).json({ success: false, message: 'Only students can follow/unfollow departments.' });
-    }
     try {
-        // Check if the student is already following the department
-        const [rows] = await pool.query(
-            'SELECT * FROM department_followers WHERE department_id = ? AND user_id = ?',
+        const departmentId = parseInt(req.params.id, 10);
+        const userId = req.user.id;
+        if (!departmentId || isNaN(departmentId)) {
+            return res.status(400).json({ success: false, message: 'Invalid department ID.' });
+        }
+        // Only students can follow/unfollow
+        if (req.user.role !== 'student') {
+            return res.status(403).json({ success: false, message: 'Only students can follow/unfollow departments.' });
+        }
+        // Check if already following
+        const [existing] = await pool.query(
+            'SELECT * FROM department_followers WHERE department_id = ? AND follower_user_id = ?',
             [departmentId, userId]
         );
-        if (rows.length > 0) {
-            // Already following, so unfollow (delete row)
+        if (existing.length > 0) {
+            // Unfollow
             await pool.query(
-                'DELETE FROM department_followers WHERE department_id = ? AND user_id = ?',
+                'DELETE FROM department_followers WHERE department_id = ? AND follower_user_id = ?',
                 [departmentId, userId]
             );
             return res.json({ success: true, following: false, message: 'Unfollowed department.' });
         } else {
-            // Not following, so follow (insert row)
+            // Follow
             await pool.query(
-                'INSERT INTO department_followers (department_id, user_id, followed_at) VALUES (?, ?, NOW())',
+                'INSERT INTO department_followers (department_id, follower_user_id, followed_at) VALUES (?, ?, NOW())',
                 [departmentId, userId]
             );
-        return res.json({ success: true, following: true, message: 'Followed department.' });
+            return res.json({ success: true, following: true, message: 'Followed department.' });
         }
     } catch (error) {
         console.error('Error in follow/unfollow department:', error);
-        res.status(500).json({ success: false, message: 'Failed to follow/unfollow department.' });
+        if (error.code === 'ER_DUP_ENTRY') {
+            return res.status(409).json({ success: false, message: 'Already following this department.' });
+        }
+        if (error.code === 'ER_NO_REFERENCED_ROW_2') {
+            return res.status(400).json({ success: false, message: 'Invalid department or user.' });
+        }
+        res.status(500).json({ success: false, message: 'Server error during follow/unfollow.' });
+    }
+});
+// --- API Route: Get departments followed by the logged-in student ---
+app.get('/api/user/followed-departments', authenticateJWT, async (req, res) => {
+    if (req.user.role !== 'student') {
+        return res.status(403).json({ success: false, message: 'Only students can view followed departments.' });
+    }
+    try {
+        const [rows] = await pool.query(
+            `SELECT d.department_id, d.name
+             FROM department_followers f
+             JOIN departments d ON f.department_id = d.department_id
+             WHERE f.follower_user_id = ?`,
+            [req.user.id]
+        );
+        res.json({ success: true, departments: rows });
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Database error.' });
     }
 });
 // --- API Route: Follow/Unfollow a Department ---

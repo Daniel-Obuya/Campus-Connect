@@ -239,7 +239,7 @@
                 alert('No department ID found.');
                 return;
             }
-            const jwt = localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || '';
+            const jwt = getJWT();
             if (!jwt) {
                 alert('You must be logged in as a student to follow departments. Please log in.');
                 window.location.href = 'login-student.html';
@@ -248,7 +248,7 @@
             try {
                 const btn = document.getElementById('followBtn');
                 btn.disabled = true;
-                const response = await fetch(`http://localhost:3001/api/departments/${currentDeptId}/follow`, {
+                const response = await fetch(`/api/departments/${currentDeptId}/follow`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -256,14 +256,13 @@
                     },
                     body: JSON.stringify({})
                 });
-                if (!response.ok) {
-                    const text = await response.text();
-                    throw new Error(`Server error: ${response.status} ${response.statusText} - ${text}`);
-                }
                 const data = await response.json();
-                if (data.success) {
-                    btn.textContent = data.followed ? 'Unfollow' : 'Follow';
-                    btn.classList.toggle('unfollow', data.followed);
+                if (response.ok && data.success) {
+                    isFollowed = !!data.following;
+                    updateFollowBtn();
+                    if (isFollowed) {
+                        showFollowedModal();
+                    }
                 } else {
                     alert(data.message || 'Failed to update follow status.');
                 }
