@@ -873,13 +873,13 @@
             }
 
             try {
-                const response = await fetch(`/api/club/memberships/${actionType}`, {
+                const response = await fetch('/api/club/requests/handle', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${authToken}`
                     },
-                    body: JSON.stringify({ membershipId })
+                    body: JSON.stringify({ membership_id: Number(membershipId), action: actionType })
                 });
                 const data = await response.json();
 
