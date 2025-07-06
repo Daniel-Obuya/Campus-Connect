@@ -183,7 +183,15 @@
 
     <div class="edit-profile-container">
         <h1>Edit Your Profile</h1>
-        <form id="editProfileForm">
+        <form id="editProfileForm" enctype="multipart/form-data">
+            <div class="form-group" style="text-align:center;">
+                <label>Current Profile Picture</label><br>
+                <img id="currentProfilePic" src="" alt="Profile Picture" style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:2px solid #deb887;margin-bottom:10px;">
+            </div>
+            <div class="form-group">
+                <label for="profilePicture">Change Profile Picture</label>
+                <input type="file" id="profilePicture" name="profilePicture" accept="image/*">
+            </div>
             <div class="form-group">
                 <label for="linkedin">LinkedIn</label>
                 <input type="text" id="linkedin" name="linkedin" placeholder="e.g. https://linkedin.com/in/yourprofile">
@@ -207,11 +215,20 @@
         document.addEventListener('DOMContentLoaded', function() {
             const currentUser = JSON.parse(localStorage.getItem('currentUser'));
             const form = document.getElementById('editProfileForm');
+            const profilePicInput = document.getElementById('profilePicture');
+            const currentProfilePic = document.getElementById('currentProfilePic');
 
             if (!currentUser || currentUser.role !== 'student') {
                 alert('User not found or not authorized. Redirecting to login.');
                 window.location.href = '/login-student';
                 return;
+            }
+
+            // Show current profile picture
+            if (currentUser.profile_picture_url) {
+                currentProfilePic.src = currentUser.profile_picture_url;
+            } else {
+                currentProfilePic.src = 'images/default-profile.jpeg';
             }
 
             // Populate form with existing data
@@ -225,11 +242,13 @@
                 saveButton.textContent = 'Saving...';
                 saveButton.disabled = true;
 
-                const profileData = {
-                    linkedin: form.linkedin.value.trim(),
-                    github: form.github.value.trim(),
-                    bio: form.bio.value.trim()
-                };
+                const formData = new FormData();
+                formData.append('linkedin', form.linkedin.value.trim());
+                formData.append('github', form.github.value.trim());
+                formData.append('bio', form.bio.value.trim());
+                if (profilePicInput.files && profilePicInput.files[0]) {
+                    formData.append('profilePicture', profilePicInput.files[0]);
+                }
 
                 const authToken = localStorage.getItem('authToken');
                 if (!authToken) {
@@ -242,10 +261,9 @@
                     const response = await fetch('/api/user/profile', {
                         method: 'PUT',
                         headers: {
-                            'Content-Type': 'application/json',
                             'Authorization': `Bearer ${authToken}`
                         },
-                        body: JSON.stringify(profileData)
+                        body: formData
                     });
                     const result = await response.json();
                     if (response.ok && result.success) {

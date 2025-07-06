@@ -22,6 +22,10 @@ app.use(express.urlencoded({ extended: true }));
 const server = http.createServer(app);
 const io = new Server(server);
 
+// --- Admin Stats API Routes ---
+const adminStatsRoutes = require('./routes/adminStats');
+app.use('/api/admin', adminStatsRoutes);
+
 // Google OAuth2 Client Setup
 const oauth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID,
@@ -857,13 +861,31 @@ app.get('/api/user/profile', authenticateJWT, async (req, res) => {
     }
 });
 
-// --- API Route for Updating Student Profile ---
-app.put('/api/user/profile', authenticateJWT, async (req, res) => {
+// --- Multer setup for profile picture upload ---
+const multer = require('multer');
+const profilePicStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, path.join(__dirname, 'images'));
+    },
+    filename: (req, file, cb) => {
+        const ext = path.extname(file.originalname);
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, `${req.user.id}-profile-${uniqueSuffix}${ext}`);
+    }
+});
+const uploadProfilePic = multer({ storage: profilePicStorage });
+
+// --- API Route for Updating Student Profile (with optional profile picture) ---
+app.put('/api/user/profile', authenticateJWT, uploadProfilePic.single('profilePicture'), async (req, res) => {
     if (req.user.role !== 'student') {
         return res.status(403).json({ success: false, message: 'Forbidden: Only students can update their profile.' });
     }
     const userId = req.user.id;
     const { linkedin, github, bio } = req.body;
+    let profilePictureUrl = null;
+    if (req.file) {
+        profilePictureUrl = `/images/${req.file.filename}`;
+    }
 
     const connection = await pool.getConnection();
     try {
@@ -879,9 +901,17 @@ app.put('/api/user/profile', authenticateJWT, async (req, res) => {
             [userId, linkedin || null, github || null]
         );
 
+        // Update bio and profile picture if provided
+        let updateFields = 'bio = ?';
+        let updateValues = [bio || null];
+        if (profilePictureUrl) {
+            updateFields += ', profile_picture_url = ?';
+            updateValues.push(profilePictureUrl);
+        }
+        updateValues.push(userId);
         await connection.query(
-            `UPDATE users SET bio = ? WHERE user_id = ?`,
-            [bio || null, userId]
+            `UPDATE users SET ${updateFields} WHERE user_id = ?`,
+            updateValues
         );
 
         await connection.commit();
@@ -1054,6 +1084,67 @@ app.post('/api/events', authenticateJWT, async (req, res) => { // Protected rout
     }
 });
 
+// --- Public Events Endpoint: Returns all published events (clubs & departments) for students ---
+app.get('/api/events/public', async (req, res) => {
+    try {
+        // Join with clubs_societies and departments to get organizer name
+        const [events] = await pool.query(`
+            SELECT 
+                e.event_id, e.title, e.description, e.organizer_type, e.organizer_id, e.event_type, 
+                e.start_datetime, e.end_datetime, e.location, e.virtual_link, e.max_attendees, 
+                e.registration_required, e.tags, e.image_url,
+                CASE 
+                    WHEN e.organizer_type = 'club' THEN c.name
+                    WHEN e.organizer_type = 'department' THEN d.name
+                    ELSE NULL
+                END AS organizer_name
+            FROM events e
+            LEFT JOIN clubs_societies c ON e.organizer_type = 'club' AND e.organizer_id = c.club_id
+            LEFT JOIN departments d ON e.organizer_type = 'department' AND e.organizer_id = d.department_id
+            WHERE e.is_published = 1
+            ORDER BY e.start_datetime DESC
+        `);
+        // Parse JSON fields from the DB before sending to the client
+        events.forEach(event => {
+            try {
+                event.tags = JSON.parse(event.tags);
+            } catch (e) {
+                event.tags = [];
+            }
+        });
+        res.json({ success: true, events });
+    } catch (error) {
+        console.error('Error fetching public events:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch public events.' });
+    }
+});
+
+// API Endpoint to GET events for the logged-in department admin's department
+app.get('/api/events/department', authenticateJWT, async (req, res) => {
+    try {
+        if (req.user.role !== 'department_admin' || !req.user.department_id) {
+            return res.status(403).json({ success: false, message: 'Access denied. User is not a department admin or department ID is missing.' });
+        }
+        const departmentId = req.user.department_id;
+        const [events] = await pool.query(
+            `SELECT event_id, title, description, 
+                    DATE_FORMAT(start_datetime, '%Y-%m-%d %H:%i') as start_datetime_formatted, 
+                    DATE_FORMAT(registration_deadline, '%Y-%m-%d %H:%i') as registration_deadline_formatted, 
+                    location 
+             FROM events 
+             WHERE organizer_type = 'department' AND organizer_id = ? 
+             ORDER BY start_datetime DESC`,
+            [departmentId]
+        );
+        // Log how many events were found for this department ID
+        console.log(`Found ${events.length} events for department ID ${departmentId} (User: ${req.user.email})`);
+        res.json({ success: true, events });
+    } catch (error) {
+        console.error('Error fetching department events:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch department events.' });
+    }
+});
+
 // API Endpoint to GET a single event by ID
 app.get('/api/events/:eventId', authenticateJWT, async (req, res) => {
     try {
@@ -1190,35 +1281,6 @@ app.put('/api/events/:eventId', authenticateJWT, async (req, res) => {
         res.status(500).json({ success: false, message: 'Failed to update event.' });
     }
 });
-
-// API Endpoint to GET events for the logged-in department admin's department
-app.get('/api/events/department', authenticateJWT, async (req, res) => {
-    try {
-        if (req.user.role !== 'department_admin' || !req.user.department_id) {
-            return res.status(403).json({ success: false, message: 'Access denied. User is not a department admin or department ID is missing.' });
-        }
-        const departmentId = req.user.department_id;
-        const [events] = await pool.query(
-            `SELECT event_id, title, description, 
-                    DATE_FORMAT(start_datetime, '%Y-%m-%d %H:%i') as start_datetime_formatted, 
-                    DATE_FORMAT(registration_deadline, '%Y-%m-%d %H:%i') as registration_deadline_formatted, 
-                    location 
-             FROM events 
-             WHERE organizer_type = 'department' AND organizer_id = ? 
-             ORDER BY start_datetime DESC`,
-            [departmentId]
-        );
-        // Log how many events were found for this department ID
-        console.log(`Found ${events.length} events for department ID ${departmentId} (User: ${req.user.email})`);
-        res.json({ success: true, events });
-    } catch (error) {
-        console.error('Error fetching department events:', error);
-        res.status(500).json({ success: false, message: 'Failed to fetch department events.' });
-    }
-});
-
-
-
 
 // API Endpoint to Create a New Announcement
 app.post('/api/announcements', authenticateJWT, async (req, res) => {
