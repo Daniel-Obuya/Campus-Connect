@@ -349,7 +349,7 @@
                             'Content-Type': 'application/json',
                             'Authorization': `Bearer ${authToken}`
                         },
-                        body: JSON.stringify({ clubId })
+                        body: JSON.stringify({ club_id: Number(clubId) }) // Ensure correct property and type
                     });
                     const data = await response.json();
 

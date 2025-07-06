@@ -490,6 +490,44 @@ app.post('/api/signup', async (req, res) => {
       }
       const [result] = await connection.query('INSERT INTO users SET ?', userInsertData);
       userId = result.insertId;
+
+      // If club admin, create club and associate admin
+      if (userInsertData.role === 'club_admin' && clubDetails && clubDetails.name) {
+        // Validate category against ENUM (case-insensitive)
+        const validCategories = ['academic','sports','cultural','technical','social','volunteer','other'];
+        let clubCategory = (clubDetails.category || '').toLowerCase();
+        clubCategory = validCategories.find(cat => cat === clubCategory) || 'other';
+        try {
+          // Insert with all required fields, including NULL for advisor_name and founded_date
+          const [clubResult] = await connection.query(
+            'INSERT INTO clubs_societies (name, description, category, president_user_id, advisor_name, contact_email, meeting_schedule, logo_url, is_active, member_count, founded_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [
+              clubDetails.name,
+              clubDetails.description || '',
+              clubCategory,
+              userId,
+              null, // advisor_name
+              clubDetails.contactEmail || email,
+              clubDetails.meetingSchedule || '',
+              clubDetails.logoUrl || null,
+              1, // is_active
+              1, // initial member count
+              null // founded_date
+            ]
+          );
+          // Add admin as a member in club_memberships (role must match ENUM: 'president')
+          await connection.query(
+            'INSERT INTO club_memberships (user_id, club_id, role, status, joined_date) VALUES (?, ?, ?, ?, CURDATE())',
+            [userId, clubResult.insertId, 'president', 'active']
+          );
+        } catch (clubErr) {
+          await connection.rollback();
+          connection.release();
+          console.error('Error inserting club for club_admin:', clubErr);
+          return res.status(500).json({ success: false, message: 'Failed to create club for club admin. Please check your club details and try again.' });
+        }
+      }
+
       // Generate and store verification token
       const verificationToken = generateVerificationToken();
       const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
@@ -1435,51 +1473,115 @@ app.get('/api/club/requests', authenticateJWT, async (req, res) => {
 // Approve or reject a join request (club admin only)
 app.post('/api/club/requests/handle', authenticateJWT, async (req, res) => {
     if (req.user.role !== 'club_admin') {
-        return res.status(403).json({ success: false, message: 'Only club admins can approve/reject requests.' });
+        return res.status(403).json({ success: false, message: 'Only club admins can handle join requests.' });
     }
-    const { membershipId, action } = req.body; // action: 'approve' or 'reject'
-    if (!membershipId || !['approve', 'reject'].includes(action)) {
-        return res.status(400).json({ success: false, message: 'Invalid request.' });
+    const { membership_id, action } = req.body;
+    if (!membership_id || !['approve', 'reject'].includes(action)) {
+        return res.status(400).json({ success: false, message: 'membership_id and valid action (approve/reject) are required.' });
     }
     try {
-        // Get the club_id for this membership
-        const [rows] = await pool.query(
-            'SELECT club_id FROM club_memberships WHERE membership_id = ?',
-            [membershipId]
-        );
-        if (rows.length === 0) {
-            return res.status(404).json({ success: false, message: 'Membership not found.' });
-        }
-        const clubId = rows[0].club_id;
-        // Check if this admin manages the club
+        // Find the club managed by this admin
         const [clubs] = await pool.query(
-            'SELECT club_id FROM clubs_societies WHERE club_id = ? AND president_user_id = ?',
-            [clubId, req.user.id]
+            'SELECT club_id FROM clubs_societies WHERE president_user_id = ?',
+            [req.user.id]
         );
         if (clubs.length === 0) {
-            return res.status(403).json({ success: false, message: 'Not authorized for this club.' });
+            return res.status(403).json({ success: false, message: 'No club associated with this admin account.' });
+        }
+        const clubId = clubs[0].club_id;
+        // Ensure the membership request belongs to this club
+        const [requests] = await pool.query(
+            'SELECT * FROM club_memberships WHERE membership_id = ? AND club_id = ? AND status = "pending"',
+            [membership_id, clubId]
+        );
+        if (requests.length === 0) {
+            return res.status(404).json({ success: false, message: 'Join request not found or not pending.' });
         }
         if (action === 'approve') {
-            // Approve: set status to active, set joined_date, increment member_count
             await pool.query(
-                'UPDATE club_memberships SET status = ?, joined_date = CURDATE() WHERE membership_id = ?',
-                ['active', membershipId]
+                'UPDATE club_memberships SET status = "active", joined_date = CURDATE() WHERE membership_id = ?',
+                [membership_id]
             );
+            // Optionally increment member_count in clubs_societies
             await pool.query(
                 'UPDATE clubs_societies SET member_count = member_count + 1 WHERE club_id = ?',
                 [clubId]
             );
+            return res.json({ success: true, message: 'Join request approved.' });
         } else if (action === 'reject') {
-            // Reject: set status to rejected
             await pool.query(
-                'UPDATE club_memberships SET status = ? WHERE membership_id = ?',
-                ['rejected', membershipId]
+                'UPDATE club_memberships SET status = "rejected" WHERE membership_id = ?',
+                [membership_id]
             );
+            return res.json({ success: true, message: 'Join request rejected.' });
         }
-        res.json({ success: true, message: `Request ${action}d.` });
-    } catch (err) {
-        console.error('Error handling join request:', err);
+    } catch (error) {
+        console.error('Error handling join request:', error);
         res.status(500).json({ success: false, message: 'Failed to handle join request.' });
+    }
+});
+
+// --- API Endpoint: Student requests to join a club ---
+app.post('/api/club/join-request', authenticateJWT, async (req, res) => {
+    if (req.user.role !== 'student') {
+        return res.status(403).json({ success: false, message: 'Only students can request to join clubs.' });
+    }
+    const userId = req.user.id;
+    const { club_id } = req.body;
+    if (!club_id || isNaN(club_id)) {
+        return res.status(400).json({ success: false, message: 'club_id is required.' });
+    }
+    try {
+        // Check if club exists and is active
+        const [clubs] = await pool.query('SELECT * FROM clubs_societies WHERE club_id = ? AND is_active = 1', [club_id]);
+        if (clubs.length === 0) {
+            return res.status(404).json({ success: false, message: 'Club not found or inactive.' });
+        }
+        // Check if already a member or has a pending request
+        const [existing] = await pool.query(
+            'SELECT * FROM club_memberships WHERE user_id = ? AND club_id = ? AND status IN ("active", "pending")',
+            [userId, club_id]
+        );
+        if (existing.length > 0) {
+            const status = existing[0].status;
+            if (status === 'active') {
+                return res.status(409).json({ success: false, message: 'You are already a member of this club.' });
+            } else {
+                return res.status(409).json({ success: false, message: 'You already have a pending join request for this club.' });
+            }
+        }
+        // Insert join request as pending
+        await pool.query(
+            'INSERT INTO club_memberships (user_id, club_id, role, status, joined_date) VALUES (?, ?, ?, ?, CURDATE())',
+            [userId, club_id, 'member', 'pending']
+        );
+        res.status(201).json({ success: true, message: 'Join request submitted. Awaiting club admin approval.', status: 'pending' });
+    } catch (error) {
+        console.error('Error submitting club join request:', error);
+        res.status(500).json({ success: false, message: 'Failed to submit join request.' });
+    }
+});
+
+// --- API Endpoint: Get all club memberships for the logged-in student ---
+app.get('/api/user/memberships', authenticateJWT, async (req, res) => {
+    if (req.user.role !== 'student') {
+        return res.status(403).json({ success: false, message: 'Only students can view their club memberships.' });
+    }
+    const userId = req.user.id;
+    try {
+        // Get all memberships for this user, including club info
+        const [rows] = await pool.query(
+            `SELECT cm.membership_id, cm.club_id, cm.status, cm.role, cm.joined_date, 
+                    c.name AS club_name, c.logo_url, c.description AS club_description, c.category
+             FROM club_memberships cm
+             JOIN clubs_societies c ON cm.club_id = c.club_id
+             WHERE cm.user_id = ?`,
+            [userId]
+        );
+        res.json({ success: true, memberships: rows });
+    } catch (error) {
+        console.error('Error fetching user memberships:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch memberships.' });
     }
 });
 // --- Club Admin Dashboard Data Endpoint ---
@@ -1571,7 +1673,19 @@ app.get('/api/club/dashboard', authenticateJWT, async (req, res) => {
             logoUrl: club.logo_url
         };
 
-        const adminName = req.user.firstName || req.user.first_name || 'Admin';
+        // Fetch the admin's real name from the users table
+        let adminName = 'Admin';
+        try {
+            const [adminRows] = await pool.query(
+                'SELECT first_name, last_name FROM users WHERE user_id = ?',
+                [req.user.id]
+            );
+            if (adminRows.length > 0) {
+                adminName = `${adminRows[0].first_name} ${adminRows[0].last_name}`.trim();
+            }
+        } catch (e) {
+            // fallback to default if error
+        }
         res.json({
             success: true,
             overview,
