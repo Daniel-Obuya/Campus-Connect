@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Campus Connect</title>
+    <link rel="stylesheet" href="dashboard_styles.css">
+    <link rel="stylesheet" href="common-header.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="floating-icons-container">
+        <div class="floating-icon icon1"></div>
+        <div class="floating-icon icon2"></div>
+        <div class="floating-icon icon3"></div>
+        <div class="floating-icon icon4"></div>
+        <div class="floating-icon icon5"></div>
+        <div class="floating-icon icon6"></div>
+    </div>
+
+    <header class="header">
+        <div class="header-left">
+            <img src="images/logo 1.png" alt="Campus Connect Logo" class="logo" style="height: 60px; width: 60px;">
+            <div class="brand-name">Campus Connect</div>
+        </div>
+        <div class="page-title">Admin Dashboard</div>
+        <div class="header-actions">
+            <a href="welcome.html" class="action-button header-button action-button-danger" id="logoutButton" onclick="logout()">Logout</a>
+        </div>
+    </header>
+
+    <main class="dashboard-grid" style="margin-top: 30px;">
+        <section class="dashboard-widget" style="grid-column: 1 / -1;">
+            <div class="widget-header"><span class="widget-icon">📊</span><h2>Overview</h2></div>
+            <div class="dashboard-grid" style="grid-template-columns: repeat(4, 1fr); gap: 24px;">
+                <div class="dashboard-card">
+                    <div class="card-title">Registered Students</div>
+                    <div class="metric-number" id="studentsCount">-</div>
+                </div>
+                <div class="dashboard-card">
+                    <div class="card-title">Clubs & Societies</div>
+                    <div class="metric-number" id="clubsCount">-</div>
+                </div>
+                <div class="dashboard-card">
+                    <div class="card-title">Announcements</div>
+                    <div class="metric-number" id="announcementsCount">-</div>
+                </div>
+                <div class="dashboard-card">
+                    <div class="card-title">Events</div>
+                    <div class="metric-number" id="eventsCount">-</div>
+                </div>
+            </div>
+        </section>
+        <section class="dashboard-widget">
+            <div class="widget-header"><span class="widget-icon">👥</span><h2>Manage Users</h2></div>
+            <div class="widget-content">
+                <table class="users-table" id="usersTable">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Users will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <section class="dashboard-widget">
+            <div class="widget-header"><span class="widget-icon">📝</span><h2>Recent System Activity Logs</h2></div>
+            <div class="widget-content">
+                <table class="logs-table" id="logsTable">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Activity</th>
+                            <th>Entity</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Logs will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+    <script>
+        // Fetch dashboard stats
+        async function fetchStats() {
+            const [students, clubs, announcements, events] = await Promise.all([
+                fetch('/api/admin/stats/students').then(r => r.json()),
+                fetch('/api/admin/stats/clubs').then(r => r.json()),
+                fetch('/api/admin/stats/announcements').then(r => r.json()),
+                fetch('/api/admin/stats/events').then(r => r.json()),
+            ]);
+            document.getElementById('studentsCount').textContent = students.count ?? '-';
+            document.getElementById('clubsCount').textContent = clubs.count ?? '-';
+            document.getElementById('announcementsCount').textContent = announcements.count ?? '-';
+            document.getElementById('eventsCount').textContent = events.count ?? '-';
+        }
+
+        // Fetch users
+        async function fetchUsers() {
+            const res = await fetch('/api/admin/users');
+            const data = await res.json();
+            const tbody = document.querySelector('#usersTable tbody');
+            tbody.innerHTML = '';
+            (data.users || []).forEach(user => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${user.first_name} ${user.last_name}</td>
+                    <td>${user.email}</td>
+                    <td>${user.role}</td>
+                    <td>${user.is_active ? 'Active' : 'Inactive'}</td>
+                    <td>
+                        <button class="action-btn" onclick="updateUser(${user.user_id})">Update</button>
+                        <button class="action-btn delete" onclick="deleteUser(${user.user_id})">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Fetch logs
+        async function fetchLogs() {
+            const res = await fetch('/api/admin/logs');
+            const data = await res.json();
+            const tbody = document.querySelector('#logsTable tbody');
+            tbody.innerHTML = '';
+            (data.logs || []).forEach(log => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${log.user_name || 'System'}</td>
+                    <td>${log.activity_type}</td>
+                    <td>${log.entity_type || ''} ${log.entity_id || ''}</td>
+                    <td>${new Date(log.created_at).toLocaleString()}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // User management actions
+        function updateUser(userId) {
+            alert('Update user ' + userId + ' (implement modal or redirect)');
+        }
+        async function deleteUser(userId) {
+            if (!confirm('Are you sure you want to delete this user?')) return;
+            const res = await fetch(`/api/admin/users/${userId}`, { method: 'DELETE' });
+            if (res.ok) fetchUsers();
+            else alert('Failed to delete user.');
+        }
+
+        // Logout
+        function logout() {
+            fetch('/api/logout', { method: 'POST' })
+                .then(() => { window.location.href = '/login-admin'; })
+                .catch(() => { window.location.href = '/login-admin'; });
+        }
+
+        // Initial load
+        fetchStats();
+        fetchUsers();
+        fetchLogs();
+    </script>
+</body>
+</html>
