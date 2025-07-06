@@ -455,33 +455,41 @@
                 <h2 class="card-title" style="font-size: 28px;">Department Profile</h2>
                 <button class="form-button" onclick="window.location.href='edit-department-profile.html'">Edit Profile</button>
             </div>
-            <div class="dashboard-card" style="display: flex; align-items: center; gap: 30px;">
-                <img src="images/logo 1.png" alt="Department Logo" style="width: 80px; height: 80px; border-radius: 18px; background: #fff; object-fit: cover; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <div id="departmentProfileCard" class="dashboard-card" style="display: flex; align-items: flex-start; gap: 30px; min-height: 120px;">
+                <img id="deptLogoImg" src="images/default-club.jpeg" alt="Department Logo" style="width: 100px; height: 100px; border-radius: 18px; background: #fff; object-fit: cover; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
                 <div style="flex:1;">
-                    <div class="card-title" style="font-size: 22px; margin-bottom: 8px;">Computer Science Department</div>
-                    <div class="metric-label" style="margin-bottom: 6px;">admin@csdept.edu</div>
-                    <div class="metric-label" style="margin-bottom: 6px;">Location: Main Campus, Block B</div>
-                    <div class="metric-label" style="margin-bottom: 6px;">Phone: +254 700 123456</div>
-                    <div class="metric-label" style="margin-bottom: 6px;">Head: Jane Doe</div>
+                    <div id="deptName" class="card-title" style="font-size: 22px; margin-bottom: 8px;"></div>
+                    <div id="deptCode" class="metric-label" style="margin-bottom: 6px;"></div>
+                    <div id="deptEmail" class="metric-label" style="margin-bottom: 6px;"></div>
+                    <div id="deptPhone" class="metric-label" style="margin-bottom: 6px;"></div>
+                    <div id="deptLocation" class="metric-label" style="margin-bottom: 6px;"></div>
+                    <div id="deptWebsite" class="metric-label" style="margin-bottom: 6px;"></div>
+                    <div id="deptHOD" class="metric-label" style="margin-bottom: 6px;"></div>
+                    <div id="deptAbout" class="metric-label" style="margin-bottom: 6px;"></div>
+                    <div id="deptVision" class="metric-label" style="margin-bottom: 6px;"></div>
+                    <div id="deptMission" class="metric-label" style="margin-bottom: 6px;"></div>
+                    <div id="deptAchievements" class="metric-label" style="margin-bottom: 6px;"></div>
                 </div>
+                <img id="deptCoverImg" src="" alt="Department Cover" style="width: 180px; height: 100px; border-radius: 12px; object-fit: cover; margin-left: 10px; display:none;">
             </div>
         </div>
     </div>
     <script>
-        // Tab switching logic (copied from club admin dashboard)
+        // Tab switching logic 
         function showTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
             document.querySelectorAll('.nav-tab').forEach(btn => btn.classList.remove('active'));
             const tabIndex = ['dashboard','members','events','announcements','analytics','profile'].indexOf(tabId);
             if(tabIndex >= 0) document.querySelectorAll('.nav-tab')[tabIndex].classList.add('active');
+            if(tabId === 'profile') loadDepartmentProfile();
         }
         // Display admin name and department name on dashboard
         document.addEventListener('DOMContentLoaded', function() {
             const user = JSON.parse(localStorage.getItem('currentUser'));
             if (user && user.role === 'department_admin') {
                 // Set department name in nav bar
-                const dashboardTitle = document.getElementById('dashboardTitle');
+                const dashboardTitle = document.getElementById('dashboardTitle'); // Fixed typo here
                 if (dashboardTitle) {
                     dashboardTitle.textContent = user.department_name || 'Department';
                 }
@@ -490,7 +498,7 @@
                 if (adminAndDeptInfo) {
                     adminAndDeptInfo.textContent = `Admin: ${user.firstName} ${user.lastName} | Department: ${user.department_name || 'Department'}`;
                 }
-                // Set welcome message to "Welcome back, [Admin Name]!"
+                // Set welcome message to "Welcome back, [Admin Name]"
                 const welcomeMessage = document.getElementById('welcomeMessage');
                 if (welcomeMessage) {
                     welcomeMessage.textContent = `Welcome back, ${user.firstName} ${user.lastName}!`;
@@ -506,6 +514,101 @@
         });
         // Notification logic placeholder
         function openNotifications() { alert('Notifications panel coming soon!'); }
+        // Fetch and display department profile in the Department Profile tab
+async function loadDepartmentProfile() {
+    const token = localStorage.getItem('authToken');
+    if (!token) return;
+    const deptNameDiv = document.getElementById('deptName');
+    const deptCodeDiv = document.getElementById('deptCode');
+    const deptEmailDiv = document.getElementById('deptEmail');
+    const deptPhoneDiv = document.getElementById('deptPhone');
+    const deptLocationDiv = document.getElementById('deptLocation');
+    const deptWebsiteDiv = document.getElementById('deptWebsite');
+    const deptHODDiv = document.getElementById('deptHOD');
+    const deptAboutDiv = document.getElementById('deptAbout');
+    const deptVisionDiv = document.getElementById('deptVision');
+    const deptMissionDiv = document.getElementById('deptMission');
+    const deptAchievementsDiv = document.getElementById('deptAchievements');
+    const logoImg = document.getElementById('deptLogoImg');
+    const coverImg = document.getElementById('deptCoverImg');
+    // Clear all fields first
+    deptNameDiv.textContent = '';
+    deptCodeDiv.textContent = '';
+    deptEmailDiv.textContent = '';
+    deptPhoneDiv.textContent = '';
+    deptLocationDiv.textContent = '';
+    deptWebsiteDiv.textContent = '';
+    deptHODDiv.textContent = '';
+    deptAboutDiv.textContent = '';
+    deptVisionDiv.textContent = '';
+    deptMissionDiv.textContent = '';
+    deptAchievementsDiv.textContent = '';
+    logoImg.src = 'images/default-club.jpeg';
+    coverImg.src = '';
+    coverImg.style.display = 'none';
+    // Remove any previous error message
+    let errorMsg = document.getElementById('deptProfileError');
+    if (errorMsg) errorMsg.remove();
+    try {
+        const res = await fetch('/api/department/profile', {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        const data = await res.json();
+        if (data.success && data.department) {
+            const d = data.department;
+            deptNameDiv.textContent = d.name || '';
+            deptCodeDiv.textContent = d.code ? `Code: ${d.code}` : '';
+            deptEmailDiv.textContent = d.contact_email ? `Email: ${d.contact_email}` : '';
+            deptPhoneDiv.textContent = d.contact_phone ? `Phone: ${d.contact_phone}` : '';
+            deptLocationDiv.textContent = d.location ? `Location: ${d.location}` : (d.department_location ? `Location: ${d.department_location}` : '');
+            deptWebsiteDiv.textContent = d.website_url ? `Website: ${d.website_url}` : '';
+            deptHODDiv.textContent = d.head_of_department ? `Head: ${d.head_of_department}` : '';
+            deptAboutDiv.textContent = d.about ? `About: ${d.about}` : (d.description ? `About: ${d.description}` : '');
+            deptVisionDiv.textContent = d.vision ? `Vision: ${d.vision}` : '';
+            deptMissionDiv.textContent = d.mission ? `Mission: ${d.mission}` : '';
+            deptAchievementsDiv.textContent = d.achievements ? `Achievements: ${d.achievements}` : '';
+            logoImg.src = d.logo_url ? d.logo_url : 'images/default-club.jpeg';
+            if (d.cover_image_url) {
+                coverImg.src = d.cover_image_url;
+                coverImg.style.display = '';
+            } else {
+                coverImg.style.display = 'none';
+            }
+            if (!d.name) {
+                showDeptProfileError('No department profile data found.');
+            }
+        } else {
+            showDeptProfileError('No department profile data found.');
+        }
+    } catch (err) {
+        showDeptProfileError('Error fetching department profile.');
+    }
+    function showDeptProfileError(msg) {
+        let errorDiv = document.createElement('div');
+        errorDiv.id = 'deptProfileError';
+        errorDiv.style.color = '#b02a37';
+        errorDiv.style.fontWeight = 'bold';
+        errorDiv.style.marginTop = '10px';
+        errorDiv.textContent = msg;
+        deptNameDiv.parentNode.insertBefore(errorDiv, deptNameDiv);
+    }
+}
+        // Load department profile when Department Profile tab is shown
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            document.querySelectorAll('.nav-tab').forEach(btn => btn.classList.remove('active'));
+            const tabIndex = ['dashboard','members','events','announcements','analytics','profile'].indexOf(tabId);
+            if(tabIndex >= 0) document.querySelectorAll('.nav-tab')[tabIndex].classList.add('active');
+            if(tabId === 'profile') loadDepartmentProfile();
+        }
+        // Also load on DOMContentLoaded if profile tab is default
+        document.addEventListener('DOMContentLoaded', function() {
+            // ...existing code...
+            if(document.getElementById('profile').classList.contains('active')) {
+                loadDepartmentProfile();
+            }
+        });
     </script>
 </body>
 </html>

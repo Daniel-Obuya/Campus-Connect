@@ -6,6 +6,7 @@
     <title>Departments Directory - Campus Connect</title>
     <link rel="stylesheet" href="department_admin.css"> <!-- Linking your existing stylesheet -->
     <link rel="stylesheet" href="departments_directory.css"> <!-- New stylesheet for departments directory -->
+    <link rel="stylesheet" href="projects.css"> <!-- New stylesheet for projects grid -->
     <!-- IDEA: Consider adding an icon library like Font Awesome -->
      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> 
     <style>
@@ -168,7 +169,7 @@
         }
         .department-info h3 {
             margin: 0 0 var(--spacing-xs) 0;
-            color: var(--color-text-base);
+            color: var(--color-text-base;
         }
         .department-info p {
             font-size: var(--font-size-small);
@@ -337,7 +338,7 @@
             </div>
 
             <!-- Department List -->
-            <ul id="departmentsList">
+            <ul id="departmentsList" class="projects-grid">
                 <!-- Department list items will be dynamically loaded from departments.json by JavaScript -->
             </ul>
             <p id="noDepartmentsMessage" style="display:none; text-align:center; padding: 20px;">No departments found matching your criteria.</p>
@@ -398,123 +399,142 @@
 
     <script>
         // --- State and Utility Functions ---
-        // Use real department IDs for following
-        const followedDepartments = new Set(JSON.parse(localStorage.getItem('followedDepartmentIds')) || []);
         let allDepartmentsData = [];
         let currentlyDisplayedCount = 0;
-        // --- PAGINATION STATE ---
         let departmentsOffset = 0;
         let departmentsTotal = null;
-        const departmentsPerLoad = 10; // You can adjust this as needed
+        const departmentsPerLoad = 10;
         const departmentsListElement = document.getElementById('departmentsList');
         const loadMoreBtn = document.getElementById('loadMoreBtn');
         const noDepartmentsMessage = document.getElementById('noDepartmentsMessage');
         let initialFetchHasError = false;
         let staticDepartmentsHTML = '';
-        let loadedJsonDepartments = false; // Track if JSON departments have been loaded
-
-        function sanitizeDepartmentId(name) {
-            return name.toLowerCase().replace(/\s+/g, '-').replace(/&/g, 'and');
-        }
+        let loadedJsonDepartments = false;
+        let followedDepartmentIds = new Set(); // Will be fetched from backend
 
         function getJWT() {
-            // Use the correct token key for JWT retrieval
             return localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || '';
         }
 
-        // --- Fix: Define updateFollowedList as a no-op to prevent errors if not needed ---
-        function updateFollowedList() {
-            // Optionally, update the followed departments UI here if needed.
-            // For now, this is a no-op to prevent JS errors.
+        // Fetch followed departments from backend
+        async function fetchFollowedDepartments() {
+            const jwt = getJWT();
+            if (!jwt) return [];
+            try {
+                const response = await fetch('/api/user/followed-departments', {
+                    headers: { 'Authorization': 'Bearer ' + jwt }
+                });
+                if (!response.ok) return [];
+                const data = await response.json();
+                if (Array.isArray(data.departments)) {
+                    followedDepartmentIds = new Set(data.departments.map(d => d.department_id));
+                    return data.departments;
+                }
+            } catch (e) {}
+            return [];
         }
 
-        // --- Robust error handling for authentication issues in follow/unfollow ---
-        async function followOrUnfollowDepartment(departmentId, message, buttonElement, isFollow) {
-            const jwt = getJWT();
-            if (!jwt) {
-                alert('You must be logged in as a student to follow or unfollow departments. Please log in.');
-                window.location.href = 'login-student.html';
+        // Update the followed departments section
+        async function updateFollowedList() {
+            const followedList = document.getElementById('followedDepartmentsList');
+            followedList.innerHTML = '';
+            const departments = await fetchFollowedDepartments();
+            if (!departments.length) {
+                followedList.innerHTML = '<li class="no-followed-message" style="text-align: center; color: var(--color-text-muted);">You are not following any departments yet.</li>';
                 return;
             }
-            try {
-                const response = await fetch(`/api/departments/${departmentId}/follow`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + jwt
-                    },
-                    body: JSON.stringify({ message: isFollow ? message : undefined })
-                });
-                if (response.status === 401 || response.status === 403) {
-                    alert('Your session has expired or you are not authorized. Please log in again.');
-                    window.location.href = 'login-student.html';
-                    return;
-                }
-                const data = await response.json();
-                if (data.success) {
-                    if (data.followed) {
-                        followedDepartments.add(departmentId);
-                        if (buttonElement) {
-                            buttonElement.textContent = 'Unfollow';
-                            buttonElement.classList.add('action-button-secondary');
-                        }
-                    } else {
-                        followedDepartments.delete(departmentId);
-                        if (buttonElement) {
-                            buttonElement.textContent = 'Follow';
-                            buttonElement.classList.remove('action-button-secondary');
-                            if (!buttonElement.classList.contains('action-button')) {
-                                buttonElement.classList.add('action-button');
-                            }
-                        }
-                    }
-                    localStorage.setItem('followedDepartmentIds', JSON.stringify(Array.from(followedDepartments)));
-                    updateFollowedList();
-                    updateFollowButtonsState();
-                } else {
-                    alert(data.message || 'Failed to update follow status.');
-                }
-            } catch (err) {
-                alert('Network or server error. Please try again.');
-            }
+            departments.forEach(dept => {
+                const li = document.createElement('li');
+                li.className = 'followed-department-item';
+                li.innerHTML = `
+                    <span><i class="fas fa-university department-icon"></i> ${dept.name || 'Unnamed Department'}</span>
+                    <button class="action-button action-button-danger" onclick="toggleFollow('${dept.department_id}', this)">Unfollow</button>
+                `;
+                followedList.appendChild(li);
+            });
         }
 
-        function showPostFollowMessageModal(departmentId) {
-            document.getElementById('postFollowMessageModal').style.display = 'flex';
-            document.getElementById('postFollowMessageInput').value = '';
-            // Store departmentId for sending
-            document.getElementById('postFollowMessageSend').onclick = function() {
-                const msg = document.getElementById('postFollowMessageInput').value;
-                if (msg.trim() !== '') {
-                    sendFollowUpMessageToDepartment(departmentId, msg);
-                }
-                document.getElementById('postFollowMessageModal').style.display = 'none';
-            };
-            document.getElementById('postFollowMessageCancel').onclick = function() {
-                document.getElementById('postFollowMessageModal').style.display = 'none';
+        // Show modal after following
+        function showFollowedModal() {
+            const modal = document.createElement('div');
+            modal.style.position = 'fixed';
+            modal.style.top = '0';
+            modal.style.left = '0';
+            modal.style.width = '100vw';
+            modal.style.height = '100vh';
+            modal.style.background = 'rgba(0,0,0,0.4)';
+            modal.style.zIndex = '2000';
+            modal.style.display = 'flex';
+            modal.style.alignItems = 'center';
+            modal.style.justifyContent = 'center';
+            modal.innerHTML = `
+                <div style="background:#fff; padding:2em; border-radius:10px; max-width:350px; margin:auto; box-shadow:0 2px 16px rgba(0,0,0,0.2); text-align:center;">
+                    <h3>Followed!</h3>
+                    <p>You are now following this department.</p>
+                    <button class="action-button action-button-primary" id="closeFollowedModalBtn">OK</button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            document.getElementById('closeFollowedModalBtn').onclick = function() {
+                document.body.removeChild(modal);
             };
         }
 
-        async function sendFollowUpMessageToDepartment(departmentId, message) {
-            const jwt = getJWT();
-            try {
-                const response = await fetch(`/api/departments/${departmentId}/follow`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + jwt
-                    },
-                    body: JSON.stringify({ message })
-                });
-                const data = await response.json();
-                if (data.success) {
-                    alert('Message sent to department admin!');
+   // Follow/unfollow logic
+async function followOrUnfollowDepartment(departmentId, message, buttonElement, isFollow) {
+    const jwt = getJWT();
+    if (!jwt) {
+        alert('You must be logged in as a student to follow or unfollow departments. Please log in.');
+        window.location.href = 'login-student.html';
+        return;
+    }
+    try {
+        const response = await fetch(`/api/departments/${departmentId}/follow`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + jwt
+            },
+            body: JSON.stringify({ message: isFollow ? message : undefined })
+        });
+        if (response.status === 401 || response.status === 403) {
+            alert('Your session has expired or you are not authorized. Please log in again.');
+            window.location.href = 'login-student.html';
+            return;
+        }
+        const data = await response.json();
+        if (data.success) {
+            await updateFollowedList();
+            updateFollowButtonsState();
+            // Immediately update the button state after a successful follow/unfollow
+            if (buttonElement) {
+                buttonElement.textContent = data.following ? 'Unfollow' : 'Follow';
+                if (data.following) {
+                    buttonElement.classList.add('action-button-secondary');
                 } else {
-                    alert(data.message || 'Failed to send message.');
+                    buttonElement.classList.remove('action-button-secondary');
                 }
-            } catch (err) {
-                alert('Network or server error. Please try again.');
             }
+        } else {
+            alert(data.message || 'Failed to update follow status.');
+        }
+    } catch (err) {
+        alert('Network or server error. Please try again.');
+    }
+}
+       
+        // Update all follow buttons
+        function updateFollowButtonsState() {
+            document.querySelectorAll('.follow-department-btn').forEach(followBtn => {
+                const departmentId = followBtn.getAttribute('data-department-id');
+                const isFollowed = followedDepartmentIds.has(Number(departmentId));
+                followBtn.textContent = isFollowed ? 'Unfollow' : 'Follow';
+                if (isFollowed) {
+                    followBtn.classList.add('action-button-secondary');
+                } else {
+                    followBtn.classList.remove('action-button-secondary');
+                }
+            });
         }
 
         // --- RENDERING ---
@@ -537,50 +557,30 @@
         }
 
         function createDepartmentListItem(dept) {
-            const departmentId = dept._id || dept.id;
-            const isFollowed = followedDepartments.has(departmentId);
+            const departmentId = dept.department_id; // Always use department_id from backend
+            const isFollowed = followedDepartmentIds.has(departmentId);
             const li = document.createElement('li');
-            li.className = 'department-list-item';
+            li.className = 'project-card';
             li.innerHTML = `
-                <div class="department-icon"><i class="fas fa-university"></i></div>
-                <div class="department-info">
-                    <h3>${dept.name || 'Unnamed Department'}</h3>
-                    <p>${dept.description || ''}</p>
-                </div>
-                <div class="department-item-actions">
-                    <button class="action-button" onclick="toggleFollow('${departmentId}', this)">
-                        ${isFollowed ? 'Unfollow' : 'Follow'}
-                    </button>
-                    <button class="action-button action-button-secondary" onclick="if(this.disabled!==true){showPostFollowMessageModal('${departmentId}')}"
- ${isFollowed ? '' : 'disabled'}>
-                        Message
-                    </button>
-                </div>
-            `;
+<div class="project-category-badge"><i class="fas fa-university"></i> ${dept.name || 'Unnamed Department'}</div>
+<div class="project-title">${dept.name || 'Unnamed Department'}</div>
+<div class="project-description">${dept.description || ''}</div>
+<div class="project-stats">
+    <div class="project-stat">
+        <div class="project-stat-number">${dept.programs || 'N/A'}</div>
+        <div class="project-stat-label">Programs</div>
+    </div>
+    <div class="project-stat">
+        <div class="project-stat-number">${dept.courses || 'N/A'}</div>
+        <div class="project-stat-label">Courses</div>
+    </div>
+</div>
+<div class="project-actions">
+   <button class="follow-department-btn action-button" data-department-id="${dept.department_id}">${isFollowed ? 'Unfollow' : 'Follow'}</button>
+    <button class="btn-header btn-header-secondary" onclick="window.location.href='department_details.html?department_id=${departmentId}'">More...</button>
+</div>
+`;
             return li;
-        }
-
-        // Update all follow/message buttons after follow/unfollow
-        function updateFollowButtonsState() {
-            document.querySelectorAll('.department-list-item').forEach(li => {
-                const followBtn = li.querySelector('.action-button:not(.action-button-secondary)');
-                const messageBtn = li.querySelector('.action-button-secondary');
-                if (!followBtn || !messageBtn) return;
-                const departmentName = li.querySelector('.department-info h3').textContent;
-                // Find departmentId from the button's onclick attribute
-                const match = /toggleFollow\('([^']+)'/.exec(followBtn.getAttribute('onclick'));
-                const departmentId = match ? match[1] : null;
-                if (!departmentId) return;
-                const isFollowed = followedDepartments.has(departmentId);
-                followBtn.textContent = isFollowed ? 'Unfollow' : 'Follow';
-                if (isFollowed) {
-                    followBtn.classList.add('action-button-secondary');
-                    messageBtn.disabled = false;
-                } else {
-                    followBtn.classList.remove('action-button-secondary');
-                    messageBtn.disabled = true;
-                }
-            });
         }
 
         // --- FETCHING ---
@@ -678,20 +678,30 @@
         }
 
         // --- EVENT LISTENERS ---
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             const listElement = document.getElementById('departmentsList');
             if (listElement) {
-                staticDepartmentsHTML = listElement.innerHTML; // Store initial static content
-            } else {
-                console.error("Critical element #departmentsList not found on DOMContentLoaded!");
+                staticDepartmentsHTML = listElement.innerHTML;
             }
-            fetchInitialDepartments();
+            await fetchInitialDepartments();
+            await updateFollowedList();
+            document.getElementById('departmentsList').addEventListener('click', function(e) {
+                const btn = e.target.closest('.follow-department-btn');
+                if (btn) {
+                    const departmentId = btn.getAttribute('data-department-id');
+                    const isFollow = btn.textContent.trim().toLowerCase() === 'follow';
+                    followOrUnfollowDepartment(departmentId, '', btn, isFollow);
+                }
+            });
         });
         loadMoreBtn.addEventListener('click', loadMoreDepartments);
 
-        // Make functions available globally for inline event handlers
-        window.toggleFollow = toggleFollow;
-        window.showPostFollowMessageModal = showPostFollowMessageModal;
+        window.toggleFollow = function(departmentId, buttonElement) {
+            const isFollow = buttonElement.textContent.trim().toLowerCase() === 'follow';
+            followOrUnfollowDepartment(departmentId, '', buttonElement, isFollow);
+        };
+
     </script>
+    <script src="departments_directory.js"></script>
 </body>
 </html>
