@@ -94,10 +94,7 @@
                 <label class="form-label" for="deptEmail">Email</label>
                 <input class="form-input" type="email" id="deptEmail" name="deptEmail" required>
             </div>
-            <div class="form-group">
-                <label class="form-label" for="deptLocation">Location</label>
-                <input class="form-input" type="text" id="deptLocation" name="deptLocation">
-            </div>
+    
             <div class="form-group">
                 <label class="form-label" for="deptPhone">Phone</label>
                 <input class="form-input" type="text" id="deptPhone" name="deptPhone">
@@ -131,30 +128,33 @@
         </form>
     </div>
     <script>
-    // Prefill logic: fetch department and profile data
+    // Prefill logic: fetch department and profile data for the logged-in admin
     async function fetchAndFillProfile() {
-        // You should get departmentId from session/localStorage/JWT
-        const departmentId = localStorage.getItem('department_id');
-        if (!departmentId) return;
-        // Fetch department main info
-        const deptRes = await fetch(`/api/departments/${departmentId}`);
-        const deptData = await deptRes.json();
-        if (deptData.success && deptData.department) {
-            document.getElementById('deptName').value = deptData.department.name || '';
-            document.getElementById('deptEmail').value = deptData.department.contact_email || '';
-            document.getElementById('deptLocation').value = deptData.department.location || '';
-            document.getElementById('deptPhone').value = deptData.department.contact_phone || '';
-        }
-        // Fetch department profile info
-        const profileRes = await fetch(`/api/department-profile/${departmentId}`);
-        const profileData = await profileRes.json();
-        if (profileData.success && profileData.profile) {
-            document.getElementById('about').value = profileData.profile.about || '';
-            document.getElementById('vision').value = profileData.profile.vision || '';
-            document.getElementById('mission').value = profileData.profile.mission || '';
-            document.getElementById('achievements').value = profileData.profile.achievements || '';
-            document.getElementById('logo_url').value = profileData.profile.logo_url || '';
-            document.getElementById('cover_image_url').value = profileData.profile.cover_image_url || '';
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        try {
+            const response = await fetch('/api/department/profile', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            const data = await response.json();
+            if (data.success && data.department) {
+                const dept = data.department;
+                document.getElementById('deptName').value = dept.name || '';
+                document.getElementById('deptEmail').value = dept.contact_email || '';
+                document.getElementById('deptPhone').value = dept.contact_phone || '';
+                document.getElementById('about').value = dept.about || '';
+                document.getElementById('vision').value = dept.vision || '';
+                document.getElementById('mission').value = dept.mission || '';
+                document.getElementById('achievements').value = dept.achievements || '';
+                document.getElementById('logo_url').value = dept.logo_url || '';
+                document.getElementById('cover_image_url').value = dept.cover_image_url || '';
+                // Set department name in navbar if element exists
+                if (document.getElementById('navbarDeptName')) {
+                    document.getElementById('navbarDeptName').textContent = dept.name || '';
+                }
+            }
+        } catch (err) {
+            console.error('Failed to fetch department profile:', err);
         }
     }
     document.addEventListener('DOMContentLoaded', fetchAndFillProfile);
@@ -162,8 +162,11 @@
     document.getElementById('editDeptProfileForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         const form = e.target;
-        const departmentId = localStorage.getItem('department_id');
+        // Collect all fields for the backend
         const data = {
+            name: form.deptName.value,
+            email: form.deptEmail.value,
+            phone: form.deptPhone.value,
             about: form.about.value,
             vision: form.vision.value,
             mission: form.mission.value,
@@ -172,14 +175,20 @@
             cover_image_url: form.cover_image_url.value
         };
         try {
-            const response = await fetch(`/api/department-profile/${departmentId}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+            const token = localStorage.getItem('token'); // Get JWT token from localStorage
+            const response = await fetch('/api/department/profile', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
                 body: JSON.stringify(data)
             });
             if (response.ok) {
-                document.getElementById('formMessage').innerHTML = '<div class="success-message">Profile updated successfully!</div>';
-                setTimeout(() => { window.location.href = 'department_admin.html?profileUpdated=1'; }, 1200);
+                document.getElementById('formMessage').innerHTML = '<div class="success-message">Profile updated successfully! Redirecting...</div>';
+                setTimeout(() => {
+                    window.location.href = "department_admin.html#profile";
+                }, 1200);
             } else {
                 document.getElementById('formMessage').innerHTML = '<div class="error-message">Failed to update profile. Please try again.</div>';
             }

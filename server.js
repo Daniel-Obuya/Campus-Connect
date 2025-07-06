@@ -141,7 +141,7 @@ app.get('/departments-directory', (req, res) => {
 app.get('/clubs-directory', (req, res) => {
   res.sendFile(path.join(__dirname, 'clubs-directory.html'));
 });
-// --- Route for Departments Directory ---
+// --- Route for Departments Directory -de--
 app.get('/projects', (req, res) => {
   res.sendFile(path.join(__dirname, 'projects_directory.html'));
 });
@@ -743,7 +743,7 @@ app.post('/api/login', async (req, res) => {
                 department_id: userDepartmentId // Also include in user object
             }
         });
-    } else {
+    } else { // Added opening brace for the else block
         // For other roles (student, club_admin), generate and send a JWT token.
         const token = jwt.sign({
             id: user.user_id,
@@ -775,6 +775,7 @@ app.post('/api/login', async (req, res) => {
       token,
       user: userProfile
     });
+  }
   } catch (err) {
     console.error('Login Error:', err);
     res.status(500).json({ 
@@ -854,8 +855,7 @@ app.put('/api/user/profile', authenticateJWT, async (req, res) => {
     } finally {
         connection.release();
     }
-}
-);
+});
 
 // API Endpoint to Create a New Event
 app.post('/api/events', authenticateJWT, async (req, res) => { // Protected route
@@ -1230,6 +1230,11 @@ app.post('/api/announcements', authenticateJWT, async (req, res) => {
             return res.status(400).json({ success: false, message: 'Title and content are required.' });
         }
 
+        // --- Fix: Ensure arrays are stringified for DB ---
+        const tagsStr = Array.isArray(tags) ? JSON.stringify(tags) : (typeof tags === 'string' ? tags : JSON.stringify([]));
+        const targetAudienceStr = Array.isArray(target_audience) ? JSON.stringify(target_audience) : (typeof target_audience === 'string' ? target_audience : JSON.stringify([]));
+        const attachmentUrlsStr = Array.isArray(attachment_urls) ? JSON.stringify(attachment_urls) : (typeof attachment_urls === 'string' ? attachment_urls : JSON.stringify([]));
+
         const sql = `INSERT INTO announcements (
                         title, content, author_id, author_type, author_entity_id, 
                         priority, target_audience, tags, attachment_urls, 
@@ -1244,15 +1249,14 @@ app.post('/api/announcements', authenticateJWT, async (req, res) => {
             authorType,
             authorEntityId, // Corrected from department_id
             priority || 'normal',
-            target_audience || JSON.stringify([]),
-            tags || JSON.stringify([]),
-            attachment_urls || JSON.stringify([]),
+            targetAudienceStr,
+            tagsStr,
+            attachmentUrlsStr,
             is_pinned || false,
             scheduled_publish_at || null,
             expires_at || null,
             is_published === undefined ? true : !!is_published // Ensure this value is correctly added
         ];
-
 
         const [result] = await pool.query(sql, values);
 
@@ -1277,7 +1281,7 @@ app.post('/api/announcements', authenticateJWT, async (req, res) => {
                 null,
                 null,
                 false,
-                tags || JSON.stringify([]),
+                tagsStr,
                 null,
                 true
             ]);
@@ -1583,86 +1587,185 @@ app.get('/api/club/dashboard', authenticateJWT, async (req, res) => {
     }
 });
 
-
-
+// --- Public API Route: Get Published Events for a Department by ID (for students and public) ---
+app.get('/api/events/department/:id', async (req, res) => {
+    const departmentId = parseInt(req.params.id, 10);
+    if (!departmentId || isNaN(departmentId)) {
+        return res.status(400).json({ success: false, message: 'Invalid department ID.' });
+    }
+    try {
+        const [events] = await pool.query(
+            `SELECT event_id, title, description,
+                    DATE_FORMAT(start_datetime, '%Y-%m-%d %H:%i') as start_datetime_formatted,
+                    DATE_FORMAT(registration_deadline, '%Y-%m-%d %H:%i') as registration_deadline_formatted,
+                    location
+             FROM events
+             WHERE organizer_type = 'department' AND organizer_id = ? AND is_published = 1
+             ORDER BY start_datetime DESC`,
+            [departmentId]
+        );
+        res.json({ success: true, events });
+    } catch (error) {
+        console.error('Error fetching public department events:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch department events.' });
+    }
+});
 // --- API Route: Follow/Unfollow a Department ---
 app.post('/api/departments/:id/follow', authenticateJWT, async (req, res) => {
-    if (req.user.role !== 'student') {
-        return res.status(403).json({ success: false, message: 'Only students can follow departments.' });
+    const departmentId = parseInt(req.params.id, 10);
+    const userId = req.user.id;
+    if (!departmentId || isNaN(departmentId)) {
+        return res.status(400).json({ success: false, message: 'Invalid department ID.' });
     }
-
-    const studentId = req.user.id;
-    const departmentId = req.params.id;
-    const { message } = req.body; // Accept optional message
-
+    if (req.user.role !== 'student') {
+        return res.status(403).json({ success: false, message: 'Only students can follow/unfollow departments.' });
+    }
     try {
-        const [isFollowing] = await pool.query(
-            'SELECT * FROM department_followers WHERE follower_user_id = ? AND department_id = ?',
-            [studentId, departmentId]
+        // Check if the student is already following the department
+        const [rows] = await pool.query(
+            'SELECT * FROM department_followers WHERE department_id = ? AND user_id = ?',
+            [departmentId, userId]
         );
-
-        if (isFollowing.length > 0) {
-            // User is already following, so unfollow
+        if (rows.length > 0) {
+            // Already following, so unfollow (delete row)
             await pool.query(
-                'DELETE FROM department_followers WHERE follower_user_id = ? AND department_id = ?',
-                [studentId, departmentId]
+                'DELETE FROM department_followers WHERE department_id = ? AND user_id = ?',
+                [departmentId, userId]
             );
-            return res.json({ success: true, message: 'Unfollowed successfully.', followed: false });
+            return res.json({ success: true, following: false, message: 'Unfollowed department.' });
         } else {
-            // User is not following, so follow
+            // Not following, so follow (insert row)
             await pool.query(
-                'INSERT INTO department_followers (follower_user_id, department_id) VALUES (?, ?)',
-                [studentId, departmentId]
+                'INSERT INTO department_followers (department_id, user_id, followed_at) VALUES (?, ?, NOW())',
+                [departmentId, userId]
             );
-            // If a message is provided, start a conversation and send the message
-            if (message && typeof message === 'string' && message.trim() !== '') {
-                // Find the department admin for this department
-                const [admins] = await pool.query(
-                    'SELECT user_id FROM users WHERE department_id = ? AND role = ? AND is_active = 1',
-                    [departmentId, 'department_admin']
-                );
-                if (admins.length > 0) {
-                    const adminUserId = admins[0].user_id;
-                    // Check if a conversation already exists between this student and department admin
-                    const [existing] = await pool.query(
-                        `SELECT c.conversation_id FROM conversations c
-                         JOIN conversation_participants cp1 ON c.conversation_id = cp1.conversation_id AND cp1.user_id = ?
-                         JOIN conversation_participants cp2 ON c.conversation_id = cp2.conversation_id AND cp2.user_id = ?
-                         WHERE c.is_group_chat = 0
-                         LIMIT 1`,
-                        [studentId, adminUserId]
-                    );
-                    let conversationId;
-                    if (existing.length > 0) {
-                        conversationId = existing[0].conversation_id;
-                    } else {
-                        // Create a new conversation
-                        const [convResult] = await pool.query(
-                            'INSERT INTO conversations (is_group_chat) VALUES (0)'
-                        );
-                        conversationId = convResult.insertId;
-                        // Add both participants
-                        await pool.query(
-                            'INSERT INTO conversation_participants (conversation_id, user_id) VALUES (?, ?), (?, ?)',
-                            [conversationId, studentId, conversationId, adminUserId]
-                        );
-                    }
-                    // Insert the message
-                    await pool.query(
-                        'INSERT INTO messages (conversation_id, sender_id, content, created_at) VALUES (?, ?, ?, NOW())',
-                        [conversationId, studentId, message.trim()]
-                    );
-                }
-            }
-            return res.json({ success: true, message: 'Followed successfully.', followed: true });
+        return res.json({ success: true, following: true, message: 'Followed department.' });
         }
     } catch (error) {
-        console.error('Error following/unfollowing department:', error);
-        res.status(500).json({ success: false, message: 'Failed to update follow status.' });
+        console.error('Error in follow/unfollow department:', error);
+        res.status(500).json({ success: false, message: 'Failed to follow/unfollow department.' });
+    }
+});
+// --- API Route: Follow/Unfollow a Department ---
+// --- API Route: Get a single department by ID (for department details page) ---
+app.get('/api/departments/:id', async (req, res) => {
+    const departmentId = parseInt(req.params.id, 10);
+    console.log(`[DEPT-DETAILS] Route hit. Received id:`, req.params.id, 'Parsed:', departmentId);
+    if (!departmentId || isNaN(departmentId)) {
+        console.warn(`[DEPT-DETAILS] Invalid department ID:`, req.params.id);
+        return res.status(400).json({ success: false, message: 'Invalid department ID.' });
+    }
+    try {
+        const [departments] = await pool.query(
+            `SELECT * FROM departments WHERE department_id = ? AND is_active = 1`,
+            [departmentId]
+        );
+        if (departments.length === 0) {
+            console.warn(`[DEPT-DETAILS] Department not found for id:`, departmentId);
+            return res.status(404).json({ success: false, message: 'Department not found.' });
+        }
+        console.log(`[DEPT-DETAILS] Department found for id:`, departmentId);
+        res.json({ success: true, department: departments[0] });
+    } catch (error) {
+        console.error('[DEPT-DETAILS] Error fetching department by ID:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch department.' });
+    }
+});
+// --- API Route: Get Department Profile for Logged-in Department Admin ---
+// --- API Route: Get Department Profile for Logged-in Department Admin ---
+app.get('/api/department/profile', authenticateJWT, async (req, res) => {
+    if (req.user.role !== 'department_admin' || !req.user.department_id) {
+        return res.status(403).json({ success: false, message: 'Forbidden: Only department admins can view their department profile.' });
+    }
+    const departmentId = req.user.department_id;
+    try {
+        // Fetch from both departments and department_profiles tables and merge
+        const [departments] = await pool.query(
+            `SELECT * FROM departments WHERE department_id = ?`,
+            [departmentId]
+        );
+        if (departments.length === 0) {
+            return res.status(404).json({ success: false, message: 'Department not found.' });
+        }
+        const department = departments[0];
+        const [profiles] = await pool.query(
+            `SELECT * FROM department_profiles WHERE department_id = ?`,
+            [departmentId]
+        );
+        const profile = profiles.length > 0 ? profiles[0] : {};
+        // Merge department and profile fields (profile fields override if duplicate)
+        const merged = { ...department, ...profile };
+        res.json({ success: true, department: merged });
+    } catch (error) {
+        console.error('Error fetching department profile:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch department profile.' });
     }
 });
 
-// Start server using the http server instance
+// --- API Route: Update Department Profile (Department Admin Only) ---
+app.put('/api/department/profile', authenticateJWT, async (req, res) => {
+    if (req.user.role !== 'department_admin' || !req.user.department_id) {
+        return res.status(403).json({ success: false, message: 'Forbidden: Only department admins can update their department profile.' });
+    }
+    const departmentId = req.user.department_id;
+    const { name, description, email, phone, website, head_of_department, logo_url } = req.body;
+    try {
+        const [result] = await pool.query(
+           `UPDATE departments SET 
+            name = ?,
+            description = ?,
+            contact_email = ?,
+            contact_phone = ?,
+            website_url = ?,
+            head_of_department = ?,
+            logo_url = ?
+         WHERE department_id = ?`,
+            [
+                name || null,
+                description || null,
+                email || null,
+                phone || null,
+                website || null,
+                head_of_department || null,
+                logo_url || null,
+                departmentId
+            ]
+        );
+        // --- Upsert department_profiles table ---
+        const { about, vision, mission, achievements, cover_image_url, location } = req.body;
+        await pool.query(
+            `INSERT INTO department_profiles (department_id, about, vision, mission, achievements, cover_image_url, location)
+             VALUES (?, ?, ?, ?, ?, ?, ?)
+             ON DUPLICATE KEY UPDATE
+                about = VALUES(about),
+                vision = VALUES(vision),
+                mission = VALUES(mission),
+                achievements = VALUES(achievements),
+                cover_image_url = VALUES(cover_image_url),
+                location = VALUES(location)`,
+            [
+                departmentId,
+                about || null,
+                vision || null,
+                mission || null,
+                achievements || null,
+                cover_image_url || null,
+                location || null
+            ]
+        );
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ success: false, message: 'Department not found or not authorized.' });
+        }
+        res.json({ success: true, message: 'Department profile updated successfully.' });
+    } catch (error) {
+        console.error('Error updating department profile:', error);
+        res.status(500).json({ success: false, message: 'Failed to update department profile.' });
+    }
+});
+
+
+
+// // Start server using the http server instance
 server.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
   console.log('Main Pages:');

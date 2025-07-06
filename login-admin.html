@@ -225,7 +225,7 @@
 
                 if (data.success) {
                     showAlert(data.message, 'success');
-                    localStorage.setItem('authToken', data.token);
+                    localStorage.setItem('token', data.token); // Save as 'token' for consistency
                     localStorage.setItem('currentUser', JSON.stringify(data.user));
                     setTimeout(() => { redirectToDashboard(data.user); }, 1500);
                 } else {
@@ -247,8 +247,22 @@
                 alert(`Welcome ${user.firstName}! Redirecting to Club Admin dashboard...`);
                 console.log("Redirecting to Club Admin Dashboard (placeholder)");
             } else if (user.role === 'department_admin') {
-                dashboardUrl = 'department_admin.html';
-                alert(`Welcome ${user.firstName}! Redirecting to Department Admin dashboard...`);
+                // Fetch department details and then redirect
+                fetch(`/api/department/profile`, {
+                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.department && data.department.name) {
+                        user.department_name = data.department.name;
+                        localStorage.setItem('currentUser', JSON.stringify(user));
+                    }
+                    window.location.href = '/department_admin.html';
+                })
+                .catch(() => {
+                    window.location.href = '/department_admin.html';
+                });
+                return;
             } else {
                 showAlert(`Login successful for ${user.firstName}, but dashboard not configured for role: ${user.role}`);
                 return;

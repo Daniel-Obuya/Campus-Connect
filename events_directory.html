@@ -3,508 +3,168 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Events Directory - Campus Connect</title>
-    <link rel="stylesheet" href="department_admin.css"> <!-- department_admin.css imports common-header.css -->
-    <!-- Consider Font Awesome for icons if not already included globally -->
-    <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> -->
-    <style>
-        body {
-            padding-top: 95px; /* Adjust as needed based on common-header.css */
-        }
-        /* Specific styles for the Events Directory page (remaining styles) */
-        .search-filter-bar { /* This was already here, keep it */
-            margin-bottom: var(--spacing-lg);
-            padding: var(--spacing-md);
-            background: var(--color-bg-glass-primary);
-            backdrop-filter: blur(var(--backdrop-blur-strong));
-            border-radius: var(--border-radius-lg);
-            border: var(--border-width) solid var(--color-border-glass);
-            box-shadow: var(--box-shadow-soft);
-            display: flex;
-            align-items: center;
-            gap: var(--spacing-sm);
-        }
-
-        .search-filter-bar input[type="text"],
-        .search-filter-bar select {
-            flex-grow: 1;
-            padding: var(--spacing-sm) var(--spacing-md);
-            background: var(--color-bg-glass-secondary);
-            border: var(--border-width-input) solid var(--color-border-input);
-            border-radius: var(--border-radius-md);
-            color: var(--color-text-base);
-        }
-        .search-filter-bar select {
-            appearance: none;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%233a3a3a' width='18px' height='18px'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
-            background-repeat: no-repeat;
-            background-position: right var(--spacing-md) center;
-            background-size: 1.5em;
-            padding-right: calc(var(--spacing-md) + 1.5em + var(--spacing-sm)); /* Space for arrow */
-        }
-
-        .search-filter-bar button {
-            width: auto;
-            flex-shrink: 0;
-        }
-
-        #eventsList {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); /* Responsive grid */
-            gap: var(--spacing-lg);
-            list-style: none;
-            padding: 0;
-        }
-
-        .event-card {
-            display: flex;
-            flex-direction: column;
-            background: var(--color-bg-glass-secondary);
-            backdrop-filter: blur(var(--backdrop-blur-medium));
-            border-radius: var(--border-radius-md);
-            border: var(--border-width) solid var(--color-border-glass);
-            box-shadow: var(--box-shadow-soft);
-            overflow: hidden; /* To contain image if any */
-        }
-
-        .event-card-image {
-            width: 100%;
-            height: 180px;
-            background-color: #e0e0e0; /* Placeholder color */
-            background-size: cover;
-            background-position: center;
-        }
-        .event-card-image.placeholder {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--color-text-muted);
-            font-style: italic;
-        }
-
-        .event-card-content {
-            padding: var(--spacing-md);
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .event-card-content h3 {
-            margin: 0 0 var(--spacing-sm) 0;
-            color: var(--color-text-base);
-            font-size: 1.25em;
-        }
-
-        .event-card-details {
-            font-size: var(--font-size-small);
-            color: var(--color-text-secondary);
-            margin-bottom: var(--spacing-sm);
-        }
-        .event-card-details p { margin: var(--spacing-xs) 0; }
-        .event-card-details strong { color: var(--color-text-base); }
-
-        .event-card-description {
-            font-size: var(--font-size-small);
-            color: var(--color-text-secondary);
-            line-height: 1.5;
-            margin-bottom: var(--spacing-md);
-            flex-grow: 1; /* Allows description to take space */
-        }
-
-        .event-card-actions {
-            display: flex;
-            gap: var(--spacing-sm);
-            margin-top: auto; /* Pushes actions to the bottom */
-            padding-top: var(--spacing-md);
-            border-top: 1px solid var(--color-border-divider);
-        }
-
-        .event-card-actions .action-button {
-            flex-grow: 1; /* Make buttons share space */
-            text-align: center;
-        }
-
-        .load-more-container {
-            text-align: center;
-            margin-top: var(--spacing-lg);
-            margin-bottom: var(--spacing-lg);
-        }
-
-        /* Saved Events Section (similar to followed departments) */
-        #savedEventsSection h3 {
-            margin-top: 0;
-        }
-        #savedEventsList {
-            list-style: none;
-            padding: 0;
-        }
-        .saved-event-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: var(--spacing-sm);
-            background: var(--color-bg-glass-secondary);
-            border-radius: var(--border-radius-sm);
-            margin-bottom: var(--spacing-sm);
-            border: 1px solid var(--color-border-glass);
-        }
-        .saved-event-item span { flex-grow: 1; margin-left: var(--spacing-sm); }
-        .saved-event-item .action-button {
-             padding: var(--spacing-xs) var(--spacing-sm);
-             font-size: var(--font-size-xsmall);
-        }
-    </style>
+    <title>Events Directory</title>
+    <link rel="stylesheet" href="projects.css">
+    <link rel="stylesheet" href="common-header.css">
 </head>
 <body>
+    <!-- Header (matching projects directory) -->
     <header class="header">
         <div class="header-left">
-            <img src="images/logo 1.png" alt="Campus Connect Logo" class="logo">
+            <img src="images/logo 1.png" alt="Campus Connect Logo" class="logo" style="height: 60px; width: 60px;">
             <div class="brand-name">Campus Connect</div>
         </div>
-        <div class="page-title">Events Directory</div>
+        <h1 class="page-title">Events Directory</h1>
         <div class="header-actions">
-            <a href="student_dashboard.html" class="btn-header">Back to Home</a>
-            <a href="#" id="logoutButton" class="btn-header btn-header-danger">Logout</a>
+            <a href="student_dashboard.html" class="btn-header btn-header-primary">Back to Dashboard</a>
+            <a href="welcome.html" class="btn-header btn-header-danger">🚪 Logout</a>
         </div>
     </header>
 
-    <main>
-        <section class="dashboard-section">
-            <h2>Discover What's Happening</h2>
-            <p>Browse upcoming events, workshops, seminars, and social gatherings from departments and clubs.</p>
-
-            <div class="search-filter-bar">
-                <input type="text" id="eventSearch" placeholder="Search events by title, organizer...">
-                <select id="eventTypeFilter">
-                    <option value="">All Types</option>
-                    <option value="workshop">Workshop</option>
-                    <option value="seminar">Seminar</option>
-                    <option value="social">Social</option>
-                    <option value="sports">Sports</option>
-                    <option value="academic">Academic</option>
-                    <option value="career">Career</option>
-                    <option value="cultural">Cultural</option>
-                    <option value="other">Other</option>
-                </select>
-                <button class="action-button" onclick="filterEvents()">Search/Filter</button>
-                <a href="#savedEventsSection" class="action-button action-button-secondary">View Saved Events</a>
+    <div class="main-content">
+        <div class="hero-section">
+            <h1 class="hero-title">🎉 Explore Department Events</h1>
+            <p class="hero-description">
+                Browse all published events from every department. Select a department to filter, or view all events below!
+            </p>
+        </div>
+        <div class="search-filter-section">
+            <div class="filter-section">
+                <div class="category-filter">
+                    <label for="department-select" style="font-weight:600; color:#333;">Department:</label>
+                    <select id="department-select" class="filter-select">
+                        <option value="">All Departments</option>
+                    </select>
+                </div>
             </div>
-
-            <ul id="eventsList">
-                <!-- Event cards will be dynamically loaded here -->
-            </ul>
-            <p id="noEventsMessage" style="display:none; text-align:center; padding: 20px;">No events found matching your criteria.</p>
-
-            <div class="load-more-container">
-                <button id="loadMoreDbEventsBtn" class="action-button" onclick="loadMoreDbEvents()">Load More Campus Events</button>
-                <button id="loadMoreApiEventsBtn" class="action-button action-button-info" onclick="loadMoreApiEvents()" style="margin-left: 10px;">Load External Events</button>
-            </div>
-        </section>
-
-        <section class="dashboard-section" id="savedEventsSection">
-            <h2>Your Saved Events</h2>
-            <ul id="savedEventsList">
-                <li class="no-saved-message" style="text-align: center; color: var(--color-text-muted);">You haven't saved any events yet.</li>
-            </ul>
-        </section>
-    </main>
-
-    <footer>
-        <p>&copy; 2024 Campus Connect</p>
-    </footer>
-
-    <div class="floating-icons-container">
-        <div class="floating-icon icon1"></div>
-        <div class="floating-icon icon2"></div>
-        <div class="floating-icon icon3"></div>
+        </div>
+        <div class="projects-grid" id="eventsGrid">
+            <!-- Event cards will be populated here -->
+        </div>
+        <div class="no-events" id="no-events-msg" style="display:none;">No events found for this department.</div>
+        <div class="error-message" id="error-msg" style="display:none;"></div>
+        <div class="loading" id="loading-msg" style="display:none;">Loading events...</div>
     </div>
-
     <script>
-        const savedEvents = new Set(JSON.parse(localStorage.getItem('savedEvents')) || []);
-        let allDbEventsData = []; // To store events from your database
-        let allApiEventsData = []; // To store events from the external API
-        let currentlyDisplayedDbCount = 0;
-        let currentlyDisplayedApiCount = 0;
-        let currentExternalApiPage = 1; // For paginating external API results
-        const eventsPerLoad = 6; // Number of events to load at a time
+        const departmentSelect = document.getElementById('department-select');
+        const eventsGrid = document.getElementById('eventsGrid');
+        const loadingMsg = document.getElementById('loading-msg');
+        const errorMsg = document.getElementById('error-msg');
+        const noEventsMsg = document.getElementById('no-events-msg');
 
-        const eventsListElement = document.getElementById('eventsList');
-        const loadMoreDbEventsBtn = document.getElementById('loadMoreDbEventsBtn');
-        const loadMoreApiEventsBtn = document.getElementById('loadMoreApiEventsBtn');
-        const noEventsMessageElement = document.getElementById('noEventsMessage');
+        let allDepartments = [];
+        let allEvents = [];
 
-        // --- Event Rendering ---
-        function createEventCard(event) {
-            const card = document.createElement('li');
-            card.className = 'event-card';
-            card.setAttribute('data-event-id', String(event.event_id || event.id)); // Ensure ID is a string
-            card.setAttribute('data-event-source', event.source || 'db');
-
-            const isSaved = savedEvents.has(String(event.event_id || event.id));
-            const saveButtonText = isSaved ? 'Unsave' : 'Save Event';
-            const saveButtonClass = isSaved ? 'action-button-secondary' : '';
-
-            // Basic date formatting (can be improved with a library like date-fns or moment.js)
-            const formatDate = (dateString) => {
-                if (!dateString) return 'N/A';
-                try {
-                    return new Date(dateString).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
-                } catch (e) { return dateString; }
-            };
-
-            card.innerHTML = `
-                <div class="event-card-image ${!event.image_url ? 'placeholder' : ''}" style="${event.image_url ? `background-image: url('${escapeHTML(event.image_url)}')` : ''}">
-                    ${!event.image_url ? '<span>No Image</span>' : ''}
-                </div>
-                <div class="event-card-content">
-                    <h3>${escapeHTML(event.title)}</h3>
-                    <div class="event-card-details">
-                        <p><strong>Starts:</strong> ${formatDate(event.start_datetime)}</p>
-                        ${event.end_datetime ? `<p><strong>Ends:</strong> ${formatDate(event.end_datetime)}</p>` : ''}
-                        <p><strong>Location:</strong> ${escapeHTML(event.location || (event.virtual_link ? 'Online' : 'N/A'))}</p>
-                        <p><strong>Organizer:</strong> ${escapeHTML(event.organizer_name || event.organizer_type || 'Campus Connect')}</p>
-                    </div>
-                    <p class="event-card-description">${escapeHTML(event.description ? (event.description.substring(0, 150) + (event.description.length > 150 ? '...' : '')) : 'No description available.')}</p>
-                    <div class="event-card-actions">
-                        <button class="action-button ${saveButtonClass}" onclick="toggleSaveEvent('${event.event_id || event.id}', this, '${event.source || 'db'}')">${saveButtonText}</button>
-                        ${event.registration_required || event.rsvp_link ? `<a href="${escapeHTML(event.rsvp_link || '#')}" target="_blank" class="action-button action-button-info" ${!event.rsvp_link ? 'onclick="alert(\\\'RSVP details not available.\\\'); return false;"' : ''}>RSVP / Details</a>` : ''}
-                    </div>
-                </div>
-            `;
-            return card;
-        }
-
-        function renderEvents(eventArray, startIndex, count, listElement, noMessageElement, loadMoreButton) {
-            const eventsToRender = eventArray.slice(startIndex, startIndex + count);
-
-            // Only show "No events available" if both DB and API events are empty initially
-            const noInitialDbEvents = allDbEventsData.length === 0 && loadMoreButton?.id === 'loadMoreDbEventsBtn';
-            if (eventsToRender.length === 0 && startIndex === 0 && listElement.children.length === 0 && noInitialDbEvents) {
-                noMessageElement.textContent = 'No events available at the moment.';
-                noMessageElement.style.display = 'block';
-            } else {
-                noMessageElement.style.display = 'none';
-            }
-
-            eventsToRender.forEach(event => {
-                const eventCard = createEventCard(event);
-                listElement.appendChild(eventCard);
-            });
-
-            const newDisplayedCount = startIndex + eventsToRender.length;
-
-            if (loadMoreButton) {
-                if (newDisplayedCount >= eventArray.length) {
-                    loadMoreButton.textContent = 'All Loaded';
-                    loadMoreButton.disabled = true;
-                } else {
-                    loadMoreButton.textContent = loadMoreButton.id === 'loadMoreDbEventsBtn' ? 'Load More Campus Events' : 'Load External Events';
-                    loadMoreButton.disabled = false;
-                }
-            }
-            return newDisplayedCount;
-        }
-
-        // --- Fetching Logic ---
-        async function fetchInitialDbEvents() {
-            loadMoreDbEventsBtn.textContent = 'Loading Campus Events...';
-            loadMoreDbEventsBtn.disabled = true;
+        async function loadDepartments() {
             try {
-                const response = await fetch('/api/events/public'); // Use your actual public events API
-                const data = await response.json();
-                if (data.success && data.events) {
-                    allDbEventsData = data.events.map(e => ({...e, source: 'db'})); // Mark source
-                    currentlyDisplayedDbCount = renderEvents(allDbEventsData, 0, eventsPerLoad, eventsListElement, noEventsMessageElement, loadMoreDbEventsBtn);
-                } else {
-                    noEventsMessageElement.textContent = data.message || 'Failed to load campus events.';
-                    noEventsMessageElement.style.display = 'block';
-                    loadMoreDbEventsBtn.style.display = 'none'; // Hide if initial load fails
-                }
-                if (allDbEventsData.length === 0) loadMoreDbEventsBtn.style.display = 'none';
-            } catch (error) {
-                console.error('Error fetching initial DB events:', error);
-                noEventsMessageElement.textContent = 'Error loading campus events. Please try again later.';
-                noEventsMessageElement.style.display = 'block';
-                loadMoreDbEventsBtn.style.display = 'none';
+                const res = await fetch('/api/departments?limit=100');
+                const data = await res.json();
+                if (!data.success) throw new Error(data.message || 'Failed to load departments.');
+                allDepartments = data.departments;
+                departmentSelect.innerHTML = '<option value="">All Departments</option>' +
+                    allDepartments.map(dep => `<option value="${dep.department_id}">${dep.name}</option>`).join('');
+            } catch (err) {
+                errorMsg.textContent = 'Error loading departments: ' + err.message;
+                errorMsg.style.display = 'block';
             }
         }
 
-        function loadMoreDbEvents() {
-            loadMoreDbEventsBtn.textContent = 'Loading...';
-            loadMoreDbEventsBtn.disabled = true;
-            currentlyDisplayedDbCount = renderEvents(allDbEventsData, currentlyDisplayedDbEventsCount, eventsPerLoad, eventsListElement, noEventsMessageElement, loadMoreDbEventsBtn);
-        }
-
-        async function loadMoreApiEvents() {
-            loadMoreApiEventsBtn.textContent = 'Loading External Events...';
-            loadMoreApiEventsBtn.disabled = true;
-
-            // Parameters for your backend API
-            const queryParams = new URLSearchParams({
-                'location': 'Nairobi', // Example: You can make this dynamic
-                'q': 'technology',     // Example: Search query, make dynamic
-                'page': currentExternalApiPage,
-            });
-
-            const localApiUrl = `/api/external-events?${queryParams.toString()}`;
-
+        async function loadAllEvents() {
+            // Fetch all events for all departments
+            loadingMsg.style.display = 'block';
+            errorMsg.style.display = 'none';
+            noEventsMsg.style.display = 'none';
+            eventsGrid.innerHTML = '';
+            let events = [];
             try {
-                console.log(`Fetching external events from backend: ${localApiUrl}`);
-                const response = await fetch(localApiUrl, {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json'
-                        // No Authorization header needed here, backend handles it
+                // Fetch all departments first
+                if (!allDepartments.length) {
+                    await loadDepartments();
+                }
+                // Fetch events for each department
+                const promises = allDepartments.map(dep => fetch(`/api/events/department/${dep.department_id}`).then(r => r.json().then(d => ({...d, dep}))));
+                const results = await Promise.all(promises);
+                results.forEach(result => {
+                    if (result.success && result.events && result.events.length > 0) {
+                        result.events.forEach(ev => {
+                            ev.departmentName = result.dep.name;
+                            events.push(ev);
+                        });
                     }
                 });
-
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({ message: response.statusText }));
-                    throw new Error(`Server Error: ${response.status} - ${errorData.message || 'Failed to fetch from backend'}`);
-                }
-
-                const backendResponse = await response.json();
-                console.log("Response from /api/external-events:", backendResponse);
-
-                if (!backendResponse.success || !backendResponse.eventsData) {
-                    throw new Error(backendResponse.message || "Backend did not return successful event data.");
-                }
-                const externalData = backendResponse.eventsData; // This is the raw Eventbrite response
-
-                // --- Map API data to your event structure ---
-                // This mapping is an EXAMPLE for Eventbrite-like data. ADJUST IT FOR YOUR API.
-                const newEvents = (externalData.events || []).map(item => ({
-                    id: item.id, // API's unique ID
-                    title: item.name ? item.name.text : 'Untitled Event',
-                    description: item.description ? item.description.text : (item.summary || ''),
-                    start_datetime: item.start ? item.start.utc || item.start.local : null,
-                    end_datetime: item.end ? item.end.utc || item.end.local : null,
-                    location: item.venue ? (item.venue.name || (item.venue.address ? item.venue.address.localized_address_display : 'Online')) : (item.is_online_event ? 'Online' : 'N/A'),
-                    organizer_name: item.organizer ? item.organizer.name : 'External Organizer',
-                    image_url: item.logo ? item.logo.original ? item.logo.original.url : item.logo.url : null,
-                    rsvp_link: item.url,
-                    registration_required: !item.is_free, // Example inference
-                    source: 'api' // Mark as API event
-                }));
-
-                if (newEvents.length > 0) {
-                    allApiEventsData = allApiEventsData.concat(newEvents);
-                    currentlyDisplayedApiCount = renderEvents(allApiEventsData, currentlyDisplayedApiCount, eventsPerLoad, eventsListElement, noEventsMessageElement, loadMoreApiEventsBtn);
-                    currentExternalApiPage++; // Increment page for next "Load More" click
-                } else {
-                    loadMoreApiEventsBtn.textContent = 'No More External Events';
-                    loadMoreApiEventsBtn.disabled = true;
-                    if (allApiEventsData.length === 0 && currentlyDisplayedDbCount === 0) { // If no DB events either
-                        noEventsMessageElement.textContent = 'No external events found.';
-                        noEventsMessageElement.style.display = 'block';
-                    }
-                }
-
-            } catch (error) {
-                console.error('Error fetching from external API:', error);
-                noEventsMessageElement.textContent = `Failed to load external events. ${error.message}`;
-                noEventsMessageElement.style.display = 'block';
-                loadMoreApiEventsBtn.textContent = 'Error Loading';
-                // Keep button disabled on error or allow retry after a delay
-                // loadMoreApiEventsBtn.disabled = false;
+                allEvents = events;
+                renderEvents(events);
+            } catch (err) {
+                errorMsg.textContent = 'Error loading events: ' + err.message;
+                errorMsg.style.display = 'block';
+            } finally {
+                loadingMsg.style.display = 'none';
             }
         }
 
-        // --- Event Actions (Save/RSVP) ---
-        function toggleSaveEvent(eventId, buttonElement, source) {
-            eventId = String(eventId); // Ensure it's a string for Set comparison
-            // Find event from either DB or API data
-            const eventDataSource = source === 'db' ? allDbEventsData : allApiEventsData;
-            const eventData = eventDataSource.find(e => String(e.event_id || e.id) === eventId);
-
-            if (savedEvents.has(eventId)) {
-                savedEvents.delete(eventId);
-                buttonElement.textContent = 'Save Event';
-                buttonElement.classList.remove('action-button-secondary');
-            } else {
-                savedEvents.add(eventId);
-                buttonElement.textContent = 'Unsave';
-                buttonElement.classList.add('action-button-secondary');
-            }
-            localStorage.setItem('savedEvents', JSON.stringify(Array.from(savedEvents)));
-            updateSavedEventsList();
-        }
-
-        function updateSavedEventsList() {
-            const listElement = document.getElementById('savedEventsList');
-            listElement.innerHTML = ''; // Clear current list
-
-            if (savedEvents.size === 0) {
-                listElement.innerHTML = '<li class="no-saved-message" style="text-align: center; color: var(--color-text-muted);">You haven\'t saved any events yet.</li>';
+        function renderEvents(events) {
+            eventsGrid.innerHTML = '';
+            if (!events || events.length === 0) {
+                noEventsMsg.style.display = 'block';
                 return;
             }
-
-            savedEvents.forEach(eventId => {
-                // Find event from either DB or API data
-                let eventData = allDbEventsData.find(e => String(e.event_id) === eventId) || allApiEventsData.find(e => String(e.id) === eventId);
-                
-                let sourceForRemove = eventData ? eventData.source : 'unknown';
-
-                if (!eventData) { 
-                    eventData = { title: `Event ID: ${eventId}`, event_id: eventId, source: 'unknown' };
-                }
-
-                const listItem = document.createElement('li');
-                listItem.className = 'saved-event-item';
-                listItem.innerHTML = `
-                    <span>${escapeHTML(eventData.title)}</span>
-                    <button class="action-button action-button-secondary" onclick="removeSavedEvent('${eventId}', '${sourceForRemove}')">Unsave</button>
-                `;
-                listElement.appendChild(listItem);
-            });
+            noEventsMsg.style.display = 'none';
+            eventsGrid.innerHTML = events.map(event => `
+                <div class="project-card">
+                    <div class="project-category-badge">${event.departmentName || ''}</div>
+                    <div class="project-title">${event.title}</div>
+                    <div class="project-description">${event.description ? event.description : 'No description provided.'}</div>
+                    <div class="project-stats">
+                        <div class="project-stat">
+                            <div class="project-stat-number">${event.start_datetime_formatted || 'TBA'}</div>
+                            <div class="project-stat-label">Start</div>
+                        </div>
+                        ${event.registration_deadline_formatted ? `
+                        <div class="project-stat">
+                            <div class="project-stat-number">${event.registration_deadline_formatted}</div>
+                            <div class="project-stat-label">Reg. Deadline</div>
+                        </div>` : ''}
+                        <div class="project-stat">
+                            <div class="project-stat-number">${event.location ? event.location : 'TBA'}</div>
+                            <div class="project-stat-label">Location</div>
+                        </div>
+                    </div>
+                    <button class="btn-header btn-header-primary rsvp-btn" data-event-id="${event.event_id}">RSVP</button>
+                </div>
+            `).join('');
         }
 
-        function removeSavedEvent(eventId, source) {
-            savedEvents.delete(String(eventId));
-            localStorage.setItem('savedEvents', JSON.stringify(Array.from(savedEvents)));
-            updateSavedEventsList();
-            // Also update the button in the main list if visible
-            const mainListButton = document.querySelector(`.event-card[data-event-id='${eventId}'][data-event-source='${source}'] .action-button`);
-            if (mainListButton && mainListButton.textContent === 'Unsave') {
-                mainListButton.textContent = 'Save Event';
-                mainListButton.classList.remove('action-button-secondary');
+        departmentSelect.addEventListener('change', async (e) => {
+            const departmentId = e.target.value;
+            if (!departmentId) {
+                renderEvents(allEvents);
+                return;
             }
-        }
-
-        // --- Search/Filter (Placeholder) ---
-        function filterEvents() {
-            alert("Search and filter functionality will be implemented here. It will filter through the loaded campus and external events.");
-            // TODO: Implement filtering based on #eventSearch and #eventTypeFilter
-            // This would involve:
-            // 1. Getting search term and filter value.
-            // 2. Filtering `allDbEventsData` and `allApiEventsData`.
-            // 3. Clearing `eventsListElement`.
-            // 4. Re-rendering the filtered results (potentially without pagination, or resetting pagination).
-            // 5. Updating `noEventsMessageElement` and load more buttons accordingly.
-        }
-
-        // --- Logout ---
-        document.getElementById('logoutButton').addEventListener('click', (e) => {
-            e.preventDefault();
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('currentUser');
-            window.location.href = '/welcome'; // Or your main login page
+            loadingMsg.style.display = 'block';
+            errorMsg.style.display = 'none';
+            noEventsMsg.style.display = 'none';
+            eventsGrid.innerHTML = '';
+            try {
+                const res = await fetch(`/api/events/department/${departmentId}`);
+                const data = await res.json();
+                if (!data.success) throw new Error(data.message || 'Failed to load events.');
+                // Attach department name
+                const dep = allDepartments.find(d => d.department_id == departmentId);
+                const events = (data.events || []).map(ev => ({...ev, departmentName: dep ? dep.name : ''}));
+                renderEvents(events);
+            } catch (err) {
+                errorMsg.textContent = 'Error loading events: ' + err.message;
+                errorMsg.style.display = 'block';
+            } finally {
+                loadingMsg.style.display = 'none';
+            }
         });
 
-        // --- Initial Load ---
-        document.addEventListener('DOMContentLoaded', () => {
-            fetchInitialDbEvents();
-            updateSavedEventsList();
-        });
-
-        function escapeHTML(str) {
-            if (str === null || str === undefined) return '';
-            const div = document.createElement('div');
-            div.appendChild(document.createTextNode(String(str)));
-            return div.innerHTML;
-        }
+        // Initial load
+        (async () => {
+            await loadDepartments();
+            await loadAllEvents();
+        })();
     </script>
 </body>
 </html>
