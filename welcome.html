@@ -178,6 +178,24 @@
             text-align: center;
         }
 
+        .dashboard-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            text-align: center;
+            padding: 10px 0;
+            font-size: 14px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .dashboard-footer p {
+            margin: 0;
+            padding: 0;
+        }
+
         @media (max-width: 480px) {
             .container {
                 padding: 40px 25px;
@@ -223,8 +241,8 @@
         </div>
     </div>
 
-    <footer>
-        🌟 Explore. Connect. Belong. | © Campus Connect 2025
+    <footer class="dashboard-footer">
+        <p>&copy; 2025 Campus Connect <span style="font-size:1.2em;">🟧</span></p>
     </footer>
 </body>
 </html>

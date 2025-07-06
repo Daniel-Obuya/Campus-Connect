@@ -1701,7 +1701,26 @@ app.get('/api/club/dashboard', authenticateJWT, async (req, res) => {
         res.status(500).json({ success: false, message: 'Failed to fetch dashboard data.' });
     }
 });
-
+// In server.js or routes/announcements.js
+app.get('/api/announcements', async (req, res) => {
+    const departmentId = req.query.department_id;
+    if (!departmentId) {
+        return res.status(400).json({ success: false, message: 'Missing department_id' });
+    }
+    try {
+        const [announcements] = await pool.query(
+            `SELECT announcement_id, title, content, created_at 
+             FROM announcements 
+             WHERE author_type = 'department' AND author_entity_id = ? 
+             ORDER BY created_at DESC LIMIT 10`,
+            [departmentId]
+        );
+        res.json({ success: true, announcements });
+    } catch (error) {
+        console.error('Error fetching announcements:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch announcements.' });
+    }
+});
 // --- Public API Route: Get Published Events for a Department by ID (for students and public) ---
 app.get('/api/events/department/:id', async (req, res) => {
     const departmentId = parseInt(req.params.id, 10);

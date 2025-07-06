@@ -155,6 +155,120 @@
             color: var(--theme-color-primary);
             text-decoration: underline;
         }
+        .dashboard-section {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: var(--color-bg-glass-primary, rgba(255,255,255,0.15));
+            border-radius: var(--border-radius-lg, 16px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.10);
+        }
+        .dashboard-section h2 {
+            margin: 0 0 1rem 0;
+            font-size: 1.8rem;
+            color: var(--theme-color-primary-darker);
+            font-weight: var(--font-weight-bold);
+        }
+        .followed-department-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.8rem;
+            border-radius: var(--border-radius-md, 12px);
+            background: var(--color-bg-glass-secondary, #fff);
+            margin-bottom: 0.8rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .department-icon {
+            margin-right: 0.8rem;
+            color: var(--theme-color-primary);
+        }
+        .action-button {
+            padding: 0.4rem 1rem;
+            border-radius: var(--border-radius-sm, 8px);
+            border: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .action-button-danger {
+            background: var(--color-danger-light, #ffe6e6);
+            color: var(--color-danger, #d9534f);
+        }
+        .action-button-danger:hover {
+            background: var(--color-danger, #d9534f);
+            color: #fff;
+        }
+        .dashboard-footer {
+            background: #fff7ed;
+            color: #d35400;
+            border-top: 2px solid #ffa94d;
+            font-family: 'Inter', Arial, sans-serif;
+            font-weight: 500;
+            font-size: 1.08em;
+            letter-spacing: 0.01em;
+            text-align: center;
+            padding: 18px 0 10px 0;
+            margin-top: 40px;
+        }
+        /* --- MOBILE VIEW: Responsive Design --- */
+        @media (max-width: 600px) {
+            body {
+                padding-top: 60px;
+            }
+            .department-profile-container {
+                padding: 1rem 0.5rem 1rem 0.5rem !important;
+                margin: 16px 2vw !important;
+            }
+            .profile-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+            .profile-logo {
+                width: 70px;
+                height: 70px;
+            }
+            .profile-main h1 {
+                font-size: 1.3rem;
+            }
+            .profile-main .dept-code {
+                font-size: 1em;
+            }
+            .profile-actions {
+                flex-direction: column;
+                gap: 8px;
+                width: 100%;
+            }
+            .btn-follow, .btn-message {
+                width: 100%;
+                font-size: 1em;
+                padding: 10px 0;
+            }
+            .profile-tabs {
+                flex-direction: column;
+                gap: 8px;
+            }
+            .profile-tab {
+                width: 100%;
+                font-size: 1em;
+                padding: 10px 0;
+            }
+            .dashboard-section, .events-list, .announcements-list {
+                padding: 8px 2vw !important;
+            }
+            .dashboard-footer {
+                font-size: 1em;
+                padding: 12px 0;
+                text-align: center;
+                position: static;
+                width: 100vw;
+            }
+            .floating-icons-container {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body>
@@ -191,6 +305,16 @@
             <div id="announcementsList">Loading announcements...</div>
         </div>
     </div>
+    <section class="dashboard-section" id="followedDepartmentsSection">
+        <h2>Departments You Follow</h2>
+        <ul id="followedDepartmentsList">
+            <!-- Followed departments will be listed here by JavaScript -->
+            <li class="no-followed-message" style="text-align: center; color: var(--color-text-muted);">You are not following any departments yet.</li>
+        </ul>
+    </section>
+    <footer class="dashboard-footer">
+        <p>&copy; 2025 Campus Connect <span style="font-size:1.2em;">🟧</span></p>
+    </footer>
     <script>
         function getQueryParam(name) {
             const url = new URL(window.location.href);
@@ -288,9 +412,18 @@
                 data.events.forEach(ev => {
                     const div = document.createElement('div');
                     div.className = 'event-card';
-                    div.innerHTML = `<div class="event-title">${ev.title}</div>
-                        <div class="event-date">${ev.start_datetime_formatted || ''}</div>
-                        <div>${ev.description || ''}</div>`;
+                    div.innerHTML = `
+                        <div class="event-title">${ev.title || ''}</div>
+                        <div class="event-date"><strong>Start:</strong> ${ev.start_datetime_formatted || ''}</div>
+                        ${ev.registration_deadline_formatted ? `<div class='event-date'><strong>Registration Deadline:</strong> ${ev.registration_deadline_formatted}</div>` : ''}
+                        ${ev.location ? `<div><strong>Location:</strong> ${ev.location}</div>` : ''}
+                        ${ev.virtual_link ? `<div><strong>Virtual Link:</strong> <a href='${ev.virtual_link}' target='_blank'>Join</a></div>` : ''}
+                        ${ev.max_attendees ? `<div><strong>Max Attendees:</strong> ${ev.max_attendees}</div>` : ''}
+                        ${typeof ev.registration_required !== 'undefined' ? `<div><strong>Registration Required:</strong> ${ev.registration_required ? 'Yes' : 'No'}</div>` : ''}
+                        ${ev.tags ? `<div><strong>Tags:</strong> ${ev.tags}</div>` : ''}
+                        ${ev.image_url ? `<div style='margin:10px 0;'><img src='${ev.image_url}' alt='Event Image' style='max-width:100%;border-radius:8px;'></div>` : ''}
+                        <div style='margin-top:8px;'>${ev.description || ''}</div>
+                    `;
                     eventsList.appendChild(div);
                 });
             } catch (e) {
@@ -333,16 +466,54 @@
                 };
             });
         }
+        // --- Fetch followed departments from backend (reuse from directory) ---
+async function fetchFollowedDepartments() {
+    const jwt = getJWT();
+    if (!jwt) return [];
+    try {
+        const response = await fetch('/api/user/followed-departments', {
+            headers: { 'Authorization': 'Bearer ' + jwt }
+        });
+        if (!response.ok) return [];
+        const data = await response.json();
+        if (Array.isArray(data.departments)) {
+            return data.departments;
+        }
+    } catch (e) {}
+    return [];
+}
+// --- Update the followed departments section ---
+async function updateFollowedList() {
+    const followedList = document.getElementById('followedDepartmentsList');
+    if (!followedList) return;
+    followedList.innerHTML = '';
+    const departments = await fetchFollowedDepartments();
+    if (!departments.length) {
+        followedList.innerHTML = '<li class="no-followed-message" style="text-align: center; color: var(--color-text-muted);">You are not following any departments yet.</li>';
+        return;
+    }
+    departments.forEach(dept => {
+        const li = document.createElement('li');
+        li.className = 'followed-department-item';
+        li.innerHTML = `
+            <span><i class="fas fa-university department-icon"></i> ${dept.name || 'Unnamed Department'}</span>
+            <button class="action-button action-button-danger" onclick="toggleFollow('${dept.department_id}', this)">Unfollow</button>
+        `;
+        followedList.appendChild(li);
+    });
+}
+// --- On page load, update the followed list ---
+document.addEventListener('DOMContentLoaded', function() {
+    loadDepartmentDetails();
+    loadEvents();
+    loadAnnouncements();
+    setupTabs();
+    updateFollowedList();
+});
         document.getElementById('followBtn').onclick = followDepartment;
         document.getElementById('messageBtn').onclick = function() {
             alert('Messaging feature coming soon!');
         };
-        document.addEventListener('DOMContentLoaded', function() {
-            loadDepartmentDetails();
-            loadEvents();
-            loadAnnouncements();
-            setupTabs();
-        });
     </script>
 </body>
 </html>

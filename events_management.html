@@ -67,6 +67,49 @@
         .event-card-actions { display: flex; gap: var(--spacing-sm); padding: var(--spacing-md); background-color: rgba(0,0,0,0.03); border-top: 1px solid var(--color-border-divider); }
         .event-card-actions .action-button { flex-grow: 1; text-align: center; }
 
+        .dashboard-footer {
+            background-color: var(--color-bg-footer);
+            padding: var(--spacing-md);
+            text-align: center;
+            border-top: 1px solid var(--color-border-divider);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dashboard-footer p {
+            margin: 0;
+            color: var(--color-text-footer);
+            font-size: var(--font-size-base);
+        }
+
+        .floating-icons-container {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .floating-icon {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        .icon1 { width: 60px; height: 60px; background: rgba(255, 87, 34, 0.7); top: -10%; left: -10%; animation: float 6s ease-in-out infinite; }
+        .icon2 { width: 80px; height: 80px; background: rgba(33, 150, 243, 0.7); top: 10%; right: -10%; animation: float 7s ease-in-out infinite; }
+        .icon3 { width: 100px; height: 100px; background: rgba(76, 175, 80, 0.7); bottom: -10%; left: 20%; animation: float 8s ease-in-out infinite; }
+        .icon4 { width: 120px; height: 120px; background: rgba(255, 193, 7, 0.7); bottom: 10%; right: -20%; animation: float 9s ease-in-out infinite; }
+        .icon5 { width: 140px; height: 140px; background: rgba(156, 39, 176, 0.7); top: -20%; right: 10%; animation: float 10s ease-in-out infinite; }
+        .icon6 { width: 160px; height: 160px; background: rgba(0, 188, 212, 0.7); top: 20%; left: -20%; animation: float 11s ease-in-out infinite; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
     </style>
 </head>
 <body>
@@ -101,8 +144,8 @@
         </section>
     </main>
 
-    <footer>
-        <p>&copy; 2024 Campus Connect - Department Admin</p>
+    <footer class="dashboard-footer">
+        <p>&copy; 2025 Campus Connect <span style="font-size:1.2em;">🟧</span></p>
     </footer>
 
     <div class="floating-icons-container">

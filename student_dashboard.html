@@ -458,6 +458,84 @@
     background: linear-gradient(135deg, #ff9800, #8b4513);
     color: #fff;
 }
+        /* --- MOBILE VIEW: Responsive Design --- */
+        @media (max-width: 600px) {
+            body {
+                padding-top: 60px;
+            }
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 10px 8px;
+                height: auto;
+            }
+            .header-left {
+                flex-direction: row;
+                align-items: center;
+                margin-bottom: 8px;
+            }
+            .logo {
+                width: 38px !important;
+                height: 38px !important;
+                margin-right: 8px;
+            }
+            .brand-name {
+                font-size: 1.1em;
+            }
+            .page-title {
+                font-size: 1.1em;
+                margin: 8px 0;
+            }
+            .header-actions {
+                flex-direction: column;
+                gap: 6px;
+                width: 100%;
+                margin-top: 6px;
+            }
+            .header-button {
+                width: 100%;
+                font-size: 1em;
+                padding: 8px 0;
+            }
+            .dashboard-quick-links {
+                flex-direction: column;
+                gap: 8px;
+                width: 100%;
+                padding: 8px 2vw;
+            }
+            .btn-header {
+                width: 100%;
+                font-size: 1em;
+                padding: 10px 0;
+                margin-bottom: 6px;
+            }
+            .main-content, .dashboard-section, .enhanced-welcome, .profile-widget, .clubs-widget, .events-widget, .motivation-widget {
+                padding: 8px 2vw !important;
+            }
+            .dashboard-footer {
+                font-size: 1em;
+                padding: 12px 0;
+                text-align: center;
+                position: static;
+                width: 100vw;
+            }
+            .floating-icons-container {
+                display: none;
+            }
+        }
+        /* Ensure the dashboard-footer is always styled consistently */
+        .dashboard-footer {
+            background: #fff7ed;
+            color: #d35400;
+            border-top: 2px solid #ffa94d;
+            font-family: 'Inter', Arial, sans-serif;
+            font-weight: 500;
+            font-size: 1.08em;
+            letter-spacing: 0.01em;
+            text-align: center;
+            padding: 18px 0 10px 0;
+            margin-top: 40px;
+        }
     </style>
 
     <main class="dashboard-grid">
@@ -564,8 +642,8 @@
         </div>
     </main>
 
-    <footer>
-        <p>&copy; Campus Connect <span id="current-year"></span></p>
+    <footer class="dashboard-footer">
+        <p>&copy; 2025 Campus Connect <span style="font-size:1.2em;">🟧</span></p>
     </footer>
 
     <script src="dashboard_script.js"></script>

@@ -14,6 +14,87 @@
     <meta property="og:description" content="Your Central Hub for University Life. Discover, Engage, and Thrive.">
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary_large_image">
+    <style>
+        /* --- MOBILE VIEW: Responsive Design --- */
+        @media (max-width: 600px) {
+            body {
+                padding-top: 60px;
+            }
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 10px 8px;
+                height: auto;
+            }
+            .header-content, .logo-section, .navigation {
+                width: 100%;
+            }
+            .logo-section {
+                flex-direction: row;
+                align-items: center;
+                margin-bottom: 8px;
+            }
+            .logo-text {
+                font-size: 1.1em;
+            }
+            .navigation {
+                flex-direction: column;
+                gap: 6px;
+                margin-top: 6px;
+            }
+            .nav-link {
+                width: 100%;
+                font-size: 1em;
+                padding: 8px 0;
+                display: block;
+                text-align: left;
+            }
+            .main-content, .hero-section, .features-section, .action-section {
+                padding: 8px 2vw;
+            }
+            .features-grid {
+                grid-template-columns: 1fr !important;
+                gap: 14px;
+            }
+            .feature-card {
+                padding: 10px 6px;
+                font-size: 1em;
+            }
+            .hero-title, .hero-subtitle {
+                font-size: 1.1em;
+            }
+            .hero-buttons, .action-buttons {
+                flex-direction: column;
+                gap: 8px;
+                width: 100%;
+            }
+            .btn, .btn-primary, .btn-secondary {
+                width: 100%;
+                font-size: 1em;
+                padding: 10px 0;
+            }
+            .dashboard-footer {
+                font-size: 1em;
+                padding: 12px 0;
+                text-align: center;
+                position: static;
+                width: 100vw;
+            }
+        }
+        /* Ensure the dashboard-footer is always styled consistently */
+        .dashboard-footer {
+            background: #fff7ed;
+            color: #d35400;
+            border-top: 2px solid #ffa94d;
+            font-family: 'Inter', Arial, sans-serif;
+            font-weight: 500;
+            font-size: 1.08em;
+            letter-spacing: 0.01em;
+            text-align: center;
+            padding: 18px 0 10px 0;
+            margin-top: 40px;
+        }
+    </style>
 </head>
 <body>
     <!-- Floating Icons -->
@@ -189,17 +270,9 @@
         </main>
 
         <!-- Footer -->
-        <footer class="footer">
-            <div class="footer-content">
-                <p class="footer-copyright">© 2025 Campus Connect. All rights reserved.</p>
-            </div>
-            <p class="footer-tagline">
-                Empowering University Communities
-                <svg class="heart-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"/>
-                </svg>
-            </p>
-        </footer>
+        <footer class="dashboard-footer">
+        <p>&copy; 2025 Campus Connect <span style="font-size:1.2em;">🟧</span></p>
+    </footer>
     </div>
 
     <script src="script.js"></script>

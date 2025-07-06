@@ -6,6 +6,77 @@
     <title>Events Directory</title>
     <link rel="stylesheet" href="projects.css">
     <link rel="stylesheet" href="common-header.css">
+    <style>
+        /* --- MOBILE VIEW: Responsive Design --- */
+        @media (max-width: 600px) {
+            body {
+                padding-top: 60px;
+            }
+            .main-content, .hero-section, .filter-section, .projects-grid {
+                padding: 8px 2vw !important;
+            }
+            .hero-section {
+                padding: 18px 4px !important;
+            }
+            .hero-title {
+                font-size: 1.3em;
+            }
+            .filter-section {
+                flex-direction: column;
+                gap: 10px;
+                padding: 10px 4px !important;
+            }
+            .filter-select {
+                width: 100% !important;
+                font-size: 1em;
+                padding: 10px 8px;
+            }
+            .projects-grid {
+                grid-template-columns: 1fr !important;
+                gap: 14px;
+            }
+            .project-card {
+                padding: 10px 6px;
+                font-size: 1em;
+            }
+            .project-title {
+                font-size: 1.1em;
+            }
+            .project-description {
+                font-size: 0.98em;
+            }
+            .project-actions {
+                flex-direction: column;
+                gap: 8px;
+                width: 100%;
+            }
+            .btn-header, .btn-header-primary, .btn-header-secondary {
+                width: 100%;
+                font-size: 1em;
+                padding: 10px 0;
+            }
+            .dashboard-footer {
+                font-size: 1em;
+                padding: 12px 0;
+                text-align: center;
+                position: static;
+                width: 100vw;
+            }
+        }
+        /* Ensure the dashboard-footer is always styled consistently */
+        .dashboard-footer {
+            background: #fff7ed;
+            color: #d35400;
+            border-top: 2px solid #ffa94d;
+            font-family: 'Inter', Arial, sans-serif;
+            font-weight: 500;
+            font-size: 1.08em;
+            letter-spacing: 0.01em;
+            text-align: center;
+            padding: 18px 0 10px 0;
+            margin-top: 40px;
+        }
+    </style>
 </head>
 <body>
     <!-- Header (matching projects directory) -->
@@ -166,5 +237,8 @@
             await loadAllEvents();
         })();
     </script>
+    <footer class="dashboard-footer">
+        <p>&copy; 2025 Campus Connect <span style="font-size:1.2em;">🟧</span></p>
+    </footer>
 </body>
 </html>

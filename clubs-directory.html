@@ -148,13 +148,74 @@
             color: red;
         }
 
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .header { flex-direction: column; gap: 10px; padding: 20px; }
-            .page-title { font-size: 20px; margin: 10px 0; }
-            .hero-title { font-size: 28px; }
-            .filter-section { flex-direction: column; }
-            .search-input { width: 100%; }
+        /* --- MOBILE VIEW: Responsive Design --- */
+        @media (max-width: 600px) {
+            body {
+                padding-top: 60px;
+            }
+            .main-content, .hero-section, .filter-section, .clubs-grid {
+                padding: 8px 2vw !important;
+            }
+            .hero-section {
+                padding: 18px 4px !important;
+            }
+            .hero-title {
+                font-size: 1.3em;
+            }
+            .filter-section {
+                flex-direction: column;
+                gap: 10px;
+                padding: 10px 4px !important;
+            }
+            .search-input, .filter-select {
+                width: 100% !important;
+                font-size: 1em;
+                padding: 10px 8px;
+            }
+            .clubs-grid {
+                grid-template-columns: 1fr !important;
+                gap: 14px;
+            }
+            .club-card {
+                padding: 10px 6px;
+                font-size: 1em;
+            }
+            .club-name {
+                font-size: 1.1em;
+            }
+            .club-description {
+                font-size: 0.98em;
+            }
+            .club-footer {
+                flex-direction: column;
+                gap: 8px;
+                width: 100%;
+            }
+            .club-btn, .club-btn-primary, .club-btn-secondary {
+                width: 100%;
+                font-size: 1em;
+                padding: 10px 0;
+            }
+            .dashboard-footer {
+                font-size: 1em;
+                padding: 12px 0;
+                text-align: center;
+                position: static;
+                width: 100vw;
+            }
+        }
+        /* Ensure the dashboard-footer is always styled consistently */
+        .dashboard-footer {
+            background: #fff7ed;
+            color: #d35400;
+            border-top: 2px solid #ffa94d;
+            font-family: 'Inter', Arial, sans-serif;
+            font-weight: 500;
+            font-size: 1.08em;
+            letter-spacing: 0.01em;
+            text-align: center;
+            padding: 18px 0 10px 0;
+            margin-top: 40px;
         }
     </style>
 </head>
@@ -197,6 +258,10 @@
             <div class="info-state" id="loadingState">Loading clubs...</div>
         </section>
     </main>
+
+    <footer class="dashboard-footer">
+        <p>&copy; 2025 Campus Connect <span style="font-size:1.2em;">🟧</span></p>
+    </footer>
 
     <script>
         let allClubs = []; // Store all fetched clubs

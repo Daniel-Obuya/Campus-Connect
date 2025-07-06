@@ -300,6 +300,115 @@
         #postFollowMessageModal .action-button {
             margin-right: 10px;
         }
+
+        /* --- MOBILE VIEW: Responsive Design --- */
+        @media (max-width: 600px) {
+            body {
+                padding-top: 60px; /* Reduce header space on mobile */
+            }
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 10px 8px;
+                height: auto;
+            }
+            .header-left {
+                flex-direction: row;
+                align-items: center;
+                margin-bottom: 8px;
+            }
+            .logo {
+                width: 38px;
+                height: 38px;
+                margin-right: 8px;
+            }
+            .brand-name {
+                font-size: 1.1em;
+            }
+            .page-title {
+                font-size: 1.1em;
+                margin: 8px 0;
+            }
+            .header-actions {
+                flex-direction: column;
+                gap: 6px;
+                width: 100%;
+                margin-top: 6px;
+            }
+            .header-button {
+                width: 100%;
+                font-size: 1em;
+                padding: 8px 0;
+            }
+            main, .dashboard-section {
+                padding: 8px 2vw;
+            }
+            .search-filter-section {
+                flex-direction: column;
+                gap: 8px;
+            }
+            .search-bar input[type="text"] {
+                font-size: 1em;
+                padding: 10px 8px;
+            }
+            .search-bar .search-btn {
+                font-size: 1em;
+                padding: 8px 12px;
+            }
+            .filter-select {
+                width: 100%;
+            }
+            #departmentsList {
+                grid-template-columns: 1fr !important;
+                gap: 14px;
+            }
+            .project-card, .department-list-item, .followed-department-item {
+                padding: 10px 6px;
+                font-size: 1em;
+            }
+            .project-title, .project-category-badge {
+                font-size: 1.1em;
+            }
+            .project-description {
+                font-size: 0.98em;
+            }
+            .project-actions, .department-item-actions {
+                flex-direction: column;
+                gap: 8px;
+                width: 100%;
+            }
+            .action-button, .btn-header, .btn-header-secondary {
+                width: 100%;
+                font-size: 1em;
+                padding: 10px 0;
+            }
+            .load-more-container {
+                margin: 18px 0;
+            }
+            #followedDepartmentsList {
+                padding: 0;
+            }
+            .followed-department-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 6px;
+            }
+            .floating-icons-container {
+                display: none; /* Hide floating icons on mobile for clarity */
+            }
+            .dashboard-footer {
+                font-size: 1em;
+                padding: 12px 0;
+                text-align: center;
+                position: static;
+                width: 100vw;
+            }
+            /* Modal adjustments */
+            #followModal > div, #postFollowMessageModal > div {
+                max-width: 95vw;
+                padding: 1em;
+            }
+        }
     </style>
 </head>
 <body>
@@ -358,8 +467,8 @@
         </section>
     </main>
 
-    <footer>
-        <p>&copy; 2024 Campus Connect</p>
+    <footer class="dashboard-footer">
+        <p>&copy; 2025 Campus Connect <span style="font-size:1.2em;">🟧</span></p>
     </footer>
 
     <div class="floating-icons-container">
@@ -556,15 +665,27 @@ async function followOrUnfollowDepartment(departmentId, message, buttonElement, 
             });
         }
 
-        function createDepartmentListItem(dept) {
-            const departmentId = dept.department_id; // Always use department_id from backend
-            const isFollowed = followedDepartmentIds.has(departmentId);
-            const li = document.createElement('li');
-            li.className = 'project-card';
-            li.innerHTML = `
+       function createDepartmentListItem(dept) {
+    const departmentId = dept.department_id; // Always use department_id from backend
+    const isFollowed = followedDepartmentIds.has(departmentId);
+    const li = document.createElement('li');
+    li.className = 'project-card';
+    let eventSection = '';
+    if (dept.next_event) {
+        eventSection = `
+            <div class="project-event">
+                <div class="event-title"><strong>Upcoming Event:</strong> ${dept.next_event.title || ''}</div>
+                <div class="event-date">${dept.next_event.start_datetime_formatted || ''}</div>
+                <div class="event-description">${dept.next_event.description || ''}</div>
+                <button class="action-button action-button-primary" onclick="rsvpEvent('${dept.next_event.event_id}', '${departmentId}')">RSVP</button>
+            </div>
+        `;
+    }
+    li.innerHTML = `
 <div class="project-category-badge"><i class="fas fa-university"></i> ${dept.name || 'Unnamed Department'}</div>
 <div class="project-title">${dept.name || 'Unnamed Department'}</div>
 <div class="project-description">${dept.description || ''}</div>
+${eventSection}
 <div class="project-stats">
     <div class="project-stat">
         <div class="project-stat-number">${dept.programs || 'N/A'}</div>
@@ -580,9 +701,8 @@ async function followOrUnfollowDepartment(departmentId, message, buttonElement, 
     <button class="btn-header btn-header-secondary" onclick="window.location.href='department_details.html?department_id=${departmentId}'">More...</button>
 </div>
 `;
-            return li;
-        }
-
+    return li;
+}
         // --- FETCHING ---
         async function fetchDepartmentsBatch(offset, limit) {
             try {
